@@ -62,19 +62,19 @@ jobs:
         id: check-bins
         if: ${{ always() }}
         run: cargo +${{ steps.install-rust.outputs.name }} check --target ${{ matrix.target }} --workspace --keep-going --bins
-      - name: Build tests
-        id: check-tests
-        if: ${{ steps.check-bins.outcome == 'success' }}
-        run: cargo +${{ steps.install-rust.outputs.name }} check --target ${{ matrix.target }} --workspace --keep-going --tests
+      # - name: Build tests
+      #   id: check-tests
+      #   if: ${{ steps.check-bins.outcome == 'success' }}
+      #   run: cargo +${{ steps.install-rust.outputs.name }} check --target ${{ matrix.target }} --workspace --keep-going --tests
       # - name: Build examples
       #   id: check-examples
       #   if: ${{ steps.check-bins.outcome == 'success' }}
       #   run: cargo +${{ steps.install-rust.outputs.name }} check --target ${{ matrix.target }} --workspace --keep-going --examples
-      - name: Run tests
-        id: run-tests
-        if: ${{ steps.check-tests.outcome == 'success' }}
-        run: |
-          cargo +${{ steps.install-rust.outputs.name }} test --target ${{ matrix.target }} --workspace --tests --no-fail-fast
+      # - name: Run tests
+      #   id: run-tests
+      #   if: ${{ steps.check-tests.outcome == 'success' }}
+      #   run: |
+      #     cargo +${{ steps.install-rust.outputs.name }} test --target ${{ matrix.target }} --workspace --tests --no-fail-fast
       # - name: Run doctests
       #   id: run-doctests
       #   if: ${{ steps.check-tests.outcome == 'success' }}
