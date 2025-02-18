@@ -12,11 +12,12 @@ use clientele::{
 use std::{
     collections::BTreeSet,
     env::consts::EXE_SUFFIX,
-    fs::Metadata,
-    os::unix::{ffi::OsStrExt, process::ExitStatusExt},
     path::{Path, PathBuf},
     process::Stdio,
 };
+
+#[cfg(unix)]
+use std::fs::Metadata;
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -76,9 +77,8 @@ pub fn main() {
                 help.push('\n');
             }
             help.push_str(&color_print::cformat!(
-                "\t<dim>$</dim> <s>asimov {}{}</s> [OPTIONS] [COMMAND]",
+                "\t<dim>$</dim> <s>asimov {}</s> [OPTIONS] [COMMAND]",
                 subcommand_name,
-                EXE_SUFFIX
             ));
         }
         Options::command()
@@ -120,13 +120,19 @@ pub fn main() {
         }
         Ok(status) => {
             use std::process::exit;
+
             #[cfg(unix)]
-            if let Some(signal) = status.signal() {
-                if options.flags.debug {
-                    eprintln!("{}: terminated by signal {}", "asimov", signal);
+            {
+                use std::os::unix::process::ExitStatusExt;
+
+                if let Some(signal) = status.signal() {
+                    if options.flags.debug {
+                        eprintln!("{}: terminated by signal {}", "asimov", signal);
+                    }
+                    exit((signal | 0x80) & 0xff);
                 }
-                exit((signal | 0x80) & 0xff);
             }
+
             exit(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
         }
     }
@@ -136,7 +142,7 @@ fn find_external_subcommands(prefix: &str) -> std::io::Result<BTreeSet<String>> 
     Ok(find_external_commands(prefix)?
         .iter()
         .filter_map(|path| {
-            path.file_name().map(|name| {
+            path.with_extension("").file_name().map(|name| {
                 name.to_string_lossy()
                     .trim_start_matches(prefix)
                     .to_string()
@@ -155,18 +161,46 @@ fn find_external_commands(prefix: &str) -> std::io::Result<Vec<PathBuf>> {
         let Ok(dir) = std::fs::read_dir(path) else {
             continue;
         };
-        for entry in dir {
-            let entry = entry?;
-            let entry_name = entry.file_name();
-            let entry_bytes = entry_name.as_bytes();
-            if entry_bytes.starts_with(b".")
-                || entry_bytes.ends_with(b"~")
-                || !entry_bytes.starts_with(prefix)
-                || !is_executable_metadata(entry.metadata()?)
-            {
-                continue; // skip hidden, backup, and non-executable files
+
+        #[cfg(windows)]
+        {
+            use std::env::consts::EXE_EXTENSION;
+            use std::os::windows::fs::MetadataExt;
+            const FILE_ATTRIBUTE_HIDDEN: u32 = 0x00000002;
+
+            for entry in dir {
+                let entry = entry?;
+                let entry_name = entry.file_name();
+                let entry_bytes = entry_name.as_encoded_bytes();
+                let metadata = entry.metadata()?;
+                let is_hidden = metadata.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0;
+                let path = entry.path();
+                let ext = path.extension().and_then(|ext| ext.to_str());
+                if is_hidden || ext != Some(EXE_EXTENSION) || !entry_bytes.starts_with(prefix) {
+                    continue;
+                }
+
+                result.push(path);
             }
-            result.push(entry.path());
+        }
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::ffi::OsStrExt;
+
+            for entry in dir {
+                let entry = entry?;
+                let entry_name = entry.file_name();
+                let entry_bytes = entry_name.as_bytes();
+                if entry_bytes.starts_with(b".")
+                    || entry_bytes.ends_with(b"~")
+                    || !entry_bytes.starts_with(prefix)
+                    || !is_executable_metadata(entry.metadata()?)
+                {
+                    continue; // skip hidden, backup, and non-executable files
+                }
+                result.push(entry.path());
+            }
         }
     }
     Ok(result)
