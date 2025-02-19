@@ -71,7 +71,7 @@ pub fn main() {
     if options.help {
         let mut help = String::new();
         help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
-        let subcommands = find_external_subcommands("asimov-").unwrap_or_default();
+        let subcommands = find_external_subcommands("asimov-", 1).unwrap_or_default();
         for (i, subcommand_name) in subcommands.iter().enumerate() {
             if i > 0 {
                 help.push('\n');
@@ -138,8 +138,8 @@ pub fn main() {
     }
 }
 
-fn find_external_subcommands(prefix: &str) -> std::io::Result<BTreeSet<String>> {
-    Ok(find_external_commands(prefix)?
+fn find_external_subcommands(prefix: &str, level: usize) -> std::io::Result<BTreeSet<String>> {
+    Ok(find_external_commands(prefix, level)?
         .iter()
         .filter_map(|path| {
             path.with_extension("").file_name().map(|name| {
@@ -151,7 +151,7 @@ fn find_external_subcommands(prefix: &str) -> std::io::Result<BTreeSet<String>> 
         .collect())
 }
 
-fn find_external_commands(prefix: &str) -> std::io::Result<Vec<PathBuf>> {
+fn find_external_commands(prefix: &str, level: usize) -> std::io::Result<Vec<PathBuf>> {
     let prefix = prefix.as_bytes();
     let mut result = vec![];
     let Some(paths) = std::env::var_os("PATH") else {
@@ -172,15 +172,24 @@ fn find_external_commands(prefix: &str) -> std::io::Result<Vec<PathBuf>> {
                 let entry = entry?;
                 let entry_name = entry.file_name();
                 let entry_bytes = entry_name.as_encoded_bytes();
-                let metadata = entry.metadata()?;
-                let is_hidden = metadata.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0;
-                let path = entry.path();
-                let ext = path.extension().and_then(|ext| ext.to_str());
-                if is_hidden || ext != Some(EXE_EXTENSION) || !entry_bytes.starts_with(prefix) {
-                    continue;
+                let entry_path = entry.path();
+                let entry_ext = entry_path.extension().and_then(|ext| ext.to_str());
+                if entry_ext != Some(EXE_EXTENSION) || !entry_bytes.starts_with(prefix) {
+                    continue; // skip non-executable and non-matching files
                 }
 
-                result.push(path);
+                let metadata = entry.metadata()?; // system call
+                let is_hidden = metadata.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0;
+                if is_hidden {
+                    continue; // skip hidden files
+                }
+
+                let count = entry_bytes
+                    .iter()
+                    .fold(0, |sum, &b| sum + (b == b'-') as usize);
+                if count <= level {
+                    result.push(entry.path());
+                }
             }
         }
 
@@ -199,7 +208,12 @@ fn find_external_commands(prefix: &str) -> std::io::Result<Vec<PathBuf>> {
                 {
                     continue; // skip hidden, backup, and non-executable files
                 }
-                result.push(entry.path());
+                let count = entry_bytes
+                    .iter()
+                    .fold(0, |sum, &b| sum + (b == b'-') as usize);
+                if count <= level {
+                    result.push(entry.path());
+                }
             }
         }
     }
