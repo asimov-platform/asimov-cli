@@ -26,6 +26,9 @@ cfg_aliases = "0.2"
 shadow-rs = { version = "0.38", features = ["tzdb"], default-features = false }
 cc = "1.1"
 
+[dev-dependencies]
+temp-dir = "0.1.14"
+
 [dependencies]
 clap = { version = "4.5", default-features = false }
 clientele = "0.2.5"
