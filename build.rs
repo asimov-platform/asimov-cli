@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use cfg_aliases::cfg_aliases;
+use shadow_rs::ShadowBuilder;
 use std::collections::BTreeSet;
 
 fn main() {
@@ -29,5 +30,5 @@ fn main() {
     omit.insert(shadow_rs::COMMIT_AUTHOR);
     omit.insert(shadow_rs::COMMIT_EMAIL);
     omit.insert(shadow_rs::GIT_STATUS_FILE);
-    shadow_rs::new_deny(omit).unwrap();
+    ShadowBuilder::builder().deny_const(omit).build().unwrap();
 }
