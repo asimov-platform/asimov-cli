@@ -29,6 +29,9 @@ shadow-rs = { version = "1.0", features = [
 ], default-features = false }
 cc = "1.1"
 
+[dev-dependencies]
+temp-dir = "0.1.14"
+
 [dependencies]
 clap = { version = "4.5", default-features = false }
 clientele = "0.2.5"
