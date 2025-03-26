@@ -131,9 +131,71 @@ fn locate_subcommand(name: &str) -> Result<ExternalCommand> {
     }
 }
 
-fn execute_subcommand(options: &Options, cmd: &ExternalCommand, args: &[String]) -> Result {
+/// Executes `help` command for the given subcommand.
+fn execute_help_command(options: &Options, command: &[String]) -> Result {
+    assert!(!command.is_empty());
+
+    // Locate the given subcommand:
+    let cmd = locate_subcommand(&command[0])?;
+
+    // Execute the `help` command:
+    let output = std::process::Command::new(&cmd.path)
+        .args(&[&[String::from("help")], &command[1..]].concat())
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output();
+
+    match output {
+        Err(error) => {
+            if options.flags.debug {
+                eprintln!("{}: {}", "asimov", error);
+            }
+            Err(EX_SOFTWARE)
+        }
+        Ok(output) => {
+            use std::io::Write;
+
+            match output.status.code() {
+                Some(code) if code == EX_OK.as_i32() => {
+                    use std::process::exit;
+
+                    let stdout = std::io::stdout();
+                    let mut stdout = stdout.lock();
+                    stdout.write_all(&output.stdout).unwrap();
+                    stdout.write_all(&output.stderr).unwrap();
+
+                    exit(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
+                }
+                _ => {
+                    eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);
+
+                    if options.flags.debug {
+                        eprintln!("{}: status code - {}", "asimov", output.status);
+
+                        let stdout = std::io::stdout();
+                        let mut stdout = stdout.lock();
+                        stdout.write_all(&output.stdout).unwrap();
+                        stdout.write_all(&output.stderr).unwrap();
+                    }
+
+                    Err(EX_SOFTWARE)
+                }
+            }
+        }
+    }
+}
+
+/// Executes the given subcommand.
+fn execute_external_command(options: &Options, command: &[String]) -> Result {
+    assert!(!command.is_empty());
+
+    // Locate the given subcommand:
+    let cmd = locate_subcommand(&command[0])?;
+
+    // Execute the given subcommand:
     let status = std::process::Command::new(&cmd.path)
-        .args(args)
+        .args(&command[1..])
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -165,30 +227,4 @@ fn execute_subcommand(options: &Options, cmd: &ExternalCommand, args: &[String])
             exit(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
         }
     }
-}
-
-/// Executes `help` command for the given subcommand.
-fn execute_help_command(options: &Options, command: &[String]) -> Result {
-    assert!(!command.is_empty());
-
-    // Locate the given subcommand:
-    let cmd = locate_subcommand(&command[0])?;
-
-    // Execute the `help` command:
-    execute_subcommand(
-        options,
-        &cmd,
-        &[&[String::from("help")], &command[1..]].concat(),
-    )
-}
-
-/// Executes the given subcommand.
-fn execute_external_command(options: &Options, command: &[String]) -> Result {
-    assert!(!command.is_empty());
-
-    // Locate the given subcommand:
-    let cmd = locate_subcommand(&command[0])?;
-
-    // Execute the given subcommand:
-    execute_subcommand(options, &cmd, &command[1..])
 }
