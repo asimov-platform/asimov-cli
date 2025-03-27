@@ -44,13 +44,13 @@ enum Command {
 
 type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E>;
 
-pub fn main() -> Result {
+pub fn main() -> SysexitsError {
     // Load environment variables from `.env`:
     clientele::dotenv().ok();
 
     // Expand wildcards and @argfiles:
     let Ok(args) = clientele::args_os() else {
-        return Err(EX_USAGE);
+        return EX_USAGE;
     };
 
     // Parse command-line options:
@@ -59,13 +59,13 @@ pub fn main() -> Result {
     // Print the version, if requested:
     if options.flags.version {
         println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
-        return Ok(EX_OK);
+        return EX_OK;
     }
 
     // Print the license, if requested:
     if options.flags.license {
         print!("{}", include_str!("../UNLICENSE"));
-        return Ok(EX_OK);
+        return EX_OK;
     }
 
     // Configure debug output:
@@ -75,10 +75,11 @@ pub fn main() -> Result {
 
     // Print the help message, if requested:
     if options.help {
-        return execute_help();
+        print_help();
+        return EX_OK;
     }
 
-    match options.command.as_ref().unwrap() {
+    let result = match options.command.as_ref().unwrap() {
         Command::Help { args } => {
             if args.is_empty() {
                 execute_extensive_help()
@@ -87,11 +88,17 @@ pub fn main() -> Result {
             }
         }
         Command::External(command) => execute_external_command(&options, command),
+    };
+
+    // We can handle result here if we want.
+    match result {
+        Ok(code) => code,
+        Err(code) => code,
     }
 }
 
 /// Prints basic help message.
-fn execute_help() -> Result {
+fn print_help() {
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
@@ -111,8 +118,6 @@ fn execute_help() -> Result {
         .after_long_help(help)
         .print_long_help()
         .unwrap();
-
-    Ok(EX_OK)
 }
 
 /// Prints extensive help message, executing `help` command for each subcommand.
