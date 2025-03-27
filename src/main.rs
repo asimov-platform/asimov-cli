@@ -158,36 +158,30 @@ fn execute_help_command(options: &Options, command: &[String]) -> Result {
             }
             Err(EX_SOFTWARE)
         }
-        Ok(output) => {
-            use std::io::Write;
+        Ok(output) => match output.status.code() {
+            Some(code) if code == EX_OK.as_i32() => {
+                use std::process::exit;
 
-            match output.status.code() {
-                Some(code) if code == EX_OK.as_i32() => {
-                    use std::process::exit;
+                let stdout = std::io::stdout();
+                let mut stdout = stdout.lock();
+                std::io::copy(&mut output.stdout.as_slice(), &mut stdout).unwrap();
+
+                exit(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
+            }
+            _ => {
+                eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);
+
+                if options.flags.debug {
+                    eprintln!("{}: status code - {}", "asimov", output.status);
 
                     let stdout = std::io::stdout();
                     let mut stdout = stdout.lock();
-                    stdout.write_all(&output.stdout).unwrap();
-                    stdout.write_all(&output.stderr).unwrap();
-
-                    exit(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
+                    std::io::copy(&mut output.stderr.as_slice(), &mut stdout).unwrap();
                 }
-                _ => {
-                    eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);
 
-                    if options.flags.debug {
-                        eprintln!("{}: status code - {}", "asimov", output.status);
-
-                        let stdout = std::io::stdout();
-                        let mut stdout = stdout.lock();
-                        stdout.write_all(&output.stdout).unwrap();
-                        stdout.write_all(&output.stderr).unwrap();
-                    }
-
-                    Err(EX_SOFTWARE)
-                }
+                Err(EX_SOFTWARE)
             }
-        }
+        },
     }
 }
 
