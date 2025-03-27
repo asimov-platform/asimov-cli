@@ -143,9 +143,9 @@ fn execute_help_command(options: &Options, command: &[String]) -> Result {
     // Locate the given subcommand:
     let cmd = locate_subcommand(&command[0])?;
 
-    // Execute the `help` command:
+    // Execute the `--help` command:
     let output = std::process::Command::new(&cmd.path)
-        .args(&[&[String::from("help")], &command[1..]].concat())
+        .args([&[String::from("--help")], &command[1..]].concat())
         .stdin(Stdio::inherit())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
