@@ -9,9 +9,11 @@ use clientele::{
     StandardOptions,
     SysexitsError::{self, *},
 };
-use std::process::Stdio;
 
-use asimov_cli::{Result, Subcommand, SubcommandsProvider};
+use asimov_cli::{
+    commands::{ExternalCmd, HelpCmdCommand, HelpCommand},
+    SubcommandsProvider,
+};
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -79,13 +81,26 @@ pub fn main() -> SysexitsError {
 
     let result = match options.command.as_ref().unwrap() {
         Command::Help { args } => {
-            if args.is_empty() {
-                execute_extensive_help()
+            if let Some(cmd_name) = args.first() {
+                let cmd = HelpCmdCommand {
+                    is_debug: options.flags.debug,
+                };
+                cmd.execute(cmd_name, &args[1..])
             } else {
-                execute_help_command(&options, args)
+                let cmd = HelpCommand;
+                cmd.execute()
             }
         }
-        Command::External(command) => execute_external_command(&options, command),
+        Command::External(args) => {
+            let cmd = ExternalCmd {
+                is_debug: options.flags.debug,
+            };
+
+            let result = cmd.execute(&args[0], &args[1..]);
+            // FIXME: Handle i32 result.
+
+            Ok(EX_OK)
+        }
     };
 
     // We can handle result here if we want.
@@ -116,112 +131,4 @@ fn print_help() {
         .after_long_help(help)
         .print_long_help()
         .unwrap();
-}
-
-/// Prints extensive help message, executing `help` command for each subcommand.
-fn execute_extensive_help() -> Result {
-    unimplemented!()
-}
-
-/// Locates the given subcommand or prints an error.
-fn locate_subcommand(name: &str) -> Result<Subcommand> {
-    match SubcommandsProvider::find("asimov-", name) {
-        Some(cmd) => Ok(cmd),
-        None => {
-            eprintln!("{}: command not found: {}{}", "asimov", "asimov-", name);
-            Err(EX_UNAVAILABLE)
-        }
-    }
-}
-
-/// Executes `help` command for the given subcommand.
-fn execute_help_command(options: &Options, command: &[String]) -> Result {
-    assert!(!command.is_empty());
-
-    // Locate the given subcommand:
-    let cmd = locate_subcommand(&command[0])?;
-
-    // Execute the `--help` command:
-    let output = std::process::Command::new(&cmd.path)
-        .args([&[String::from("--help")], &command[1..]].concat())
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .output();
-
-    match output {
-        Err(error) => {
-            if options.flags.debug {
-                eprintln!("{}: {}", "asimov", error);
-            }
-            Err(EX_SOFTWARE)
-        }
-        Ok(output) => match output.status.code() {
-            Some(code) if code == EX_OK.as_i32() => {
-                use std::process::exit;
-
-                let stdout = std::io::stdout();
-                let mut stdout = stdout.lock();
-                std::io::copy(&mut output.stdout.as_slice(), &mut stdout).unwrap();
-
-                exit(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
-            }
-            _ => {
-                eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);
-
-                if options.flags.debug {
-                    eprintln!("{}: status code - {}", "asimov", output.status);
-
-                    let stdout = std::io::stdout();
-                    let mut stdout = stdout.lock();
-                    std::io::copy(&mut output.stderr.as_slice(), &mut stdout).unwrap();
-                }
-
-                Err(EX_SOFTWARE)
-            }
-        },
-    }
-}
-
-/// Executes the given subcommand.
-fn execute_external_command(options: &Options, command: &[String]) -> Result {
-    assert!(!command.is_empty());
-
-    // Locate the given subcommand:
-    let cmd = locate_subcommand(&command[0])?;
-
-    // Execute the given subcommand:
-    let status = std::process::Command::new(&cmd.path)
-        .args(&command[1..])
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status();
-
-    match status {
-        Err(error) => {
-            if options.flags.debug {
-                eprintln!("{}: {}", "asimov", error);
-            }
-            Err(EX_SOFTWARE)
-        }
-        Ok(status) => {
-            use std::process::exit;
-
-            #[cfg(unix)]
-            {
-                use std::os::unix::process::ExitStatusExt;
-
-                if let Some(signal) = status.signal() {
-                    if options.flags.debug {
-                        eprintln!("{}: terminated by signal {}", "asimov", signal);
-                    }
-                    exit((signal | 0x80) & 0xff)
-                }
-            }
-
-            // unwrap_or should never happen because we are handling signal above.
-            exit(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
-        }
-    }
 }

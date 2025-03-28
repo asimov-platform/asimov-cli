@@ -1,5 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
+pub mod commands;
+pub mod shared;
+
 mod subcommands_provider;
 pub use subcommands_provider::*;
 
