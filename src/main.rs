@@ -5,13 +5,15 @@
 mod feature;
 
 use clientele::{
-    crates::clap::{CommandFactory, Parser, Subcommand},
-    exit, StandardOptions,
-    SysexitsError::*,
+    crates::clap::{CommandFactory, Parser, Subcommand as ClapSubcommand},
+    StandardOptions,
+    SysexitsError::{self, *},
 };
-use std::process::Stdio;
 
-use asimov_cli::ExternalCommands;
+use asimov_cli::{
+    commands::{ExternalCmd, HelpCmdCommand, HelpCommand},
+    SubcommandsProvider,
+};
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -31,19 +33,24 @@ struct Options {
     command: Option<Command>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, ClapSubcommand)]
 enum Command {
+    // FIXME: `help` command is not listed in the help message.
+    Help {
+        #[clap(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
     #[clap(external_subcommand)]
     External(Vec<String>),
 }
 
-pub fn main() {
+pub fn main() -> SysexitsError {
     // Load environment variables from `.env`:
     clientele::dotenv().ok();
 
     // Expand wildcards and @argfiles:
     let Ok(args) = clientele::args_os() else {
-        exit(EX_USAGE);
+        return EX_USAGE;
     };
 
     // Parse command-line options:
@@ -52,13 +59,13 @@ pub fn main() {
     // Print the version, if requested:
     if options.flags.version {
         println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
-        exit(EX_OK);
+        return EX_OK;
     }
 
     // Print the license, if requested:
     if options.flags.license {
         print!("{}", include_str!("../UNLICENSE"));
-        exit(EX_OK);
+        return EX_OK;
     }
 
     // Configure debug output:
@@ -68,69 +75,60 @@ pub fn main() {
 
     // Print the help message, if requested:
     if options.help {
-        let mut help = String::new();
-        help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
-
-        let commands = ExternalCommands::collect("asimov-", 1);
-        for (i, cmd) in commands.iter().enumerate() {
-            if i > 0 {
-                help.push('\n');
-            }
-            help.push_str(&color_print::cformat!(
-                "\t<dim>$</dim> <s>asimov {}</s> [OPTIONS] [COMMAND]",
-                cmd.name,
-            ));
-        }
-
-        Options::command()
-            .after_long_help(help)
-            .print_long_help()
-            .unwrap();
-
-        exit(EX_OK);
+        print_help();
+        return EX_OK;
     }
 
-    // Locate the given subcommand:
-    let Command::External(command) = &options.command.unwrap();
-    let Some(cmd_to_execute) = ExternalCommands::find("asimov-", &command[0]) else {
-        eprintln!(
-            "{}: command not found: {}{}",
-            "asimov", "asimov-", command[0]
-        );
-        exit(EX_UNAVAILABLE);
+    let result = match options.command.as_ref().unwrap() {
+        Command::Help { args } => {
+            if let Some(cmd_name) = args.first() {
+                let cmd = HelpCmdCommand {
+                    is_debug: options.flags.debug,
+                };
+                cmd.execute(cmd_name, &args[1..])
+            } else {
+                let cmd = HelpCommand;
+                cmd.execute()
+            }
+        }
+        Command::External(args) => {
+            let cmd = ExternalCmd {
+                is_debug: options.flags.debug,
+            };
+
+            let result = cmd.execute(&args[0], &args[1..]);
+            // FIXME: Handle i32 result.
+
+            Ok(EX_OK)
+        }
     };
 
-    // Execute the given subcommand:
-    let status = std::process::Command::new(&cmd_to_execute.path)
-        .args(&command[1..])
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status();
-
-    match status {
-        Err(error) => {
-            if options.flags.debug {
-                eprintln!("{}: {}", "asimov", error);
-            }
-            exit(EX_SOFTWARE);
-        }
-        Ok(status) => {
-            use std::process::exit;
-
-            #[cfg(unix)]
-            {
-                use std::os::unix::process::ExitStatusExt;
-
-                if let Some(signal) = status.signal() {
-                    if options.flags.debug {
-                        eprintln!("{}: terminated by signal {}", "asimov", signal);
-                    }
-                    exit((signal | 0x80) & 0xff);
-                }
-            }
-
-            exit(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
-        }
+    // We can handle result here if we want.
+    match result {
+        Ok(code) => code,
+        Err(code) => code,
     }
+}
+
+/// Prints basic help message.
+fn print_help() {
+    let mut help = String::new();
+    help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
+
+    let commands = SubcommandsProvider::collect("asimov-", 1);
+    for (i, cmd) in commands.iter().enumerate() {
+        if i > 0 {
+            help.push('\n');
+        }
+        println!("{}", cmd.path.display());
+        help.push_str(&color_print::cformat!(
+            "\t<dim>$</dim> <s>asimov {}</s> [OPTIONS] [COMMAND]",
+            cmd.name,
+        ));
+    }
+
+    Options::command()
+        .after_long_help(help)
+        .print_long_help()
+        .unwrap();
 }

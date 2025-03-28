@@ -3,18 +3,18 @@
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct ExternalCommand {
+pub struct Subcommand {
     pub name: String,
     pub path: PathBuf,
 }
 
 #[derive(Debug, Clone)]
-pub struct ExternalCommands {
-    commands: Vec<ExternalCommand>,
+pub struct SubcommandsProvider {
+    commands: Vec<Subcommand>,
 }
 
-impl ExternalCommands {
-    pub fn collect(prefix: &str, level: usize) -> ExternalCommands {
+impl SubcommandsProvider {
+    pub fn collect(prefix: &str, level: usize) -> SubcommandsProvider {
         let commands = Self::collect_commands(prefix)
             .into_iter()
             // Construct ExternalCommand.
@@ -25,7 +25,7 @@ impl ExternalCommands {
                     .trim_start_matches(prefix)
                     .to_string();
 
-                Some(ExternalCommand { name, path })
+                Some(Subcommand { name, path })
             })
             // Respect level.
             .filter(|cmd| {
@@ -34,24 +34,24 @@ impl ExternalCommands {
             })
             .collect();
 
-        ExternalCommands { commands }
+        SubcommandsProvider { commands }
     }
 
-    pub fn find(prefix: &str, name: &str) -> Option<ExternalCommand> {
+    pub fn find(prefix: &str, name: &str) -> Option<Subcommand> {
         let name = format!("{}{}", prefix, name);
         let path = Self::resolve_command(prefix, &name);
-        path.map(|path| ExternalCommand { name, path })
+        path.map(|path| Subcommand { name, path })
     }
 }
 
-impl ExternalCommands {
-    pub fn iter(&self) -> impl Iterator<Item = &ExternalCommand> {
+impl SubcommandsProvider {
+    pub fn iter(&self) -> impl Iterator<Item = &Subcommand> {
         self.commands.iter()
     }
 }
 
 #[cfg(unix)]
-impl ExternalCommands {
+impl SubcommandsProvider {
     fn filter_file(prefix: &str, path: &Path) -> bool {
         use std::os::unix::prelude::*;
 
@@ -137,7 +137,7 @@ impl ExternalCommands {
 }
 
 #[cfg(windows)]
-impl ExternalCommands {
+impl SubcommandsProvider {
     fn get_path_exts() -> Option<Vec<String>> {
         let Ok(exts) = std::env::var("PATHEXT") else {
             // PATHEXT variable is not set.
