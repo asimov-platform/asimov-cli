@@ -85,7 +85,10 @@ pub fn main() -> SysexitsError {
                 let cmd = HelpCmdCommand {
                     is_debug: options.flags.debug,
                 };
-                cmd.execute(cmd_name, &args[1..])
+
+                // FIXME: Handle i32 result.
+                let result = cmd.execute(cmd_name, &args[1..]);
+                Ok(EX_OK)
             } else {
                 let cmd = HelpCommand;
                 cmd.execute()
@@ -96,9 +99,8 @@ pub fn main() -> SysexitsError {
                 is_debug: options.flags.debug,
             };
 
-            let result = cmd.execute(&args[0], &args[1..]);
             // FIXME: Handle i32 result.
-
+            let result = cmd.execute(&args[0], &args[1..]);
             Ok(EX_OK)
         }
     };

@@ -12,7 +12,7 @@ pub struct HelpCmdCommand {
 }
 
 impl HelpCmdCommand {
-    pub fn execute(&self, cmd: &str, args: &[String]) -> Result {
+    pub fn execute(&self, cmd: &str, args: &[String]) -> Result<i32> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;
 
@@ -33,13 +33,11 @@ impl HelpCmdCommand {
             }
             Ok(output) => match output.status.code() {
                 Some(code) if code == EX_OK.as_i32() => {
-                    use std::process::exit;
-
                     let stdout = std::io::stdout();
                     let mut stdout = stdout.lock();
                     std::io::copy(&mut output.stdout.as_slice(), &mut stdout).unwrap();
 
-                    exit(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
+                    Ok(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
                 }
                 _ => {
                     eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);

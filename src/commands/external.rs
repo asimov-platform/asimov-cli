@@ -32,8 +32,6 @@ impl ExternalCmd {
                 Err(EX_SOFTWARE)
             }
             Ok(status) => {
-                use std::process::exit;
-
                 #[cfg(unix)]
                 {
                     use std::os::unix::process::ExitStatusExt;
@@ -42,12 +40,12 @@ impl ExternalCmd {
                         if self.is_debug {
                             eprintln!("{}: terminated by signal {}", "asimov", signal);
                         }
-                        exit((signal | 0x80) & 0xff)
+                        return Ok((signal | 0x80) & 0xff);
                     }
                 }
 
                 // unwrap_or should never happen because we are handling signal above.
-                exit(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
+                Ok(status.code().unwrap_or(EX_SOFTWARE.as_i32()))
             }
         }
     }
