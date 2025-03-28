@@ -1,4 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-mod external_commands;
-pub use external_commands::*;
+mod subcommands_provider;
+pub use subcommands_provider::*;
+
+use clientele::SysexitsError;
+
+pub type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E>;

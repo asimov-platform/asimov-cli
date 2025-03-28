@@ -5,13 +5,13 @@
 mod feature;
 
 use clientele::{
-    crates::clap::{CommandFactory, Parser, Subcommand},
+    crates::clap::{CommandFactory, Parser, Subcommand as ClapSubcommand},
     StandardOptions,
     SysexitsError::{self, *},
 };
 use std::process::Stdio;
 
-use asimov_cli::{ExternalCommand, ExternalCommands};
+use asimov_cli::{Result, Subcommand, SubcommandsProvider};
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -31,7 +31,7 @@ struct Options {
     command: Option<Command>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, ClapSubcommand)]
 enum Command {
     // FIXME: `help` command is not listed in the help message.
     Help {
@@ -41,8 +41,6 @@ enum Command {
     #[clap(external_subcommand)]
     External(Vec<String>),
 }
-
-type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E>;
 
 pub fn main() -> SysexitsError {
     // Load environment variables from `.env`:
@@ -102,7 +100,7 @@ fn print_help() {
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
-    let commands = ExternalCommands::collect("asimov-", 1);
+    let commands = SubcommandsProvider::collect("asimov-", 1);
     for (i, cmd) in commands.iter().enumerate() {
         if i > 0 {
             help.push('\n');
@@ -126,8 +124,8 @@ fn execute_extensive_help() -> Result {
 }
 
 /// Locates the given subcommand or prints an error.
-fn locate_subcommand(name: &str) -> Result<ExternalCommand> {
-    match ExternalCommands::find("asimov-", name) {
+fn locate_subcommand(name: &str) -> Result<Subcommand> {
+    match SubcommandsProvider::find("asimov-", name) {
         Some(cmd) => Ok(cmd),
         None => {
             eprintln!("{}: command not found: {}{}", "asimov", "asimov-", name);
