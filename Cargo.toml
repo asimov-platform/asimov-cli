@@ -31,6 +31,7 @@ cc = "1.1"
 
 [dev-dependencies]
 temp-dir = "0.1.14"
+indoc = "2.0.6"
 
 [dependencies]
 clap = { version = "4.5", default-features = false }
