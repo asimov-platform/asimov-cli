@@ -86,8 +86,26 @@ pub fn main() -> SysexitsError {
                     is_debug: options.flags.debug,
                 };
 
-                // FIXME: Handle i32 result.
                 let result = cmd.execute(cmd_name, &args[1..]);
+                if let Ok(result) = result {
+                    if result.success {
+                        let stdout = std::io::stdout();
+                        let mut stdout = stdout.lock();
+                        std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                    } else {
+                        eprintln!("{}: {} doesn't provide help", "asimov", cmd_name);
+
+                        if options.flags.debug {
+                            eprintln!("{}: status code - {}", "asimov", result.code);
+
+                            let stdout = std::io::stdout();
+                            let mut stdout = stdout.lock();
+                            std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                        }
+                    }
+                }
+
+                // FIXME: Handle i32 result.
                 Ok(EX_OK)
             } else {
                 let cmd = Help;

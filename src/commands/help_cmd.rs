@@ -6,13 +6,25 @@ use std::process::Stdio;
 use crate::shared::locate_subcommand;
 use crate::Result;
 
+pub struct HelpCmdResult {
+    /// Whether the command was successful or not.
+    pub success: bool,
+
+    /// Return code of the executed command.
+    pub code: i32,
+
+    /// If `success` is `true`, this field contains stdout,
+    /// otherwise it contains stderr.
+    pub output: Vec<u8>,
+}
+
 /// Executes `help` command for the given subcommand.
 pub struct HelpCmd {
     pub is_debug: bool,
 }
 
 impl HelpCmd {
-    pub fn execute(&self, cmd: &str, args: &[String]) -> Result<i32> {
+    pub fn execute(&self, cmd: &str, args: &[String]) -> Result<HelpCmdResult> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;
 
@@ -32,26 +44,16 @@ impl HelpCmd {
                 Err(EX_SOFTWARE)
             }
             Ok(output) => match output.status.code() {
-                Some(code) if code == EX_OK.as_i32() => {
-                    let stdout = std::io::stdout();
-                    let mut stdout = stdout.lock();
-                    std::io::copy(&mut output.stdout.as_slice(), &mut stdout).unwrap();
-
-                    Ok(output.status.code().unwrap_or(EX_SOFTWARE.as_i32()))
-                }
-                _ => {
-                    eprintln!("{}: {} doesn't provide help", "asimov", cmd.name);
-
-                    if self.is_debug {
-                        eprintln!("{}: status code - {}", "asimov", output.status);
-
-                        let stdout = std::io::stdout();
-                        let mut stdout = stdout.lock();
-                        std::io::copy(&mut output.stderr.as_slice(), &mut stdout).unwrap();
-                    }
-
-                    Err(EX_SOFTWARE)
-                }
+                Some(code) if code == EX_OK.as_i32() => Ok(HelpCmdResult {
+                    success: true,
+                    code,
+                    output: output.stdout,
+                }),
+                _ => Ok(HelpCmdResult {
+                    success: false,
+                    code: output.status.code().unwrap_or(EX_SOFTWARE.as_i32()),
+                    output: output.stderr,
+                }),
             },
         }
     }
