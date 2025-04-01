@@ -97,6 +97,7 @@ pub fn main() -> SysexitsError {
         Command::External(args) => {
             let cmd = External {
                 is_debug: options.flags.debug,
+                pipe_output: false,
             };
 
             // FIXME: Handle i32 result.
