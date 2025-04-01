@@ -7,11 +7,11 @@ use crate::shared::locate_subcommand;
 use crate::Result;
 
 /// Executes the given subcommand.
-pub struct ExternalCmd {
+pub struct External {
     pub is_debug: bool,
 }
 
-impl ExternalCmd {
+impl External {
     pub fn execute(&self, cmd: &str, args: &[String]) -> Result<i32> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;

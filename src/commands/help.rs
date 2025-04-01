@@ -3,9 +3,9 @@
 use crate::Result;
 
 /// Prints extensive help message, executing `help` command for each subcommand.
-pub struct HelpCommand;
+pub struct Help;
 
-impl HelpCommand {
+impl Help {
     pub fn execute(&self) -> Result {
         unimplemented!()
     }

@@ -11,7 +11,7 @@ use clientele::{
 };
 
 use asimov_cli::{
-    commands::{ExternalCmd, HelpCmdCommand, HelpCommand},
+    commands::{External, Help, HelpCmd},
     SubcommandsProvider,
 };
 
@@ -82,7 +82,7 @@ pub fn main() -> SysexitsError {
     let result = match options.command.as_ref().unwrap() {
         Command::Help { args } => {
             if let Some(cmd_name) = args.first() {
-                let cmd = HelpCmdCommand {
+                let cmd = HelpCmd {
                     is_debug: options.flags.debug,
                 };
 
@@ -90,12 +90,12 @@ pub fn main() -> SysexitsError {
                 let result = cmd.execute(cmd_name, &args[1..]);
                 Ok(EX_OK)
             } else {
-                let cmd = HelpCommand;
+                let cmd = Help;
                 cmd.execute()
             }
         }
         Command::External(args) => {
-            let cmd = ExternalCmd {
+            let cmd = External {
                 is_debug: options.flags.debug,
             };
 
