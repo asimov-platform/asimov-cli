@@ -3,7 +3,7 @@
 use asimov_cli::SubcommandsProvider;
 
 mod shared;
-use shared::{Result, TEST_FILES};
+use shared::{Result, TEST_FILES, TEST_PREFIX};
 
 #[test]
 pub fn test_find() -> Result<()> {
@@ -12,8 +12,8 @@ pub fn test_find() -> Result<()> {
     for file in TEST_FILES {
         println!("{}: ", file.name);
 
-        let cd_name = file.name.trim_start_matches("asimov-");
-        let cmd = SubcommandsProvider::find("asimov-", cd_name);
+        let cd_name = file.name.trim_start_matches(TEST_PREFIX);
+        let cmd = SubcommandsProvider::find(TEST_PREFIX, cd_name);
         let path = dir.child(file.full_name());
 
         // assert_eq!(cmd.is_some(), file.should_be_listed);

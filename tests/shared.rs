@@ -22,6 +22,8 @@ impl TestFile {
     }
 }
 
+pub static TEST_PREFIX: &str = "asimov-";
+
 pub static TEST_FILES: &[TestFile] = &[
     TestFile {
         name: "asimov-hello",
