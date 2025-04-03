@@ -138,7 +138,7 @@ fn print_help() {
         if i > 0 {
             help.push('\n');
         }
-        println!("{}", cmd.path.display());
+
         help.push_str(&color_print::cformat!(
             "\t<dim>$</dim> <s>asimov {}</s> [OPTIONS] [COMMAND]",
             cmd.name,
