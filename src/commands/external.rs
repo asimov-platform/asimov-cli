@@ -7,8 +7,13 @@ use crate::shared::locate_subcommand;
 use crate::Result;
 
 pub struct ExternalResult {
+    /// Return code of the executed command.
     pub code: i32,
+
+    /// If `pipe_output` is `true`, this field contains stdout, otherwise its None.
     pub stdout: Option<Vec<u8>>,
+
+    /// If `pipe_output` is `true`, this field contains stderr, otherwise its None.
     pub stderr: Option<Vec<u8>>,
 }
 
