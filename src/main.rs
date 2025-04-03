@@ -87,7 +87,7 @@ pub fn main() -> SysexitsError {
                 };
 
                 let result = cmd.execute(cmd_name, &args[1..]);
-                if let Ok(result) = result {
+                if let Ok(result) = &result {
                     if result.success {
                         let stdout = std::io::stdout();
                         let mut stdout = stdout.lock();
@@ -105,8 +105,7 @@ pub fn main() -> SysexitsError {
                     }
                 }
 
-                // FIXME: Handle i32 result.
-                Ok(EX_OK)
+                result.map(|result| result.code)
             } else {
                 let cmd = Help;
                 cmd.execute()
@@ -118,17 +117,15 @@ pub fn main() -> SysexitsError {
                 pipe_output: false,
             };
 
-            // FIXME: Handle i32 result.
-            let result = cmd.execute(&args[0], &args[1..]);
-            Ok(EX_OK)
+            cmd.execute(&args[0], &args[1..]).map(|result| result.code)
         }
     };
 
-    // We can handle result here if we want.
-    match result {
-        Ok(code) => code,
-        Err(code) => code,
-    }
+    // Return whatever status code we got.
+    // NOTE: We could return Result<...> here, however
+    // in that case we would get an annoying `Error: ...` message,
+    // which is not what we want. So we just return an error like this.
+    result.unwrap_or_else(|e| e)
 }
 
 /// Prints basic help message.
