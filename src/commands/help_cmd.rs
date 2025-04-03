@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::SysexitsError::*;
+use clientele::SysexitsError::{self, *};
 use std::process::Stdio;
 
 use crate::shared::locate_subcommand;
@@ -11,7 +11,7 @@ pub struct HelpCmdResult {
     pub success: bool,
 
     /// Return code of the executed command.
-    pub code: i32,
+    pub code: SysexitsError,
 
     /// If `success` is `true`, this field contains stdout,
     /// otherwise it contains stderr.
@@ -46,12 +46,16 @@ impl HelpCmd {
             Ok(output) => match output.status.code() {
                 Some(code) if code == EX_OK.as_i32() => Ok(HelpCmdResult {
                     success: true,
-                    code,
+                    code: EX_OK,
                     output: output.stdout,
                 }),
                 _ => Ok(HelpCmdResult {
                     success: false,
-                    code: output.status.code().unwrap_or(EX_SOFTWARE.as_i32()),
+                    code: output
+                        .status
+                        .code()
+                        .and_then(|code| SysexitsError::try_from(code).ok())
+                        .unwrap_or(EX_SOFTWARE),
                     output: output.stderr,
                 }),
             },

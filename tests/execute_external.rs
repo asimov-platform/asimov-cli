@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_cli::commands::External;
+use clientele::SysexitsError::*;
 
 mod shared;
 use shared::{Result, TEST_FILES, TEST_PREFIX};
@@ -22,7 +23,7 @@ pub fn test_execute_external() -> Result<()> {
         // assert_eq!(result.is_ok(), file.should_be_listed);
 
         if let Ok(result) = result {
-            assert_eq!(result.code, 0);
+            assert_eq!(result.code, EX_OK);
             assert!(result.stdout.is_some());
             assert!(result.stderr.is_some());
 

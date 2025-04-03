@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::SysexitsError::*;
+use clientele::SysexitsError::{self, *};
 use std::process::{ExitStatus, Stdio};
 
 use crate::shared::locate_subcommand;
@@ -8,7 +8,7 @@ use crate::Result;
 
 pub struct ExternalResult {
     /// Return code of the executed command.
-    pub code: i32,
+    pub code: SysexitsError,
 
     /// If `pipe_output` is `true`, this field contains stdout, otherwise its None.
     pub stdout: Option<Vec<u8>>,
@@ -66,7 +66,8 @@ impl External {
                         }
 
                         return Ok(ExternalResult {
-                            code: (signal | 0x80) & 0xff,
+                            code: SysexitsError::try_from((signal | 0x80) & 0xff)
+                                .unwrap_or(EX_SOFTWARE),
                             stdout: result.1,
                             stderr: result.2,
                         });
@@ -75,7 +76,11 @@ impl External {
 
                 Ok(ExternalResult {
                     // unwrap_or should never happen because we are handling signal above.
-                    code: result.0.code().unwrap_or(EX_SOFTWARE.as_i32()),
+                    code: result
+                        .0
+                        .code()
+                        .and_then(|code| SysexitsError::try_from(code).ok())
+                        .unwrap_or(EX_SOFTWARE),
                     stdout: result.1,
                     stderr: result.2,
                 })
