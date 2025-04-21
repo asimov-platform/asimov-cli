@@ -35,7 +35,7 @@ indoc = "2.0.6"
 
 [dependencies]
 clap = { version = "4.5", default-features = false }
-clientele = "0.2.9"
+clientele = "0.3.0"
 color-print = "=0.3.7"
 
 [[bin]]
