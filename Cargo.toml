@@ -47,6 +47,9 @@ miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 serde_yml = { version = "0.0.12", default-features = false }
 
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+openssl = { version = "0.10", features = ["vendored"] }
+
 [[bin]]
 name = "asimov"
 path = "src/main.rs"
