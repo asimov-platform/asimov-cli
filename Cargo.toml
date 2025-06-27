@@ -2,7 +2,7 @@
 
 [package]
 name = "asimov-cli"
-version = "25.0.0-dev.5"
+version = "25.0.0-dev.6"
 authors = ["ASIMOV Protocol <support@asimov.so>"]
 edition = "2024"
 rust-version = "1.85"
@@ -37,7 +37,7 @@ indoc = "2.0"
 
 [dependencies]
 asimov-env = "25.0.0-dev.12"
-asimov-proxy = { version = "25.0.0-dev.5", optional = true }
+asimov-proxy = { version = "25.0.0-dev.6", optional = true }
 asimov-module = "25.0.0-dev.10"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.2", features = ["gofer"] }

@@ -77,7 +77,7 @@ pub fn main() -> SysexitsError {
 
     // Configure debug output:
     if options.flags.debug {
-        std::env::set_var("RUST_BACKTRACE", "1");
+        //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
     // Print the help message, if requested:
