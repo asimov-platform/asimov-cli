@@ -61,7 +61,7 @@ pub static TEST_FILES: &[TestFile] = &[
 pub fn init() -> Result<TempDir> {
     let dir = TempDir::new()?;
 
-    std::env::set_var("PATH", dir.path());
+    unsafe { std::env::set_var("PATH", dir.path()) };
 
     #[cfg(unix)]
     for file in TEST_FILES {
