@@ -65,9 +65,7 @@ pub fn init() -> Result<TempDir> {
 
     #[cfg(unix)]
     for file in TEST_FILES {
-        use std::fs::OpenOptions;
-        use std::io::Write;
-        use std::os::unix::fs::OpenOptionsExt;
+        use std::{fs::OpenOptions, io::Write, os::unix::fs::OpenOptionsExt};
 
         #[rustfmt::skip]
         let content = formatdoc!(r#"

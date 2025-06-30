@@ -5,9 +5,9 @@
 
 use asimov_cli::commands::{self, External, Help, HelpCmd};
 use clientele::{
-    crates::clap::{CommandFactory, Parser, Subcommand as ClapSubcommand},
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
+    crates::clap::{CommandFactory, Parser, Subcommand as ClapSubcommand},
 };
 
 /// ASIMOV Command-Line Interface (CLI)
@@ -38,11 +38,23 @@ enum Command {
 
     /// Fetch raw data from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
-    Fetch { urls: Vec<String> },
+    Fetch {
+        /// Optionally choose the use of a module instead of using module resolution.
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        urls: Vec<String>,
+    },
 
     /// Import knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "import")]
-    Import { urls: Vec<String> },
+    Import {
+        /// Optionally choose the use of a module instead of using module resolution.
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        urls: Vec<String>,
+    },
 
     #[clap(external_subcommand)]
     External(Vec<String>),
@@ -119,9 +131,13 @@ pub fn main() -> SysexitsError {
             }
         }
         #[cfg(feature = "fetch")]
-        Command::Fetch { urls } => commands::fetch(urls, &options.flags).map(|_| EX_OK),
+        Command::Fetch { module, urls } => {
+            commands::fetch(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        }
         #[cfg(feature = "import")]
-        Command::Import { urls } => commands::import(urls, &options.flags).map(|_| EX_OK),
+        Command::Import { module, urls } => {
+            commands::import(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        }
         Command::External(args) => {
             let cmd = External {
                 is_debug: options.flags.debug,

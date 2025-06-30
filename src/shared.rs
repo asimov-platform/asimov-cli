@@ -4,7 +4,7 @@ use crate::Result;
 use asimov_env::paths::asimov_root;
 use asimov_module::{models::ModuleManifest, resolve::Resolver};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
-use miette::{miette, IntoDiagnostic};
+use miette::{IntoDiagnostic, miette};
 
 pub(crate) fn build_resolver(pattern: &str) -> miette::Result<Resolver> {
     let mut resolver = Resolver::new();
