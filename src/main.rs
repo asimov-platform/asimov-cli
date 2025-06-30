@@ -39,7 +39,9 @@ enum Command {
     /// Fetch raw data from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
     Fetch {
-        /// Optionally choose the use of a module instead of using module resolution.
+        /// Optionally choose the module instead of using module resolution.
+        /// The module's manifest must declare support for the URL for the
+        /// module to be used.
         #[clap(long, short = 'm')]
         module: Option<String>,
 
@@ -49,7 +51,9 @@ enum Command {
     /// Import knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "import")]
     Import {
-        /// Optionally choose the use of a module instead of using module resolution.
+        /// Optionally choose the module instead of using module resolution.
+        /// The module's manifest must declare support for the URL for the
+        /// module to be used.
         #[clap(long, short = 'm')]
         module: Option<String>,
 
