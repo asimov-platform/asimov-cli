@@ -1,7 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::SubcommandsProvider;
-use clientele::SysexitsError::{self, *};
+use clientele::{
+    SubcommandsProvider,
+    SysexitsError::{self, *},
+};
 use rayon::prelude::*;
 use std::process::Stdio;
 

@@ -3,8 +3,7 @@
 use clientele::SysexitsError::{self, *};
 use std::process::{ExitStatus, Stdio};
 
-use crate::shared::locate_subcommand;
-use crate::Result;
+use crate::{Result, shared::locate_subcommand};
 
 pub struct ExternalResult {
     /// Return code of the executed command.

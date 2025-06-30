@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{
-    commands::External,
-    shared::build_resolver,
     StandardOptions,
     SysexitsError::{self, *},
+    commands::External,
+    shared::build_resolver,
 };
 use color_print::ceprintln;
 use miette::Result;

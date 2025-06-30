@@ -3,8 +3,7 @@
 use clientele::SysexitsError::{self, *};
 use std::process::Stdio;
 
-use crate::shared::locate_subcommand;
-use crate::Result;
+use crate::{Result, shared::locate_subcommand};
 
 pub struct HelpCmdResult {
     /// Whether the command was successful or not.
