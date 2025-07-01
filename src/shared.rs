@@ -138,19 +138,30 @@ mod tests {
 
     #[test]
     fn url_normalization() {
-        unsafe { std::env::set_var("HOME", "/home/user") };
-
         let cases = [
             ("https://example.org/", "https://example.org/"),
             ("near://testnet/123456789", "near://testnet/123456789"),
-            ("~/path/to/file.txt", "file:///home/user/path/to/file.txt"),
-            ("~/path/../file.txt", "file:///home/user/path/../file.txt"),
             ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
             ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
         ];
 
         for case in cases {
             assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
+        }
+
+        #[cfg(unix)]
+        {
+            unsafe { std::env::set_var("HOME", "/home/user") };
+
+            let input = "~/path/to/file.txt";
+            let want = "file:///home/user/path/to/file.txt";
+
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "home directory should be expanded, input: {:?}",
+                input
+            );
         }
 
         let cur_dir = std::env::current_dir().unwrap().display().to_string();
