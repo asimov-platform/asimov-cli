@@ -74,3 +74,132 @@ pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
         }
     }
 }
+
+pub fn normalize_url(url: &str) -> String {
+    // test whether it's a normal, valid, URL
+    if let Ok(url) = <url::Url>::parse(url) {
+        return url.to_string();
+    };
+
+    // all the below cases treat the url as a file path.
+
+    // replace a `~/` prefix with the path to the user's home dir.
+    let url = url
+        .strip_prefix("~/")
+        .map(|path| {
+            std::env::home_dir()
+                .expect("unable to determine home directory")
+                .join(path)
+        })
+        .unwrap_or_else(|| std::path::PathBuf::from(url));
+
+    // `std::path::Path::canonicalize`:
+    // > Returns the canonical, absolute form of the path with all
+    // > intermediate components normalized and symbolic links resolved.
+    //
+    // This will only work if the file actually exists.
+    if let Ok(path) = std::path::Path::new(&url)
+        .canonicalize()
+        .map_err(|_| ())
+        .and_then(url::Url::from_file_path)
+    {
+        return path.to_string();
+    };
+
+    // `std::path::absolute`:
+    // > Makes the path absolute without accessing the filesystem.
+    if let Ok(path) = std::path::absolute(&url)
+        .map_err(|_| ())
+        .and_then(url::Url::from_file_path)
+    {
+        return path.to_string();
+    }
+
+    // TODO: add `std::path::Path::normalize_lexically` once it stabilizes.
+    // https://github.com/rust-lang/rust/issues/134694
+    //
+    // if let Ok(path) = std::path::Path::new(url).normalize_lexically() {
+    //     return url::Url::from_file_path(path).unwrap().to_string();
+    // }
+
+    // one last try, test whether the `url` crate accepts it as path without changes.
+    if let Ok(path) = url::Url::from_file_path(std::path::Path::new(&url)) {
+        return path.to_string();
+    }
+
+    // otherwise just convert to a file URL without changes and hope for the best :)
+    // (we should not really get here but just in case.)
+    format!("file://{}", url.display())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn url_normalization() {
+        let cases = [
+            ("https://example.org/", "https://example.org/"),
+            ("near://testnet/123456789", "near://testnet/123456789"),
+            ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
+            ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
+        ];
+
+        for case in cases {
+            assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
+        }
+
+        #[cfg(unix)]
+        {
+            unsafe { std::env::set_var("HOME", "/home/user") };
+
+            let input = "~/path/to/file.txt";
+            let want = "file:///home/user/path/to/file.txt";
+
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "home directory should be expanded, input: {:?}",
+                input
+            );
+        }
+
+        let cur_dir = std::env::current_dir().unwrap().display().to_string();
+
+        let input = "path/to/file.txt";
+        let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
+        assert_eq!(
+            normalize_url(input),
+            want,
+            "relative path should be get added after current directory, input: {:?}",
+            input
+        );
+
+        let input = "../path/./file.txt";
+        let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
+        assert_eq!(
+            normalize_url(input),
+            want,
+            "relative path should be get added after current directory, input: {:?}",
+            input
+        );
+
+        let input = "another-type-of-a-string";
+        let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
+        assert_eq!(
+            normalize_url(input),
+            want,
+            "non-path-looking input should be treated as a file in current directory, input: {:?}",
+            input
+        );
+
+        let input = "hello\\ world!";
+        let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
+        assert_eq!(
+            normalize_url(input),
+            want,
+            "output should be url encoded, input: {:?}",
+            input
+        );
+    }
+}

@@ -4,7 +4,7 @@ use crate::{
     StandardOptions,
     SysexitsError::{self, *},
     commands::External,
-    shared::build_resolver,
+    shared::{build_resolver, normalize_url},
 };
 use color_print::ceprintln;
 use miette::Result;
@@ -24,7 +24,9 @@ pub fn import(
             ceprintln!("<s,c>»</> Importing `{}`...", url);
         }
 
-        let modules = resolver.resolve(url)?;
+        let url = normalize_url(url);
+
+        let modules = resolver.resolve(&url)?;
 
         let module = if let Some(want) = module {
             modules.iter().find(|m| m.name == want).ok_or_else(|| {

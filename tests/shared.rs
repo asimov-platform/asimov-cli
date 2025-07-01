@@ -1,5 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
+#![allow(unused)]
+
 use indoc::formatdoc;
 use temp_dir::TempDir;
 

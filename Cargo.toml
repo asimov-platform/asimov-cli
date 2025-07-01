@@ -46,6 +46,7 @@ rayon = "1.10"
 miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 serde_yml = { version = "0.0.12", default-features = false }
+url = "2.5"
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
