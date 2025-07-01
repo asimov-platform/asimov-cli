@@ -24,6 +24,8 @@ pub fn fetch(
             ceprintln!("<s><c>»</></> Fetching `{}`...", url);
         }
 
+        let url = normalize_url(url);
+
         let modules = resolver.resolve(&url)?;
 
         let module = if let Some(want) = module {
