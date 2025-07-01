@@ -79,6 +79,8 @@ pub fn main() -> SysexitsError {
         return EX_OK;
     };
 
+    asimov_module::init_tracing_subscriber(&options.flags).expect("failed to initialize logging");
+
     // Print the version, if requested:
     if options.flags.version {
         println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
