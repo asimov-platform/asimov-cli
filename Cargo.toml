@@ -36,11 +36,11 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.12"
-asimov-proxy = { version = "25.0.0-dev.6", optional = true }
+asimov-env = "25.0.0-dev.13"
 asimov-module = "25.0.0-dev.13"
+asimov-proxy = { version = "25.0.0-dev.13", optional = true }
 clap = { version = "4.5", default-features = false }
-clientele = { version = "0.3.7", features = ["gofer"] }
+clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
 rayon = "1.10"
 miette = { version = "7.5", features = ["fancy"] }
@@ -51,11 +51,11 @@ url = "2.5"
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 
+[profile.release]
+opt-level = "z"
+strip = true
+lto = "thin"
+
 [[bin]]
 name = "asimov"
 path = "src/main.rs"
-
-[profile.release]
-opt-level = 3
-strip = "symbols"
-#debug = true
