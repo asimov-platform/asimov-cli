@@ -21,7 +21,7 @@
 #### Installation via Cargo
 
 ```bash
-cargo install asimov-cli --version 25.0.0-dev.6
+cargo install asimov-cli --version 25.0.0-dev.7
 ```
 
 ### Installation using Package Manager
