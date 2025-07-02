@@ -3,17 +3,17 @@
 [package]
 name = "asimov-cli"
 version = "25.0.0-dev.6"
-authors = ["ASIMOV Protocol <support@asimov.so>"]
+authors = ["ASIMOV Community"]
 edition = "2024"
-rust-version = "1.85"
+#rust-version = "1.85"
 description = "ASIMOV Command-Line Interface (CLI)"
 #documentation = ""
 readme = true
-homepage = "https://cli.asimov.so"
+homepage = "https://cli.asimov.sh"
 repository = "https://github.com/asimov-platform/asimov-cli"
 license = "Unlicense"
 keywords = ["asimov", "ai", "cli"]
-categories = ["text-processing"]
+categories = ["command-line-utilities", "text-processing"]
 publish = true
 
 [features]

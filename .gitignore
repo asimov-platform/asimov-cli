@@ -4,7 +4,7 @@
 # Environment variables
 .env
 
-# IntelliJ IDEA
+# JetBrains IntelliJ IDEA
 .idea/
 
 # Visual Studio Code
@@ -14,6 +14,6 @@
 *~
 
 # Rust artifacts
-/Cargo.lock
 /rust-toolchain
+/rust-toolchain.toml
 /target
