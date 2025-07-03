@@ -26,6 +26,9 @@ cargo install asimov-cli --version 25.0.0-dev.7
 
 ### Installation using Package Manager
 
+<details>
+<summary>Homebrew</summary>
+
 #### [Homebrew](https://brew.sh)
 
 Firstly, register this tap in your local Homebrew installation with:
@@ -40,6 +43,11 @@ Now you can install ASIMOV CLI with:
 brew install asimov-cli
 ```
 
+</details>
+
+<details>
+<summary>Scoop</summary>
+
 #### [Scoop](https://scoop.sh)
 
 First things first, you need to add our custom Scoop bucket:
@@ -53,6 +61,11 @@ Now, installing ASIMOV CLI is as easy as running:
 ```bash
 scoop install asimov-platform/asimov-cli
 ```
+
+</details>
+
+<details>
+<summary>Nix flakes</summary>
 
 #### [Nix flakes](https://nixos.wiki/wiki/Flakes)
 
@@ -73,6 +86,11 @@ And then install ASIMOV CLI with:
 ```bash
 nix profile install asimov-cli#default --no-write-lock-file
 ```
+
+</details>
+
+<details>
+<summary>Flatpak</summary>
 
 #### [Flatpak](https://flatpak.org)
 
@@ -100,9 +118,57 @@ You may want to create an alias for it:
 alias asimov="flatpak run so.asimov.cli"
 ```
 
+</details>
+
 ## 👉 Examples
 
-TBD
+Show help, including all available commands:
+
+```bash
+asimov help
+```
+
+When running commands you can add one or more `-v` flags to increase verbosity level.
+
+## Fetch data
+
+```bash
+# Fetch data from a URL, automatically choosing from installed modules
+asimov fetch https://example.com/
+
+# To fetch with a specific module use `-m` or `--module`
+asimov fetch -m http https://example.com/
+
+# Fetch multiple URLs
+asimov fetch https://asimov.sh/ https://asimov.blog/
+```
+
+### Import data as RDF from a URL
+
+If you have the [ASIMOV Bright Data module](https://github.com/asimov-modules/asimov-brightdata-module) installed and configured, you should be able to fetch various social platform resources:
+
+```bash
+# Import data from a URL, automatically choosing from installed modules
+asimov import https://x.com/asimov_platform
+
+# Import using the specific module
+asimov import -m brightdata https://x.com/asimov_platform
+```
+
+### External Commands
+
+The CLI automatically discovers and runs external commands starting with `asimov-`.
+If you installed using a package manager you should have access to [ASIMOV Module CLI] for managing installed [modules](https://asimov.directory/modules):
+
+```bash
+# If you have asimov-module-cli installed
+asimov module [arguments]
+
+asimov module install http
+
+# Get help for external commands
+asimov help module
+```
 
 ## 📚 Reference
 
@@ -121,3 +187,5 @@ git clone https://github.com/asimov-platform/asimov-cli.git
 [![Share on Hacker News](https://img.shields.io/badge/share%20on-hn-orange?logo=ycombinator)](https://news.ycombinator.com/submitlink?u=https://github.com/asimov-platform/asimov-cli&t=ASIMOV%20Command-Line%20Interface%20%28CLI%29)
 [![Share on Facebook](https://img.shields.io/badge/share%20on-fb-1976D2?logo=facebook)](https://www.facebook.com/sharer/sharer.php?u=https://github.com/asimov-platform/asimov-cli)
 [![Share on LinkedIn](https://img.shields.io/badge/share%20on-linkedin-3949AB?logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/asimov-platform/asimov-cli)
+
+[ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli
