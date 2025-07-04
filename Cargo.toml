@@ -21,7 +21,9 @@ default = ["all"]
 all = ["fetch", "import"]
 fetch = ["dep:asimov-proxy"]
 import = ["dep:asimov-proxy"]
-unstable = []
+list = []
+read = []
+unstable = ["list", "read"]
 
 [build-dependencies]
 cfg_aliases = "0.2"

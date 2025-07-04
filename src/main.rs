@@ -60,6 +60,24 @@ enum Command {
         urls: Vec<String>,
     },
 
+    /// TBD
+    #[cfg(feature = "list")]
+    List {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        urls: Vec<String>,
+    },
+
+    /// TBD
+    #[cfg(feature = "read")]
+    Read {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        urls: Vec<String>,
+    },
+
     #[clap(external_subcommand)]
     External(Vec<String>),
 }
@@ -135,15 +153,23 @@ pub fn main() -> SysexitsError {
                 print_full_help();
                 Ok(EX_OK)
             }
-        }
+        },
         #[cfg(feature = "fetch")]
         Command::Fetch { module, urls } => {
-            commands::fetch(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
-        }
+            commands::fetch::fetch(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        },
         #[cfg(feature = "import")]
         Command::Import { module, urls } => {
-            commands::import(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
-        }
+            commands::import::import(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        },
+        #[cfg(feature = "list")]
+        Command::List { module, urls } => {
+            commands::list::list(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        },
+        #[cfg(feature = "read")]
+        Command::Read { module, urls } => {
+            commands::read::read(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+        },
         Command::External(args) => {
             let cmd = External {
                 is_debug: options.flags.debug,
@@ -151,7 +177,7 @@ pub fn main() -> SysexitsError {
             };
 
             cmd.execute(&args[0], &args[1..]).map(|result| result.code)
-        }
+        },
     };
 
     // Return whatever status code we got.

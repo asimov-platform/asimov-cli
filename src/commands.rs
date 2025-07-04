@@ -4,9 +4,7 @@ mod external;
 pub use external::*;
 
 #[cfg(feature = "fetch")]
-mod fetch;
-#[cfg(feature = "fetch")]
-pub use fetch::*;
+pub mod fetch;
 
 mod help;
 pub use help::*;
@@ -15,6 +13,10 @@ mod help_cmd;
 pub use help_cmd::*;
 
 #[cfg(feature = "import")]
-mod import;
-#[cfg(feature = "import")]
-pub use import::*;
+pub mod import;
+
+#[cfg(feature = "list")]
+pub mod list;
+
+#[cfg(feature = "read")]
+pub mod read;
