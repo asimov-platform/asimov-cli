@@ -53,7 +53,7 @@ impl External {
                     eprintln!("{}: {}", "asimov", error);
                 }
                 Err(EX_SOFTWARE)
-            }
+            },
             Ok(result) => {
                 #[cfg(unix)]
                 {
@@ -83,7 +83,7 @@ impl External {
                     stdout: result.1,
                     stderr: result.2,
                 })
-            }
+            },
         }
     }
 }

@@ -71,7 +71,7 @@ pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
         None => {
             eprintln!("{}: command not found: {}{}", "asimov", "asimov-", name);
             Err(EX_UNAVAILABLE)
-        }
+        },
     }
 }
 

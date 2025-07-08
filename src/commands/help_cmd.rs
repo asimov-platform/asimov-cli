@@ -41,7 +41,7 @@ impl HelpCmd {
                     eprintln!("{}: {}", "asimov", error);
                 }
                 Err(EX_SOFTWARE)
-            }
+            },
             Ok(output) => match output.status.code() {
                 Some(code) if code == EX_OK.as_i32() => Ok(HelpCmdResult {
                     success: true,
