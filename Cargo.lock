@@ -144,9 +144,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.0.0-dev.13"
+version = "25.0.0-dev.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df0f4e9abe9ba122b6c880f0022bcdd5fb80e1ee8b9770e8c78731707c64d136"
+checksum = "7f65778ee204913244ae3bc3e954e28c546a6fd73a68ebe541adbc6246ce7c9b"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -555,12 +555,13 @@ dependencies = [
 
 [[package]]
 name = "dogma"
-version = "0.1.9"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4329b663bcb56cab24a624e8eb2032805e999c3724cd570e3ba1aef5a9d7bb8"
+checksum = "2ba51e88eeeb6858fc7528ed1727f135646230f30c49f2e922b4ffe9c952f9a5"
 dependencies = [
  "iri-string",
  "known-schemes",
+ "serde",
 ]
 
 [[package]]
@@ -1176,9 +1177,13 @@ dependencies = [
 
 [[package]]
 name = "known-schemes"
-version = "0.1.2"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2474d01704cbcb2ed17c7cc1106b950775b9979d983c9b129adbe830cb317c2c"
+checksum = "c000b5392f942e57f412e6dc49400601f435d283d9019a3da92432057d2f7499"
+dependencies = [
+ "iri-string",
+ "serde",
+]
 
 [[package]]
 name = "lazy-regex"
