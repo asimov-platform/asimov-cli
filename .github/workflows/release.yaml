@@ -24,6 +24,7 @@ jobs:
 
   tweet:
     uses: asimov-platform/.github/.github/workflows/tweet.yaml@master
+    needs: build-and-release
     secrets: inherit
     with:
       message: |
