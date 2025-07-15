@@ -40,7 +40,7 @@ indoc = "2.0"
 [dependencies]
 asimov-env = "25.0.0-dev.13"
 asimov-module = "25.0.0-dev.13"
-asimov-proxy = { version = "25.0.0-dev.13", optional = true }
+asimov-proxy = { version = "25.0.0-dev.14", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
