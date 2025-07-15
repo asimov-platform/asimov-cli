@@ -23,7 +23,7 @@ pub struct External {
 }
 
 impl External {
-    pub fn execute(&self, cmd: &str, args: &[String]) -> Result<ExternalResult> {
+    pub fn execute(&self, cmd: &str, args: impl AsRef<[String]>) -> Result<ExternalResult> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;
 
@@ -31,7 +31,7 @@ impl External {
         let result: std::io::Result<(ExitStatus, Option<Vec<u8>>, Option<Vec<u8>>)> =
             if self.pipe_output {
                 std::process::Command::new(&cmd.path)
-                    .args(args)
+                    .args(args.as_ref())
                     .stdin(Stdio::inherit())
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
@@ -39,7 +39,7 @@ impl External {
                     .map(|x| (x.status, Some(x.stdout), Some(x.stderr)))
             } else {
                 std::process::Command::new(&cmd.path)
-                    .args(args)
+                    .args(args.as_ref())
                     .stdin(Stdio::inherit())
                     .stdout(Stdio::inherit())
                     .stderr(Stdio::inherit())

@@ -49,19 +49,16 @@ pub fn list(
             pipe_output: false,
         };
 
-        let output = output.unwrap_or_else(|| "cli");
-        let code = cmd
-            .execute(
-                &subcommand,
-                &[
-                    "--limit".to_string(),
-                    format!("{}", limit.unwrap_or(1000)), // FIXME
-                    "--output".to_string(),
-                    output.to_owned(),
-                    url.to_owned(),
-                ],
-            )
-            .map(|result| result.code)?;
+        let mut args = vec![];
+        if let Some(limit) = limit {
+            args.push(format!("--limit={}", limit));
+        }
+        if let Some(output) = output {
+            args.push(format!("--output={}", output));
+        }
+        args.push(url.to_owned());
+
+        let code = cmd.execute(&subcommand, args).map(|result| result.code)?;
         if code.is_failure() {
             return Err(code);
         }
