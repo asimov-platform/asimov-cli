@@ -18,12 +18,12 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["fetch", "import"]
+all = ["fetch", "import", "list"]
 fetch = ["dep:asimov-proxy"]
 import = ["dep:asimov-proxy"]
 list = []
 read = []
-unstable = ["list", "read"]
+unstable = ["read"]
 
 [build-dependencies]
 cfg_aliases = "0.2"
@@ -39,7 +39,7 @@ indoc = "2.0"
 
 [dependencies]
 asimov-env = "25.0.0-dev.14"
-asimov-module = "25.0.0-dev.13"
+asimov-module = "25.0.0-dev.14"
 asimov-proxy = { version = "25.0.0-dev.14", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }

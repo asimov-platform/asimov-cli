@@ -45,6 +45,10 @@ enum Command {
         #[clap(long, short = 'm')]
         module: Option<String>,
 
+        /// The output format.
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
+
         urls: Vec<String>,
     },
 
@@ -65,6 +69,14 @@ enum Command {
     List {
         #[clap(long, short = 'm')]
         module: Option<String>,
+
+        /// The maximum number of resources to list.
+        #[arg(value_name = "COUNT", short = 'n', long)]
+        limit: Option<usize>,
+
+        /// The output format.
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
 
         urls: Vec<String>,
     },
@@ -155,17 +167,30 @@ pub fn main() -> SysexitsError {
             }
         },
         #[cfg(feature = "fetch")]
-        Command::Fetch { module, urls } => {
-            commands::fetch::fetch(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
-        },
+        Command::Fetch {
+            module,
+            output,
+            urls,
+        } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
+            .map(|_| EX_OK),
         #[cfg(feature = "import")]
         Command::Import { module, urls } => {
             commands::import::import(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
         },
         #[cfg(feature = "list")]
-        Command::List { module, urls } => {
-            commands::list::list(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
-        },
+        Command::List {
+            module,
+            limit,
+            output,
+            urls,
+        } => commands::list::list(
+            urls,
+            module.as_deref(),
+            limit.clone(),
+            output.as_deref(),
+            &options.flags,
+        )
+        .map(|_| EX_OK),
         #[cfg(feature = "read")]
         Command::Read { module, urls } => {
             commands::read::read(urls, module.as_deref(), &options.flags).map(|_| EX_OK)

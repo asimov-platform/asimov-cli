@@ -12,6 +12,7 @@ use miette::Result;
 pub fn fetch(
     urls: &Vec<String>,
     module: Option<&str>,
+    output: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let resolver = build_resolver("fetcher").map_err(|e| {
@@ -47,8 +48,12 @@ pub fn fetch(
             pipe_output: false,
         };
 
+        let output = output.unwrap_or_else(|| "cli");
         let code = cmd
-            .execute(&subcommand, &[url.to_owned()])
+            .execute(
+                &subcommand,
+                &["--output".to_string(), output.to_owned(), url.to_owned()],
+            )
             .map(|result| result.code)?;
         if code.is_failure() {
             return Err(code);

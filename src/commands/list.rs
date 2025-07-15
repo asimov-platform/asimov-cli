@@ -12,6 +12,8 @@ use miette::Result;
 pub fn list(
     urls: &Vec<String>,
     module: Option<&str>,
+    limit: Option<usize>,
+    output: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let resolver = build_resolver("cataloger").map_err(|e| {
@@ -47,8 +49,18 @@ pub fn list(
             pipe_output: false,
         };
 
+        let output = output.unwrap_or_else(|| "cli");
         let code = cmd
-            .execute(&subcommand, &[url.to_owned()])
+            .execute(
+                &subcommand,
+                &[
+                    "--limit".to_string(),
+                    format!("{}", limit.unwrap_or(1000)), // FIXME
+                    "--output".to_string(),
+                    output.to_owned(),
+                    url.to_owned(),
+                ],
+            )
             .map(|result| result.code)?;
         if code.is_failure() {
             return Err(code);
