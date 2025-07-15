@@ -50,9 +50,6 @@ thiserror = "2"
 serde_yml = { version = "0.0.12", default-features = false }
 url = "2.5"
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-openssl = { version = "0.10", features = ["vendored"] }
-
 [profile.release]
 opt-level = "z"
 strip = true
