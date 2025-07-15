@@ -28,5 +28,5 @@ jobs:
     secrets: inherit
     with:
       message: |
-        📦 ASIMOV Command-Line Interface (CLI) ${{ github.event.release.tag_name }} has been released:
-        ${{ github.event.release.html_url }}
+        📦 ASIMOV Command-Line Interface (CLI) ${{ github.ref_name }} has been released:
+        ${{ needs.build-and-release.outputs.release_url }}
