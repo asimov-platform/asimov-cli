@@ -5,8 +5,6 @@
 pub static FEATURES: &[&str] = &[
     #[cfg(feature = "fetch")]
     "fetch",
-    #[cfg(feature = "import")]
-    "import",
     #[cfg(feature = "unstable")]
     "unstable",
 ];

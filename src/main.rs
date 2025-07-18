@@ -36,8 +36,9 @@ enum Command {
         args: Vec<String>,
     },
 
-    /// Fetch raw data from a URL, utilizing enabled modules
+    /// Fetch knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
+    #[command(alias = "import")]
     Fetch {
         /// Optionally choose the module instead of using module resolution.
         /// The module's manifest must declare support for the URL for the
@@ -48,18 +49,6 @@ enum Command {
         /// The output format.
         #[arg(value_name = "FORMAT", short = 'o', long)]
         output: Option<String>,
-
-        urls: Vec<String>,
-    },
-
-    /// Import knowledge from a URL, utilizing enabled modules
-    #[cfg(feature = "import")]
-    Import {
-        /// Optionally choose the module instead of using module resolution.
-        /// The module's manifest must declare support for the URL for the
-        /// module to be used.
-        #[clap(long, short = 'm')]
-        module: Option<String>,
 
         urls: Vec<String>,
     },
@@ -173,10 +162,6 @@ pub fn main() -> SysexitsError {
             urls,
         } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
             .map(|_| EX_OK),
-        #[cfg(feature = "import")]
-        Command::Import { module, urls } => {
-            commands::import::import(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
-        },
         #[cfg(feature = "list")]
         Command::List {
             module,

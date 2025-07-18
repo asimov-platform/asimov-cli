@@ -28,7 +28,7 @@ pub fn list(
 
         let url = normalize_url(url);
 
-        let modules = resolver.resolve(&url)?;
+        let modules = resolver.resolve(&url).unwrap(); // FIXME
 
         let module = if let Some(want) = module {
             modules.iter().find(|m| m.name == want).ok_or_else(|| {

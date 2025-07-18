@@ -18,9 +18,8 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["fetch", "import", "list"]
+all = ["fetch", "list"]
 fetch = ["dep:asimov-proxy"]
-import = ["dep:asimov-proxy"]
 list = []
 read = []
 unstable = ["read"]

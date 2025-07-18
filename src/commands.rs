@@ -12,9 +12,6 @@ pub use help::*;
 mod help_cmd;
 pub use help_cmd::*;
 
-#[cfg(feature = "import")]
-pub mod import;
-
 #[cfg(feature = "list")]
 pub mod list;
 
