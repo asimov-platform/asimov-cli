@@ -83,7 +83,8 @@ enum Command {
     External(Vec<String>),
 }
 
-pub fn main() -> SysexitsError {
+#[tokio::main]
+pub async fn main() -> SysexitsError {
     // Load environment variables from `.env`:
     clientele::dotenv().ok();
 
@@ -155,13 +156,16 @@ pub fn main() -> SysexitsError {
                 Ok(EX_OK)
             }
         },
+
         #[cfg(feature = "fetch")]
         Command::Fetch {
             module,
             output,
             urls,
         } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
+            .await
             .map(|_| EX_OK),
+
         #[cfg(feature = "list")]
         Command::List {
             module,
@@ -175,11 +179,16 @@ pub fn main() -> SysexitsError {
             output.as_deref(),
             &options.flags,
         )
+        .await
         .map(|_| EX_OK),
+
         #[cfg(feature = "read")]
         Command::Read { module, urls } => {
-            commands::read::read(urls, module.as_deref(), &options.flags).map(|_| EX_OK)
+            commands::read::read(urls, module.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
         },
+
         Command::External(args) => {
             let cmd = External {
                 is_debug: options.flags.debug,

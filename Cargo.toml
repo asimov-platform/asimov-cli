@@ -37,15 +37,18 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.14"
-asimov-module = "25.0.0-dev.14"
-asimov-proxy = { version = "25.0.0-dev.14", optional = true }
+asimov-env = "25.0.0-dev.15"
+asimov-module = "25.0.0-dev.15"
+asimov-patterns = "25.0.0-dev.15"
+asimov-proxy = { version = "25.0.0-dev.15", optional = true }
+asimov-runner = "25.0.0-dev.15"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
 rayon = "1.10"
 miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
+tokio = { version = "1", features = ["full"] }
 serde_yml = { version = "0.0.12", default-features = false }
 url = "2.5"
 
