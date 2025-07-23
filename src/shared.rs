@@ -141,7 +141,6 @@ mod tests {
         let cases = [
             ("https://example.org/", "https://example.org/"),
             ("near://testnet/123456789", "near://testnet/123456789"),
-            ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
         ];
 
         for case in cases {
@@ -155,6 +154,7 @@ mod tests {
             let cases = [
                 ("~/path/to/file.txt", "file:///home/user/path/to/file.txt"),
                 ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
+                ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
             ];
 
             for case in cases {
@@ -164,10 +164,13 @@ mod tests {
 
         #[cfg(windows)]
         {
-            let cases = [(
-                "/file with spaces.txt",
-                "file:///C:/file%20with%20spaces.txt",
-            )];
+            let cases = [
+                (
+                    "/file with spaces.txt",
+                    "file:///C:/file%20with%20spaces.txt",
+                ),
+                ("/file+with+pluses.txt", "file:///C:/file+with+pluses.txt"),
+            ];
 
             for case in cases {
                 assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
