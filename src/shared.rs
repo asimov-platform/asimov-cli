@@ -160,6 +160,44 @@ mod tests {
             for case in cases {
                 assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
             }
+
+            let cur_dir = std::env::current_dir().unwrap().display().to_string();
+
+            let input = "path/to/file.txt";
+            let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "relative path should be get added after current directory, input: {:?}",
+                input
+            );
+
+            let input = "../path/./file.txt";
+            let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "relative path should be get added after current directory, input: {:?}",
+                input
+            );
+
+            let input = "another-type-of-a-string";
+            let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "non-path-looking input should be treated as a file in current directory, input: {:?}",
+                input
+            );
+
+            let input = "hello\\ world!";
+            let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "output should be url encoded, input: {:?}",
+                input
+            );
         }
 
         #[cfg(windows)]
@@ -176,43 +214,5 @@ mod tests {
                 assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
             }
         }
-
-        let cur_dir = std::env::current_dir().unwrap().display().to_string();
-
-        let input = "path/to/file.txt";
-        let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "relative path should be get added after current directory, input: {:?}",
-            input
-        );
-
-        let input = "../path/./file.txt";
-        let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "relative path should be get added after current directory, input: {:?}",
-            input
-        );
-
-        let input = "another-type-of-a-string";
-        let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "non-path-looking input should be treated as a file in current directory, input: {:?}",
-            input
-        );
-
-        let input = "hello\\ world!";
-        let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "output should be url encoded, input: {:?}",
-            input
-        );
     }
 }
