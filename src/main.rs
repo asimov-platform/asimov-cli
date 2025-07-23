@@ -38,7 +38,7 @@ enum Command {
 
     /// Fetch knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
-    #[command(alias = "import")]
+    #[command(aliases = ["extract", "get", "import", "parse"])]
     Fetch {
         /// Optionally choose the module instead of using module resolution.
         /// The module's manifest must declare support for the URL for the
@@ -55,6 +55,7 @@ enum Command {
 
     /// TBD
     #[cfg(feature = "list")]
+    #[command(aliases = ["dir", "ls"])]
     List {
         #[clap(long, short = 'm')]
         module: Option<String>,
