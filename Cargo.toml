@@ -37,11 +37,11 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.15"
-asimov-module = "25.0.0-dev.15"
-asimov-patterns = "25.0.0-dev.15"
-asimov-proxy = { version = "25.0.0-dev.15", optional = true }
-asimov-runner = "25.0.0-dev.15"
+asimov-env = "25.0.0-dev.17"
+asimov-module = "25.0.0-dev.17"
+asimov-patterns = "25.0.0-dev.17"
+asimov-proxy = { version = "25.0.0-dev.17", optional = true }
+asimov-runner = "25.0.0-dev.17"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
