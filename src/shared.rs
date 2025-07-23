@@ -141,8 +141,6 @@ mod tests {
         let cases = [
             ("https://example.org/", "https://example.org/"),
             ("near://testnet/123456789", "near://testnet/123456789"),
-            ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
-            ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
         ];
 
         for case in cases {
@@ -153,53 +151,68 @@ mod tests {
         {
             unsafe { std::env::set_var("HOME", "/home/user") };
 
-            let input = "~/path/to/file.txt";
-            let want = "file:///home/user/path/to/file.txt";
+            let cases = [
+                ("~/path/to/file.txt", "file:///home/user/path/to/file.txt"),
+                ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
+                ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
+            ];
 
+            for case in cases {
+                assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
+            }
+
+            let cur_dir = std::env::current_dir().unwrap().display().to_string();
+
+            let input = "path/to/file.txt";
+            let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
             assert_eq!(
                 normalize_url(input),
                 want,
-                "home directory should be expanded, input: {:?}",
+                "relative path should be get added after current directory, input: {:?}",
+                input
+            );
+
+            let input = "../path/./file.txt";
+            let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "relative path should be get added after current directory, input: {:?}",
+                input
+            );
+
+            let input = "another-type-of-a-string";
+            let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "non-path-looking input should be treated as a file in current directory, input: {:?}",
+                input
+            );
+
+            let input = "hello\\ world!";
+            let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
+            assert_eq!(
+                normalize_url(input),
+                want,
+                "output should be url encoded, input: {:?}",
                 input
             );
         }
 
-        let cur_dir = std::env::current_dir().unwrap().display().to_string();
+        #[cfg(windows)]
+        {
+            let cases = [
+                (
+                    "/file with spaces.txt",
+                    "file:///C:/file%20with%20spaces.txt",
+                ),
+                ("/file+with+pluses.txt", "file:///C:/file+with+pluses.txt"),
+            ];
 
-        let input = "path/to/file.txt";
-        let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "relative path should be get added after current directory, input: {:?}",
-            input
-        );
-
-        let input = "../path/./file.txt";
-        let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "relative path should be get added after current directory, input: {:?}",
-            input
-        );
-
-        let input = "another-type-of-a-string";
-        let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "non-path-looking input should be treated as a file in current directory, input: {:?}",
-            input
-        );
-
-        let input = "hello\\ world!";
-        let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
-        assert_eq!(
-            normalize_url(input),
-            want,
-            "output should be url encoded, input: {:?}",
-            input
-        );
+            for case in cases {
+                assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
+            }
+        }
     }
 }
