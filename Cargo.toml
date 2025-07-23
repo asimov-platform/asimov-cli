@@ -20,9 +20,11 @@ publish = true
 default = ["all"]
 all = ["fetch", "list"]
 fetch = ["dep:asimov-proxy"]
+index = []
 list = []
 read = []
-unstable = ["read"]
+search = []
+unstable = ["index", "read", "search"]
 
 [build-dependencies]
 cfg_aliases = "0.2"

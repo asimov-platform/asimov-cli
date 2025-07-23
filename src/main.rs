@@ -54,6 +54,15 @@ enum Command {
     },
 
     /// TBD
+    #[cfg(feature = "index")]
+    Index {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        urls: Vec<String>,
+    },
+
+    /// TBD
     #[cfg(feature = "list")]
     #[command(aliases = ["dir", "ls"])]
     List {
@@ -78,6 +87,15 @@ enum Command {
         module: Option<String>,
 
         urls: Vec<String>,
+    },
+
+    /// TBD
+    #[cfg(feature = "search")]
+    Search {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        prompt: String,
     },
 
     #[clap(external_subcommand)]
@@ -167,6 +185,13 @@ pub async fn main() -> SysexitsError {
             .await
             .map(|_| EX_OK),
 
+        #[cfg(feature = "index")]
+        Command::Index { module, urls } => {
+            commands::index::index(urls, module.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
+        },
+
         #[cfg(feature = "list")]
         Command::List {
             module,
@@ -186,6 +211,13 @@ pub async fn main() -> SysexitsError {
         #[cfg(feature = "read")]
         Command::Read { module, urls } => {
             commands::read::read(urls, module.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
+        },
+
+        #[cfg(feature = "search")]
+        Command::Search { module, prompt } => {
+            commands::search::search(&prompt, module.as_deref(), &options.flags)
                 .await
                 .map(|_| EX_OK)
         },
