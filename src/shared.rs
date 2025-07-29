@@ -2,7 +2,7 @@
 
 use crate::Result;
 use asimov_env::paths::asimov_root;
-use asimov_module::{models::ModuleManifest, resolve::Resolver};
+use asimov_module::{ModuleManifest, resolve::Resolver};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use miette::{IntoDiagnostic, miette};
 
