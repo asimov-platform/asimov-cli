@@ -136,7 +136,6 @@ dependencies = [
  "indoc",
  "miette",
  "rayon",
- "serde_yml",
  "shadow-rs",
  "temp-dir",
  "thiserror 2.0.12",
