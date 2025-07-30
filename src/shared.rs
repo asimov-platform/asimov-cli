@@ -19,7 +19,11 @@ pub(crate) fn build_resolver(pattern: &str) -> miette::Result<Resolver> {
     for entry in module_dir {
         let filename = entry.file_name();
 
-        let Some(filename) = filename.to_str().unwrap().strip_suffix(".yaml") else {
+        let Some(filename_str) = filename.to_str() else {
+            // invalid UTF-8 in filename
+            continue;
+        };
+        let Some(filename) = filename_str.strip_suffix(".yaml") else {
             // no .yaml extension
             continue;
         };
