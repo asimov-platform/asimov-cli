@@ -1,5 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
+use std::path::Path;
+
 use crate::Result;
 use asimov_env::paths::asimov_root;
 use asimov_module::{ModuleManifest, resolve::Resolver};
@@ -16,13 +18,13 @@ pub(crate) fn build_resolver(pattern: &str) -> miette::Result<Resolver> {
 
     for entry in module_dir {
         let filename = entry.file_name();
-        let filename = filename.to_string_lossy();
-        if !filename.ends_with(".yml") && !filename.ends_with(".yaml") {
-            continue;
-        }
-        let file = std::fs::File::open(entry.path()).into_diagnostic()?;
 
-        let manifest: ModuleManifest = serde_yml::from_reader(file).map_err(|e| {
+        let Some(filename) = filename.to_str().unwrap().strip_suffix(".yaml") else {
+            // no .yaml extension
+            continue;
+        };
+
+        let manifest = ModuleManifest::read_manifest(filename).map_err(|e| {
             miette!(
                 "Invalid module manifest at `{}`: {}",
                 entry.path().display(),
