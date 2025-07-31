@@ -121,11 +121,8 @@ pub async fn fetch(
             }
         };
 
-        // Locate the correct subcommand:
-        let subcommand = locate_subcommand(&format!("{}-fetcher", module.name))?;
-
         let mut fetcher = asimov_runner::Fetcher::new(
-            &subcommand.path,
+            format!("asimov-{}-fetcher", module.name),
             &input_url,
             GraphOutput::Inherited,
             FetcherOptions::builder()

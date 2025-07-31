@@ -117,11 +117,8 @@ pub async fn read(
             }
         };
 
-        // Locate the correct subcommand:
-        let subcommand = locate_subcommand(&format!("{}-reader", module.name))?;
-
         let mut reader = asimov_runner::Reader::new(
-            &subcommand.path,
+            format!("asimov-{}-reader", module.name),
             AnyInput::Ignored, // FIXME: &input_url,
             GraphOutput::Inherited,
             ReaderOptions::builder()

@@ -122,11 +122,8 @@ pub async fn list(
             }
         };
 
-        // Locate the correct subcommand:
-        let subcommand = locate_subcommand(&format!("{}-cataloger", module.name))?;
-
         let mut cataloger = asimov_runner::Cataloger::new(
-            &subcommand.path,
+            format!("asimov-{}-cataloger", module.name),
             &input_url,
             GraphOutput::Inherited,
             CatalogerOptions::builder()
