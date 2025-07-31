@@ -92,9 +92,9 @@ pub async fn fetch(
                     let module_count = modules.len();
                     if module_count > 0 {
                         if modules.len() == 1 {
-                            ceprintln!("<s,dim>hint:</> You have <s>{module_count}</> installed module that could handle this URL but is disabled.");
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed module that could handle this URL but is disabled.");
                         } else {
-                            ceprintln!("<s,dim>hint:</> You have <s>{module_count}</> installed modules that could handle this URL but are disabled.");
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed modules that could handle this URL but are disabled.");
                         }
                         ceprintln!("<s,dim>hint:</> A module can be enabled with: `asimov module enable <<module>>`");
                         ceprintln!("<s,dim>hint:</> Available modules:");
