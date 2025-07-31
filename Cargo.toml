@@ -40,6 +40,7 @@ indoc = "2.0"
 
 [dependencies]
 asimov-env = "25.0.0-dev.19"
+asimov-installer = "25.0.0-dev.19"
 asimov-module = "25.0.0-dev.19"
 asimov-patterns = "25.0.0-dev.19"
 asimov-proxy = { version = "25.0.0-dev.19", optional = true }
@@ -52,7 +53,6 @@ miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 url = "2.5"
-asimov-installer = "25.0.0-dev.19"
 
 [profile.release]
 opt-level = "z"
