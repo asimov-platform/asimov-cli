@@ -88,7 +88,7 @@ pub async fn list(
             loop {
                 let module = iter.next().ok_or_else(|| {
                     ceprintln!(
-                        "<s,r>error:</> failed to find a module to catalogue the URL: `{input_url}`"
+                        "<s,r>error:</> failed to find a module to catalog the URL: `{input_url}`"
                     );
                     let module_count = modules.len();
                     if module_count > 0 {
