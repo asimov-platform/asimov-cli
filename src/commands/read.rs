@@ -87,7 +87,7 @@ pub async fn read(
                     );
                     let module_count = modules.len();
                     if module_count > 0 {
-                        if modules.len() == 1 {
+                        if module_count == 1 {
                             ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed module that could handle this URL but is disabled.");
                         } else {
                             ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed modules that could handle this URL but are disabled.");
