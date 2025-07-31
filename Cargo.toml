@@ -52,6 +52,7 @@ miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 url = "2.5"
+asimov-installer = "25.0.0-dev.19"
 
 [profile.release]
 opt-level = "z"
