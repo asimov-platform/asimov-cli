@@ -64,7 +64,7 @@ pub async fn fetch(
                 .await
                 .map_err(|e| {
                     ceprintln!(
-                        "<s,r>error:</> failed to check whether module `{}` is enabled: {e}",
+                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
                         module.name
                     );
                     EX_IOERR
@@ -110,7 +110,7 @@ pub async fn fetch(
                     .await
                     .map_err(|e| {
                         ceprintln!(
-                            "<s,r>error:</> failed to check whether module `{}` is enabled: {e}",
+                            "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
                             module.name
                         );
                         EX_IOERR
