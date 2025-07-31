@@ -55,23 +55,6 @@ pub(crate) fn build_resolver(pattern: &str) -> miette::Result<Resolver> {
 
 /// Locates the given subcommand or prints an error.
 pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
-    let libexec = asimov_root().join("libexec");
-    if libexec.exists() {
-        let file = std::fs::read_dir(libexec)?
-            .filter_map(Result::ok)
-            .find(|entry| {
-                entry.file_name().to_str().is_some_and(|filename| {
-                    filename.starts_with("asimov-") && filename.ends_with(name)
-                })
-            });
-        if let Some(entry) = file {
-            return Ok(Subcommand {
-                name: format!("asimov-{}", name),
-                path: entry.path(),
-            });
-        }
-    }
-
     match SubcommandsProvider::find("asimov-", name) {
         Some(cmd) => Ok(cmd),
         None => {
