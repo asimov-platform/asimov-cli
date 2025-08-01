@@ -5,12 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 25.0.0-dev.10 - 2025-08-01
+### Added
+- Utilise asimov_installer (#42 by @SamuelSarle)
+### Fixed
+- Remove the serde_yml dependency (#41 by @imunproductive)
+
 ## 25.0.0-dev.9 - 2025-07-29
 ### Added
 - Remove `asimov import` in favor of `asimov fetch` (by @artob)
 - Define aliases for built-in commands (by @artob)
 ### Changed
-- Remove the OpenSSL dependency (@imunproductive)
+- Remove the OpenSSL dependency (by @imunproductive)
 
 ## 25.0.0-dev.8 - 2025-07-15
 ### Added
