@@ -19,12 +19,15 @@ publish = true
 [features]
 default = ["all"]
 all = ["fetch", "list"]
+unstable = ["describe", "index", "read", "search"]
+
+# Optional features:
+describe = []
 fetch = ["dep:asimov-proxy"]
 index = []
 list = []
 read = []
 search = []
-unstable = ["index", "read", "search"]
 
 [build-dependencies]
 cfg_aliases = "0.2"
@@ -43,7 +46,6 @@ asimov-env = "25.0.0-dev.19"
 asimov-installer = "25.0.0-dev.19"
 asimov-module = "25.0.0-dev.19"
 asimov-patterns = "25.0.0-dev.19"
-asimov-proxy = { version = "25.0.0-dev.19", optional = true }
 asimov-runner = "25.0.0-dev.19"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
@@ -53,6 +55,9 @@ miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 url = "2.5"
+
+# Optional dependencies:
+asimov-proxy = { version = "25.0.0-dev.19", optional = true }
 
 [profile.release]
 opt-level = "z"

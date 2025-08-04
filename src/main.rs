@@ -36,6 +36,20 @@ enum Command {
         args: Vec<String>,
     },
 
+    /// TBD
+    #[cfg(feature = "describe")]
+    #[command(aliases = ["summarize", "tldr"])]
+    Describe {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        /// The output format.
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
+
+        urls: Vec<String>,
+    },
+
     /// Fetch knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
     #[command(aliases = ["extract", "get", "import", "parse"])]
@@ -174,6 +188,17 @@ pub async fn main() -> SysexitsError {
                 print_full_help();
                 Ok(EX_OK)
             }
+        },
+
+        #[cfg(feature = "describe")]
+        Command::Describe {
+            module,
+            output,
+            urls,
+        } => {
+            commands::describe::describe(urls, module.as_deref(), output.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
         },
 
         #[cfg(feature = "fetch")]

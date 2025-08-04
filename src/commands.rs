@@ -3,14 +3,17 @@
 mod external;
 pub use external::*;
 
-#[cfg(feature = "fetch")]
-pub mod fetch;
-
 mod help;
 pub use help::*;
 
 mod help_cmd;
 pub use help_cmd::*;
+
+#[cfg(feature = "describe")]
+pub mod describe;
+
+#[cfg(feature = "fetch")]
+pub mod fetch;
 
 #[cfg(feature = "index")]
 pub mod index;
