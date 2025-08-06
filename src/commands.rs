@@ -26,3 +26,6 @@ pub mod read;
 
 #[cfg(feature = "search")]
 pub mod search;
+
+#[cfg(feature = "snap")]
+pub mod snap;
