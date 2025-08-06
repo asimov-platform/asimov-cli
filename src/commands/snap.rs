@@ -4,7 +4,7 @@ use crate::{
     StandardOptions,
     SysexitsError::{self, *},
     commands::External,
-    shared::{build_resolver, locate_subcommand, normalize_url},
+    shared::{normalize_url},
 };
 use asimov_env::paths::asimov_root;
 use asimov_module::{ModuleManifest, resolve::Resolver};
