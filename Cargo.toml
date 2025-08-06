@@ -42,11 +42,11 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.19"
-asimov-installer = "25.0.0-dev.19"
-asimov-module = "25.0.0-dev.19"
-asimov-patterns = "25.0.0-dev.19"
-asimov-runner = "25.0.0-dev.19"
+asimov-env = "25.0.0-dev.21"
+asimov-module = "25.0.0-dev.21"
+asimov-patterns = "25.0.0-dev.21"
+asimov-registry = "25.0.0-dev.21"
+asimov-runner = "25.0.0-dev.21"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"

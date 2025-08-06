@@ -18,8 +18,8 @@ pub async fn list(
     output: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
-    let installer = asimov_installer::Installer::default();
-    let installed_modules: Vec<ModuleManifest> = installer
+    let registry = asimov_registry::Registry::default();
+    let installed_modules: Vec<ModuleManifest> = registry
         .installed_modules()
         .await
         .map_err(|e| {
@@ -60,7 +60,7 @@ pub async fn list(
                 EX_SOFTWARE
             })?;
 
-            if installer
+            if registry
                 .is_module_enabled(&module.name)
                 .await
                 .map_err(|e| {
@@ -106,7 +106,7 @@ pub async fn list(
                     EX_UNAVAILABLE
                 })?;
 
-                if installer
+                if registry
                     .is_module_enabled(&module.name)
                     .await
                     .map_err(|e| {
