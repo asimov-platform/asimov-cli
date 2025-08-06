@@ -3,14 +3,14 @@
 use crate::{
     StandardOptions,
     SysexitsError::{self, *},
-    shared::{normalize_url},
+    shared::normalize_url,
 };
 use asimov_env::paths::asimov_root;
 use asimov_module::{ModuleManifest, resolve::Resolver};
 use color_print::ceprintln;
 use miette::Result;
 
-pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn snap(input_urls: &[String], _flags: &StandardOptions) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
 
     let enabled_modules = registry
