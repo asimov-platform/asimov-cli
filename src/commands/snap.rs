@@ -10,7 +10,7 @@ use asimov_module::{ModuleManifest, resolve::Resolver};
 use color_print::ceprintln;
 use miette::Result;
 
-pub async fn snap(input_urls: &Vec<String>, flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
 
     let enabled_modules = registry
