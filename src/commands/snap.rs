@@ -3,7 +3,6 @@
 use crate::{
     StandardOptions,
     SysexitsError::{self, *},
-    commands::External,
     shared::{normalize_url},
 };
 use asimov_env::paths::asimov_root;
