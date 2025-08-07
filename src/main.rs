@@ -112,6 +112,10 @@ enum Command {
         prompt: String,
     },
 
+    /// Save a snapshot for a URL, utilizing enabled modules
+    #[cfg(feature = "snap")]
+    Snap { urls: Vec<String> },
+
     #[clap(external_subcommand)]
     External(Vec<String>),
 }
@@ -246,6 +250,11 @@ pub async fn main() -> SysexitsError {
                 .await
                 .map(|_| EX_OK)
         },
+
+        #[cfg(feature = "snap")]
+        Command::Snap { urls } => commands::snap::snap(urls, &options.flags)
+            .await
+            .map(|_| EX_OK),
 
         Command::External(args) => {
             let cmd = External {
