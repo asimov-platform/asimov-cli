@@ -203,9 +203,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.0.0-dev.19"
+version = "25.0.0-dev.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad0c35db119d824f5b8079df5ecce45134fe652219e17902bb0f2ce5c7bf8e0c"
+checksum = "6af0691f0347b3d59864aec8fae91c695d8d7ea4e61b78824b8418e03700c57f"
 dependencies = [
  "dogma",
  "gofer",
