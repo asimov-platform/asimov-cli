@@ -18,6 +18,16 @@ pub async fn snap(input_urls: &[String], _flags: &StandardOptions) -> Result<(),
         .await
         .map_err(|e| {
             ceprintln!("<s,r>error:</> unable to access enabled modules: {e}");
+            match e {
+                asimov_registry::error::EnabledModulesError::DirIo(_, err)
+                    if err.kind() == std::io::ErrorKind::NotFound => {
+                        ceprintln!("<s,dim>hint:</> There appears to be no installed modules.");
+                        ceprintln!("<s,dim>hint:</> Modules may be discovered either on the site <u>https://asimov.directory/modules</>");
+                        ceprintln!("<s,dim>hint:</> or on the GitHub organization <u>https://github.com/asimov-modules</>");
+                        ceprintln!("<s,dim>hint:</> and installed with `asimov module install <<module>>`");
+                    },
+                _ => (),
+            };
             EX_UNAVAILABLE
         })?
         .into_iter()
