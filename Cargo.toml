@@ -52,7 +52,7 @@ asimov-snapshot = { version = "25.0.0-dev.21", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
-rayon = "1.10"
+rayon = "1.11"
 miette = { version = "7.5", features = ["fancy"] }
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
