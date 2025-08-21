@@ -191,12 +191,17 @@ mod tests {
 
         #[cfg(windows)]
         {
+            let cwd = std::env::current_dir().unwrap();
+            let drive = cwd.to_str().unwrap().chars().next().unwrap();
             let cases = [
                 (
                     "/file with spaces.txt",
-                    "file:///C:/file%20with%20spaces.txt",
+                    format!("file:///{drive}:/file%20with%20spaces.txt"),
                 ),
-                ("/file+with+pluses.txt", "file:///C:/file+with+pluses.txt"),
+                (
+                    "/file+with+pluses.txt",
+                    format!("file:///{drive}:/file+with+pluses.txt"),
+                ),
             ];
 
             for case in cases {
