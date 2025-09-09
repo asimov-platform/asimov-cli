@@ -180,9 +180,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66eef5d5b37893217c0664218c47e90ccc8aee1372d3d50aa46623cf3e780979"
+checksum = "57b83a378357d35a8c403701d80c27e7ff37e05be25d7fc9000f0e24fc7f289b"
 dependencies = [
  "async-trait",
  "bon",
