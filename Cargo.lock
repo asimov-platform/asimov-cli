@@ -147,9 +147,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7416d3047e141847d53007cbf86e914254c9b217c94c3bc6ff20685def9b9ef"
+checksum = "a01c1a24fb90884188d6fb1d9552be8f08fc7a44f213d870c5b35c5fbf53619d"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -159,14 +159,15 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86b66a5cca65a92cc9db2722ccb373abb6a4f42aed210d13a005296c7984f1f7"
+checksum = "ee7ae02dabe67f0d3226888c6df2c958665a37036885f7bd83253014deddd8fd"
 dependencies = [
  "asimov-env",
  "clientele",
  "dogma",
  "getenv",
+ "iri-string",
  "secrecy",
  "serde",
  "serde_json",
@@ -180,9 +181,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66eef5d5b37893217c0664218c47e90ccc8aee1372d3d50aa46623cf3e780979"
+checksum = "57b83a378357d35a8c403701d80c27e7ff37e05be25d7fc9000f0e24fc7f289b"
 dependencies = [
  "async-trait",
  "bon",
@@ -191,9 +192,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "348d8d48a835832fc28788303d0c31399478d33bbc47570999752d4525c80447"
+checksum = "ef5ac8b716ed8ac4c5ce4af12c58f9e22ae3bb3928033db214ec5ba13eeb5dce"
 dependencies = [
  "bon",
  "derive_more",
@@ -203,9 +204,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6af0691f0347b3d59864aec8fae91c695d8d7ea4e61b78824b8418e03700c57f"
+checksum = "3ecdf4360d565ed6a564da840b2d166714271d9e27c29873a62b7ec3ae139936"
 dependencies = [
  "dogma",
  "gofer",
@@ -215,9 +216,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d13a39e2740f4256f87ae63baf934c7427acfd456b3e650edd71ab76c6acfcd2"
+checksum = "cfb21ab9c7fd221b265407c08e672efe63d517792fcb59c91def4a7a9c2259d6"
 dependencies = [
  "asimov-env",
  "asimov-module",
@@ -240,9 +241,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a07ab7e2872af745ab6fe0c11c095953317ab79e0502fae57cb64ceff4d24513"
+checksum = "313a7c7446ebe4ad7b1f75e05f9d15517729d709c80d6276fa07cfc2c41b14e5"
 dependencies = [
  "asimov-env",
  "asimov-patterns",
@@ -257,17 +258,19 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.0.0-dev.21"
+version = "25.0.0-dev.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7c6f5d06570bf199f60d2462600b30cd6c72aafa148a9f4f2977909443a193d"
+checksum = "c526d004813150bd36d4c8b24678187a915219fae4ead28fe925d7d64cd042f3"
 dependencies = [
  "asimov-env",
  "asimov-module",
  "asimov-patterns",
+ "asimov-registry",
  "asimov-runner",
  "async-trait",
  "bon",
  "cap-std",
+ "cap-tempfile",
  "dogma",
  "hex",
  "jiff",
@@ -495,6 +498,19 @@ dependencies = [
  "io-extras",
  "io-lifetimes",
  "rustix",
+]
+
+[[package]]
+name = "cap-tempfile"
+version = "3.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bdc50d18ee6c3551b30eb7ad5c4628d7c73ed9e1696b63c432a55602d634d7d"
+dependencies = [
+ "cap-std",
+ "rand 0.8.5",
+ "rustix",
+ "rustix-linux-procfs",
+ "uuid",
 ]
 
 [[package]]
@@ -2024,7 +2040,7 @@ dependencies = [
  "bytes",
  "getrandom 0.3.3",
  "lru-slab",
- "rand",
+ "rand 0.9.1",
  "ring",
  "rustc-hash",
  "rustls",
@@ -2073,12 +2089,33 @@ checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
 
 [[package]]
 name = "rand"
+version = "0.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
+dependencies = [
+ "libc",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
+]
+
+[[package]]
+name = "rand"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9fbfd9d094a40bf3ae768db9361049ace4c0e04a4fd6b359518bd7b73a73dd97"
 dependencies = [
- "rand_chacha",
- "rand_core",
+ "rand_chacha 0.9.0",
+ "rand_core 0.9.3",
+]
+
+[[package]]
+name = "rand_chacha"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
+dependencies = [
+ "ppv-lite86",
+ "rand_core 0.6.4",
 ]
 
 [[package]]
@@ -2088,7 +2125,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
 dependencies = [
  "ppv-lite86",
- "rand_core",
+ "rand_core 0.9.3",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
+dependencies = [
+ "getrandom 0.2.16",
 ]
 
 [[package]]
@@ -3190,6 +3236,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cf4199d1e5d15ddd86a694e4d0dffa9c323ce759fea589f00fef9d81cc1931d"
 dependencies = [
  "getrandom 0.3.3",
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]

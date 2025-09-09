@@ -12,7 +12,7 @@ use color_print::ceprintln;
 use miette::Result;
 
 pub async fn fetch(
-    input_urls: &Vec<String>,
+    input_urls: &[String],
     module: Option<&str>,
     output: Option<&str>,
     flags: &StandardOptions,
