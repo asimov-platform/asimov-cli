@@ -59,7 +59,7 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 
 # Optional dependencies:
-asimov-proxy = { version = "25.0.0-dev.21", optional = true }
+asimov-proxy = { version = "25.0.0-dev.22", optional = true }
 
 [profile.release]
 opt-level = "z"
