@@ -3,10 +3,8 @@
 use crate::{
     StandardOptions,
     SysexitsError::{self, *},
-    commands::External,
-    shared::{build_resolver, locate_subcommand, normalize_url},
 };
-use asimov_module::{ModuleManifest, resolve::Resolver};
+use asimov_module::{ModuleManifest, resolve::Resolver, url::normalize_url};
 use asimov_runner::{CatalogerOptions, GraphOutput};
 use color_print::ceprintln;
 use miette::Result;
@@ -57,7 +55,14 @@ pub async fn list(
             ceprintln!("<s,c>»</> Cataloging `{}`...", input_url);
         }
 
-        let input_url = normalize_url(input_url);
+        let input_url = normalize_url(input_url).unwrap_or_else(|e| {
+            if flags.verbose > 1 {
+                ceprintln!(
+                    "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
+                );
+            }
+            input_url.clone()
+        });
 
         let modules = resolver.resolve(&input_url).map_err(|e| {
             ceprintln!("<s,r>error:</> unable to handle URL `{input_url}`: {e}");
