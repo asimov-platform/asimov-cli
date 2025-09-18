@@ -1,12 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::Result;
-use asimov_module::ModuleManifest;
+use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{
     Subcommand, SubcommandsProvider,
     SysexitsError::{self, *},
 };
 use color_print::{ceprintln, cstr};
+use std::rc::Rc;
 
 /// Locates the given subcommand or prints an error.
 pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
@@ -29,7 +30,7 @@ const NO_MODULES_FOUND_HINT: &str = cstr!(
 pub async fn installed_modules(
     registry: &asimov_registry::Registry,
     filter: Option<&str>,
-) -> Result<Vec<ModuleManifest>, SysexitsError> {
+) -> Result<Vec<ModuleManifest>> {
     let modules = registry
         .installed_modules()
         .await
@@ -58,4 +59,81 @@ pub async fn installed_modules(
         .collect();
 
     Ok(modules)
+}
+
+pub async fn pick_module(
+    registry: &asimov_registry::Registry,
+    url: impl AsRef<str>,
+    modules: &[Rc<Module>],
+    filter: Option<&str>,
+) -> Result<Rc<Module>> {
+    let url = url.as_ref();
+
+    if let Some(filter) = filter {
+        let module = modules.iter().find(|m| m.name == filter).ok_or_else(|| {
+                ceprintln!("<s,r>error:</> failed to find a module named `{filter}` that supports handling the URL: `{url}`");
+                EX_SOFTWARE
+            })?;
+
+        if registry
+            .is_module_enabled(&module.name)
+            .await
+            .map_err(|e| {
+                ceprintln!(
+                    "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                    module.name
+                );
+                EX_IOERR
+            })?
+        {
+            Ok(module.clone())
+        } else {
+            ceprintln!(
+                "<s,r>error:</> module <s>{}</> is not enabled.",
+                module.name
+            );
+            ceprintln!(
+                "<s,dim>hint:</> It can be enabled with: <s>asimov module enable {}</>",
+                module.name
+            );
+            Err(EX_UNAVAILABLE)
+        }
+    } else {
+        let mut iter = modules.iter();
+        loop {
+            let module = iter.next().ok_or_else(|| {
+                    ceprintln!(
+                        "<s,r>error:</> failed to find a module to handle the URL: `{url}`"
+                    );
+                    let module_count = modules.len();
+                    if module_count > 0 {
+                        if module_count == 1 {
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed module that could handle this URL but is disabled.");
+                        } else {
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed modules that could handle this URL but are disabled.");
+                        }
+                        ceprintln!("<s,dim>hint:</> A module can be enabled with: <s>asimov module enable <<module>></>");
+                        ceprintln!("<s,dim>hint:</> Available modules:");
+                        for module in modules {
+                            ceprintln!("<s,dim>hint:</>\t<s>{}</>", module.name);
+                        }
+                    }
+                    EX_UNAVAILABLE
+                })?;
+
+            if registry
+                .is_module_enabled(&module.name)
+                .await
+                .map_err(|e| {
+                    ceprintln!(
+                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                        module.name
+                    );
+                    EX_IOERR
+                })?
+            {
+                return Ok(module.clone());
+            }
+        }
+    }
 }
