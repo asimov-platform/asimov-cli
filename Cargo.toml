@@ -18,10 +18,11 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["fetch", "list", "snap"]
+all = ["ask", "fetch", "list", "snap"]
 unstable = ["describe", "index", "read", "search"]
 
 # Optional features:
+ask = []
 describe = []
 fetch = ["dep:asimov-proxy"]
 index = []

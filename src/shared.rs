@@ -2,10 +2,7 @@
 
 use crate::Result;
 use asimov_module::{ModuleManifest, resolve::Module};
-use clientele::{
-    Subcommand, SubcommandsProvider,
-    SysexitsError::{self, *},
-};
+use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
 use std::rc::Rc;
 
@@ -75,7 +72,7 @@ pub async fn pick_module(
                 EX_SOFTWARE
             })?;
 
-        if registry
+        if !registry
             .is_module_enabled(&module.name)
             .await
             .map_err(|e| {
@@ -86,8 +83,6 @@ pub async fn pick_module(
                 EX_IOERR
             })?
         {
-            Ok(module.clone())
-        } else {
             ceprintln!(
                 "<s,r>error:</> module <s>{}</> is not enabled.",
                 module.name
@@ -97,6 +92,8 @@ pub async fn pick_module(
                 module.name
             );
             Err(EX_UNAVAILABLE)
+        } else {
+            Ok(module.clone())
         }
     } else {
         let mut iter = modules.iter();

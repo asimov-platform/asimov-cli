@@ -36,6 +36,15 @@ enum Command {
         args: Vec<String>,
     },
 
+    /// Save a snapshot for a URL, utilizing enabled modules
+    #[cfg(feature = "ask")]
+    Ask {
+        #[clap(long, short = 'm')]
+        module: Option<String>,
+
+        input: Option<String>,
+    },
+
     /// TBD
     #[cfg(feature = "describe")]
     #[command(aliases = ["summarize", "tldr"])]
@@ -192,6 +201,21 @@ pub async fn main() -> SysexitsError {
                 print_full_help();
                 Ok(EX_OK)
             }
+        },
+
+        #[cfg(feature = "ask")]
+        Command::Ask { module, input } => {
+            let input = if let Some(input) = input {
+                input.clone()
+            } else {
+                use std::io::Read;
+                let mut buf = String::new();
+                std::io::stdin().read_to_string(&mut buf).unwrap();
+                buf
+            };
+            commands::ask::ask(input, module.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
         },
 
         #[cfg(feature = "describe")]
