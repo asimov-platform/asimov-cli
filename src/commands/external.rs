@@ -50,7 +50,7 @@ impl External {
         match result {
             Err(error) => {
                 if self.is_debug {
-                    eprintln!("{}: {}", "asimov", error);
+                    eprintln!("asimov: {}", error);
                 }
                 Err(EX_SOFTWARE)
             },
@@ -61,7 +61,7 @@ impl External {
 
                     if let Some(signal) = result.0.signal() {
                         if self.is_debug {
-                            eprintln!("{}: terminated by signal {}", "asimov", signal);
+                            eprintln!("asimov: terminated by signal {}", signal);
                         }
 
                         return Ok(ExternalResult {

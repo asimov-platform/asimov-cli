@@ -175,10 +175,10 @@ pub async fn main() -> SysexitsError {
                         let mut stdout = stdout.lock();
                         std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
                     } else {
-                        eprintln!("{}: {} doesn't provide help", "asimov", cmd_name);
+                        eprintln!("asimov: {} doesn't provide help", cmd_name);
 
                         if options.flags.debug {
-                            eprintln!("{}: status code - {}", "asimov", result.code);
+                            eprintln!("asimov: status code - {}", result.code);
 
                             let stdout = std::io::stdout();
                             let mut stdout = stdout.lock();
@@ -230,7 +230,7 @@ pub async fn main() -> SysexitsError {
         } => commands::list::list(
             urls,
             module.as_deref(),
-            limit.clone(),
+            *limit,
             output.as_deref(),
             &options.flags,
         )

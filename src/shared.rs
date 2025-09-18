@@ -13,7 +13,7 @@ pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
     match SubcommandsProvider::find("asimov-", name) {
         Some(cmd) => Ok(cmd),
         None => {
-            eprintln!("{}: command not found: {}{}", "asimov", "asimov-", name);
+            eprintln!("asimov: command not found: asimov-{}", name);
             Err(EX_UNAVAILABLE)
         },
     }
