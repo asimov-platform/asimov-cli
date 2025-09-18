@@ -1,9 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::{
-    SubcommandsProvider,
-    SysexitsError::{self, *},
-};
+use clientele::SubcommandsProvider;
 use rayon::prelude::*;
 use std::process::Stdio;
 
@@ -86,7 +83,7 @@ impl Help {
 
                     let now = std::time::Instant::now();
                     if now.duration_since(start_time) > MAX_WAIT_TIME {
-                        child.kill();
+                        child.kill().ok();
                         drop(child);
                         return None;
                     }

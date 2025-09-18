@@ -1,7 +1,5 @@
 // This is free and unencumbered software released into the public domain.
 
-#![allow(unused)]
-
 pub mod commands;
 pub mod features;
 pub mod shared;

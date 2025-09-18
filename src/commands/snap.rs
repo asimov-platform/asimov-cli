@@ -5,7 +5,7 @@ use crate::{
     SysexitsError::{self, *},
 };
 use asimov_env::paths::asimov_root;
-use asimov_module::{ModuleManifest, resolve::Resolver, url::normalize_url};
+use asimov_module::url::normalize_url;
 use color_print::ceprintln;
 use miette::Result;
 
