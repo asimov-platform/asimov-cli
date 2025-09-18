@@ -136,8 +136,8 @@ When running commands you can add one or more `-v` flags to increase verbosity l
 # Fetch data from a URL, automatically choosing from installed modules
 asimov fetch https://example.com/
 
-# To fetch with a specific module use `-m` or `--module`
-asimov fetch -m http https://example.com/
+# To fetch with a specific module use `-M` or `--module`
+asimov fetch -M http https://example.com/
 
 # Fetch multiple URLs
 asimov fetch https://asimov.sh/ https://asimov.blog/
@@ -152,7 +152,7 @@ If you have the [ASIMOV Bright Data module](https://github.com/asimov-modules/as
 asimov import https://x.com/asimov_platform
 
 # Import using the specific module
-asimov import -m brightdata https://x.com/asimov_platform
+asimov import -M brightdata https://x.com/asimov_platform
 ```
 
 ### External Commands
