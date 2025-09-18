@@ -33,10 +33,13 @@ pub async fn installed_modules(
         .await
         .map_err(|e| {
             ceprintln!("<s,r>error:</> unable to access installed modules: {e}");
-            if let asimov_registry::error::InstalledModulesError::DirIo(_, err) = e
-                && err.kind() == std::io::ErrorKind::NotFound
-            {
-                ceprintln!("{NO_MODULES_FOUND_HINT}");
+            match e {
+                asimov_registry::error::InstalledModulesError::DirIo(_, err)
+                    if err.kind() == std::io::ErrorKind::NotFound =>
+                {
+                    ceprintln!("{NO_MODULES_FOUND_HINT}");
+                },
+                _ => (),
             }
             EX_UNAVAILABLE
         })?
