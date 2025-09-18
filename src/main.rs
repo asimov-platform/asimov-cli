@@ -36,7 +36,7 @@ enum Command {
         args: Vec<String>,
     },
 
-    /// Save a snapshot for a URL, utilizing enabled modules
+    /// Prompt an LLM with text input
     #[cfg(feature = "ask")]
     Ask {
         #[clap(long, short = 'm')]
