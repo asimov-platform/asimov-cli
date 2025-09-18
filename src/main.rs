@@ -39,7 +39,7 @@ enum Command {
     /// Prompt an LLM with text input
     #[cfg(feature = "ask")]
     Ask {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         input: Option<String>,
@@ -49,7 +49,7 @@ enum Command {
     #[cfg(feature = "describe")]
     #[command(aliases = ["summarize", "tldr"])]
     Describe {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The output format.
@@ -66,7 +66,7 @@ enum Command {
         /// Optionally choose the module instead of using module resolution.
         /// The module's manifest must declare support for the URL for the
         /// module to be used.
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The output format.
@@ -89,7 +89,7 @@ enum Command {
     #[cfg(feature = "list")]
     #[command(aliases = ["dir", "ls"])]
     List {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The maximum number of resources to list.
@@ -106,7 +106,7 @@ enum Command {
     /// TBD
     #[cfg(feature = "read")]
     Read {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         urls: Vec<String>,
@@ -115,7 +115,7 @@ enum Command {
     /// TBD
     #[cfg(feature = "search")]
     Search {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         prompt: String,
