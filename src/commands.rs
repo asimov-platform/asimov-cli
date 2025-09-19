@@ -9,6 +9,9 @@ pub use help::*;
 mod help_cmd;
 pub use help_cmd::*;
 
+#[cfg(feature = "ask")]
+pub mod ask;
+
 #[cfg(feature = "describe")]
 pub mod describe;
 

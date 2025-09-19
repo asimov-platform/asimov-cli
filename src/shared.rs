@@ -1,211 +1,138 @@
 // This is free and unencumbered software released into the public domain.
 
-use std::path::Path;
-
 use crate::Result;
-use asimov_env::paths::asimov_root;
-use asimov_module::{ModuleManifest, resolve::Resolver};
+use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
-use miette::{IntoDiagnostic, miette};
-
-pub(crate) fn build_resolver(pattern: &str) -> miette::Result<Resolver> {
-    let mut resolver = Resolver::new();
-
-    let module_dir_path = asimov_root().join("modules");
-    let module_dir = std::fs::read_dir(&module_dir_path)
-        .map_err(|e| miette!("Failed to read module manifest directory: {e}"))?
-        .filter_map(Result::ok);
-
-    for entry in module_dir {
-        let filename = entry.file_name();
-
-        let Some(filename_str) = filename.to_str() else {
-            // invalid UTF-8 in filename
-            continue;
-        };
-        let Some(filename) = filename_str.strip_suffix(".yaml") else {
-            // no .yaml extension
-            continue;
-        };
-
-        let manifest = ModuleManifest::read_manifest(filename).map_err(|e| {
-            miette!(
-                "Invalid module manifest at `{}`: {}",
-                entry.path().display(),
-                e
-            )
-        })?;
-
-        if !manifest
-            .provides
-            .programs
-            .iter()
-            .any(|program| program.split('-').next_back().is_some_and(|p| p == pattern))
-        {
-            continue;
-        }
-
-        resolver
-            .insert_manifest(&manifest)
-            .map_err(|e| miette!("{e}"))?;
-    }
-
-    Ok(resolver)
-}
+use color_print::{ceprintln, cstr};
+use std::rc::Rc;
 
 /// Locates the given subcommand or prints an error.
 pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
     match SubcommandsProvider::find("asimov-", name) {
         Some(cmd) => Ok(cmd),
         None => {
-            eprintln!("{}: command not found: {}{}", "asimov", "asimov-", name);
+            eprintln!("asimov: command not found: asimov-{}", name);
             Err(EX_UNAVAILABLE)
         },
     }
 }
 
-pub fn normalize_url(url: &str) -> String {
-    // test whether it's a normal, valid, URL
-    if let Ok(url) = <url::Url>::parse(url) {
-        return url.to_string();
-    };
+const NO_MODULES_FOUND_HINT: &str = cstr!(
+    r#"<s,dim>hint:</> There appears to be no installed modules.
+<s,dim>hint:</> Modules may be discovered either on the site <u>https://asimov.directory/modules</>
+<s,dim>hint:</> or on the GitHub organization <u>https://github.com/asimov-modules</>
+<s,dim>hint:</> and installed with <s>asimov module install <<module>></>"#
+);
 
-    // all the below cases treat the url as a file path.
-
-    // replace a `~/` prefix with the path to the user's home dir.
-    let url = url
-        .strip_prefix("~/")
-        .map(|path| {
-            std::env::home_dir()
-                .expect("unable to determine home directory")
-                .join(path)
+pub async fn installed_modules(
+    registry: &asimov_registry::Registry,
+    filter: Option<&str>,
+) -> Result<Vec<ModuleManifest>> {
+    let modules = registry
+        .installed_modules()
+        .await
+        .map_err(|e| {
+            ceprintln!("<s,r>error:</> unable to access installed modules: {e}");
+            match e {
+                asimov_registry::error::InstalledModulesError::DirIo(_, err)
+                    if err.kind() == std::io::ErrorKind::NotFound =>
+                {
+                    ceprintln!("{NO_MODULES_FOUND_HINT}");
+                },
+                _ => (),
+            }
+            EX_UNAVAILABLE
+        })?
+        .into_iter()
+        .map(|manifest| manifest.manifest)
+        .filter(|manifest| {
+            if let Some(filter) = filter {
+                manifest
+                    .provides
+                    .programs
+                    .iter()
+                    .any(|program| program.split('-').next_back().is_some_and(|p| p == filter))
+            } else {
+                true
+            }
         })
-        .unwrap_or_else(|| std::path::PathBuf::from(url));
+        .collect();
 
-    // `std::path::Path::canonicalize`:
-    // > Returns the canonical, absolute form of the path with all
-    // > intermediate components normalized and symbolic links resolved.
-    //
-    // This will only work if the file actually exists.
-    if let Ok(path) = std::path::Path::new(&url)
-        .canonicalize()
-        .map_err(|_| ())
-        .and_then(url::Url::from_file_path)
-    {
-        return path.to_string();
-    };
-
-    // `std::path::absolute`:
-    // > Makes the path absolute without accessing the filesystem.
-    if let Ok(path) = std::path::absolute(&url)
-        .map_err(|_| ())
-        .and_then(url::Url::from_file_path)
-    {
-        return path.to_string();
-    }
-
-    // TODO: add `std::path::Path::normalize_lexically` once it stabilizes.
-    // https://github.com/rust-lang/rust/issues/134694
-    //
-    // if let Ok(path) = std::path::Path::new(url).normalize_lexically() {
-    //     return url::Url::from_file_path(path).unwrap().to_string();
-    // }
-
-    // one last try, test whether the `url` crate accepts it as path without changes.
-    if let Ok(path) = url::Url::from_file_path(std::path::Path::new(&url)) {
-        return path.to_string();
-    }
-
-    // otherwise just convert to a file URL without changes and hope for the best :)
-    // (we should not really get here but just in case.)
-    format!("file://{}", url.display())
+    Ok(modules)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub async fn pick_module(
+    registry: &asimov_registry::Registry,
+    url: impl AsRef<str>,
+    modules: &[Rc<Module>],
+    filter: Option<&str>,
+) -> Result<Rc<Module>> {
+    let url = url.as_ref();
 
-    #[test]
-    fn url_normalization() {
-        let cases = [
-            ("https://example.org/", "https://example.org/"),
-            ("near://testnet/123456789", "near://testnet/123456789"),
-        ];
+    if let Some(filter) = filter {
+        let module = modules.iter().find(|m| m.name == filter).ok_or_else(|| {
+                ceprintln!("<s,r>error:</> failed to find a module named `{filter}` that supports handling the URL: `{url}`");
+                EX_SOFTWARE
+            })?;
 
-        for case in cases {
-            assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
-        }
-
-        #[cfg(unix)]
+        if !registry
+            .is_module_enabled(&module.name)
+            .await
+            .map_err(|e| {
+                ceprintln!(
+                    "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                    module.name
+                );
+                EX_IOERR
+            })?
         {
-            unsafe { std::env::set_var("HOME", "/home/user") };
-
-            let cases = [
-                ("~/path/to/file.txt", "file:///home/user/path/to/file.txt"),
-                ("/file with spaces.txt", "file:///file%20with%20spaces.txt"),
-                ("/file+with+pluses.txt", "file:///file+with+pluses.txt"),
-            ];
-
-            for case in cases {
-                assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
-            }
-
-            let cur_dir = std::env::current_dir().unwrap().display().to_string();
-
-            let input = "path/to/file.txt";
-            let want = "file://".to_string() + &cur_dir + "/path/to/file.txt";
-            assert_eq!(
-                normalize_url(input),
-                want,
-                "relative path should be get added after current directory, input: {:?}",
-                input
+            ceprintln!(
+                "<s,r>error:</> module <s>{}</> is not enabled.",
+                module.name
             );
-
-            let input = "../path/./file.txt";
-            let want = "file://".to_string() + &cur_dir + "/../path/file.txt";
-            assert_eq!(
-                normalize_url(input),
-                want,
-                "relative path should be get added after current directory, input: {:?}",
-                input
+            ceprintln!(
+                "<s,dim>hint:</> It can be enabled with: <s>asimov module enable {}</>",
+                module.name
             );
-
-            let input = "another-type-of-a-string";
-            let want = "file://".to_string() + &cur_dir + "/another-type-of-a-string";
-            assert_eq!(
-                normalize_url(input),
-                want,
-                "non-path-looking input should be treated as a file in current directory, input: {:?}",
-                input
-            );
-
-            let input = "hello\\ world!";
-            let want = "file://".to_string() + &cur_dir + "/hello%5C%20world!";
-            assert_eq!(
-                normalize_url(input),
-                want,
-                "output should be url encoded, input: {:?}",
-                input
-            );
+            Err(EX_UNAVAILABLE)
+        } else {
+            Ok(module.clone())
         }
+    } else {
+        let mut iter = modules.iter();
+        loop {
+            let module = iter.next().ok_or_else(|| {
+                    ceprintln!(
+                        "<s,r>error:</> failed to find a module to handle the URL: `{url}`"
+                    );
+                    let module_count = modules.len();
+                    if module_count > 0 {
+                        if module_count == 1 {
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed module that could handle this URL but is disabled.");
+                        } else {
+                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed modules that could handle this URL but are disabled.");
+                        }
+                        ceprintln!("<s,dim>hint:</> A module can be enabled with: <s>asimov module enable <<module>></>");
+                        ceprintln!("<s,dim>hint:</> Available modules:");
+                        for module in modules {
+                            ceprintln!("<s,dim>hint:</>\t<s>{}</>", module.name);
+                        }
+                    }
+                    EX_UNAVAILABLE
+                })?;
 
-        #[cfg(windows)]
-        {
-            let cwd = std::env::current_dir().unwrap();
-            let drive = cwd.to_str().unwrap().chars().next().unwrap();
-            let cases = [
-                (
-                    "/file with spaces.txt",
-                    format!("file:///{drive}:/file%20with%20spaces.txt"),
-                ),
-                (
-                    "/file+with+pluses.txt",
-                    format!("file:///{drive}:/file+with+pluses.txt"),
-                ),
-            ];
-
-            for case in cases {
-                assert_eq!(normalize_url(case.0), case.1, "input: {:?}", case.0);
+            if registry
+                .is_module_enabled(&module.name)
+                .await
+                .map_err(|e| {
+                    ceprintln!(
+                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                        module.name
+                    );
+                    EX_IOERR
+                })?
+            {
+                return Ok(module.clone());
             }
         }
     }

@@ -36,11 +36,23 @@ enum Command {
         args: Vec<String>,
     },
 
+    /// Prompt an LLM with text input
+    #[cfg(feature = "ask")]
+    Ask {
+        #[clap(long, short = 'M')]
+        module: Option<String>,
+
+        #[clap(long, short = 'm')]
+        model: Option<String>,
+
+        input: Option<String>,
+    },
+
     /// TBD
     #[cfg(feature = "describe")]
     #[command(aliases = ["summarize", "tldr"])]
     Describe {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The output format.
@@ -57,7 +69,7 @@ enum Command {
         /// Optionally choose the module instead of using module resolution.
         /// The module's manifest must declare support for the URL for the
         /// module to be used.
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The output format.
@@ -80,7 +92,7 @@ enum Command {
     #[cfg(feature = "list")]
     #[command(aliases = ["dir", "ls"])]
     List {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         /// The maximum number of resources to list.
@@ -97,7 +109,7 @@ enum Command {
     /// TBD
     #[cfg(feature = "read")]
     Read {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         urls: Vec<String>,
@@ -106,7 +118,7 @@ enum Command {
     /// TBD
     #[cfg(feature = "search")]
     Search {
-        #[clap(long, short = 'm')]
+        #[clap(long, short = 'M')]
         module: Option<String>,
 
         prompt: String,
@@ -175,10 +187,10 @@ pub async fn main() -> SysexitsError {
                         let mut stdout = stdout.lock();
                         std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
                     } else {
-                        eprintln!("{}: {} doesn't provide help", "asimov", cmd_name);
+                        eprintln!("asimov: {} doesn't provide help", cmd_name);
 
                         if options.flags.debug {
-                            eprintln!("{}: status code - {}", "asimov", result.code);
+                            eprintln!("asimov: status code - {}", result.code);
 
                             let stdout = std::io::stdout();
                             let mut stdout = stdout.lock();
@@ -192,6 +204,25 @@ pub async fn main() -> SysexitsError {
                 print_full_help();
                 Ok(EX_OK)
             }
+        },
+
+        #[cfg(feature = "ask")]
+        Command::Ask {
+            module,
+            model,
+            input,
+        } => {
+            let input = if let Some(input) = input {
+                input.clone()
+            } else {
+                use std::io::Read;
+                let mut buf = String::new();
+                std::io::stdin().read_to_string(&mut buf).unwrap();
+                buf
+            };
+            commands::ask::ask(input, module.as_deref(), model.as_deref(), &options.flags)
+                .await
+                .map(|_| EX_OK)
         },
 
         #[cfg(feature = "describe")]
@@ -230,7 +261,7 @@ pub async fn main() -> SysexitsError {
         } => commands::list::list(
             urls,
             module.as_deref(),
-            limit.clone(),
+            *limit,
             output.as_deref(),
             &options.flags,
         )

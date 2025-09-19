@@ -18,10 +18,11 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["fetch", "list", "snap"]
+all = ["ask", "fetch", "list", "snap"]
 unstable = ["describe", "index", "read", "search"]
 
 # Optional features:
+ask = []
 describe = []
 fetch = ["dep:asimov-proxy"]
 index = []
@@ -33,8 +34,8 @@ snap = ["dep:asimov-snapshot"]
 [build-dependencies]
 cfg_aliases = "0.2"
 shadow-rs = { version = "1.3", features = [
-    "build",
-    "tzdb",
+  "build",
+  "tzdb",
 ], default-features = false }
 cc = "1.2"
 
@@ -43,12 +44,12 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.21"
-asimov-module = "25.0.0-dev.21"
-asimov-patterns = "25.0.0-dev.21"
-asimov-registry = "25.0.0-dev.21"
-asimov-runner = "25.0.0-dev.21"
-asimov-snapshot = { version = "25.0.0-dev.21", optional = true }
+asimov-env = "25.0.0-dev.22"
+asimov-module = "25.0.0-dev.22"
+asimov-patterns = "25.0.0-dev.22"
+asimov-registry = "25.0.0-dev.22"
+asimov-runner = "25.0.0-dev.22"
+asimov-snapshot = { version = "25.0.0-dev.22", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
@@ -59,7 +60,7 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 
 # Optional dependencies:
-asimov-proxy = { version = "25.0.0-dev.21", optional = true }
+asimov-proxy = { version = "25.0.0-dev.22", optional = true }
 
 [profile.release]
 opt-level = "z"

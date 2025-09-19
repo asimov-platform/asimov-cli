@@ -38,7 +38,7 @@ impl HelpCmd {
         match output {
             Err(error) => {
                 if self.is_debug {
-                    eprintln!("{}: {}", "asimov", error);
+                    eprintln!("asimov: {}", error);
                 }
                 Err(EX_SOFTWARE)
             },
