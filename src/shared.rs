@@ -51,7 +51,7 @@ pub async fn installed_modules(
                     .provides
                     .programs
                     .iter()
-                    .any(|program| program.split("-").last().is_some_and(|p| p == filter))
+                    .any(|program| program.split('-').next_back().is_some_and(|p| p == filter))
             } else {
                 true
             }
