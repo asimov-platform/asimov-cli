@@ -12,6 +12,7 @@ use crate::{
 pub async fn ask(
     input: impl AsRef<str>,
     module_filter: Option<&str>,
+    model: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
@@ -99,6 +100,7 @@ pub async fn ask(
         asimov_runner::Output::Captured,
         PrompterOptions::builder()
             .maybe_other(flags.debug.then_some("--debug"))
+            .maybe_model(model)
             .build(),
     );
 

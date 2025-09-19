@@ -42,6 +42,9 @@ enum Command {
         #[clap(long, short = 'M')]
         module: Option<String>,
 
+        #[clap(long, short = 'm')]
+        model: Option<String>,
+
         input: Option<String>,
     },
 
@@ -204,7 +207,11 @@ pub async fn main() -> SysexitsError {
         },
 
         #[cfg(feature = "ask")]
-        Command::Ask { module, input } => {
+        Command::Ask {
+            module,
+            model,
+            input,
+        } => {
             let input = if let Some(input) = input {
                 input.clone()
             } else {
@@ -213,7 +220,7 @@ pub async fn main() -> SysexitsError {
                 std::io::stdin().read_to_string(&mut buf).unwrap();
                 buf
             };
-            commands::ask::ask(input, module.as_deref(), &options.flags)
+            commands::ask::ask(input, module.as_deref(), model.as_deref(), &options.flags)
                 .await
                 .map(|_| EX_OK)
         },
