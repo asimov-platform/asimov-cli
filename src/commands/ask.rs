@@ -70,10 +70,6 @@ pub async fn ask(
                 EX_UNAVAILABLE
             })?;
 
-            if module_filter.is_some_and(|filter| module.name != filter) {
-                continue;
-            }
-
             if !registry
                 .is_module_enabled(&module.name)
                 .await
