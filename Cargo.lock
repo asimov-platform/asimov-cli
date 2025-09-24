@@ -147,9 +147,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a01c1a24fb90884188d6fb1d9552be8f08fc7a44f213d870c5b35c5fbf53619d"
+checksum = "7fc51032553521b4887f8e5eeeb01566d0e44fcf98dbc71ee0ec85cb54d68848"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -159,9 +159,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee7ae02dabe67f0d3226888c6df2c958665a37036885f7bd83253014deddd8fd"
+checksum = "de3d2cb247c8f3dbba04919b4f23db19d9065cc0c0579c485f85302f1012312a"
 dependencies = [
  "asimov-env",
  "clientele",
@@ -181,9 +181,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57b83a378357d35a8c403701d80c27e7ff37e05be25d7fc9000f0e24fc7f289b"
+checksum = "5ef90a915ce9bd0d756173a86609652b62e483bde589f29982712797a1f878fb"
 dependencies = [
  "async-trait",
  "bon",
@@ -192,9 +192,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef5ac8b716ed8ac4c5ce4af12c58f9e22ae3bb3928033db214ec5ba13eeb5dce"
+checksum = "8957269b321141bbf993dd690ff631cfcd077eda9e83d6c9a5ba45065b36d213"
 dependencies = [
  "bon",
  "derive_more",
@@ -204,9 +204,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ecdf4360d565ed6a564da840b2d166714271d9e27c29873a62b7ec3ae139936"
+checksum = "35a49e4539d7a25361ed780fae227cb03936a8b65acf5c4f2cd809ddd6fd52d6"
 dependencies = [
  "dogma",
  "gofer",
@@ -216,9 +216,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfb21ab9c7fd221b265407c08e672efe63d517792fcb59c91def4a7a9c2259d6"
+checksum = "af0074ece0440dfaf5d15e384f9f5bc753530d2a32b944c55fd32934dac0692f"
 dependencies = [
  "asimov-env",
  "asimov-module",
@@ -241,9 +241,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "313a7c7446ebe4ad7b1f75e05f9d15517729d709c80d6276fa07cfc2c41b14e5"
+checksum = "499ab387c194209c8fae53aab56fd10d51cac47e487a7729ad3d4020aefbb319"
 dependencies = [
  "asimov-env",
  "asimov-patterns",
@@ -258,9 +258,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.0.0-dev.22"
+version = "25.0.0-dev.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c526d004813150bd36d4c8b24678187a915219fae4ead28fe925d7d64cd042f3"
+checksum = "0f5254bacb85493f550c7172f1e19705b9059cc0c728dc86fb918adb78d7804f"
 dependencies = [
  "asimov-env",
  "asimov-module",
