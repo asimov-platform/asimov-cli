@@ -3,9 +3,10 @@
 use crate::{
     StandardOptions,
     SysexitsError::{self, *},
+    shared,
 };
-use asimov_module::{ModuleManifest, resolve::Resolver, url::normalize_url};
-use asimov_runner::{AnyInput, GraphOutput, ReaderOptions};
+use asimov_module::{normalization::normalize_url, resolve::Resolver};
+use asimov_runner::{GraphOutput, Input, ReaderOptions};
 use color_print::ceprintln;
 use miette::Result;
 
@@ -14,34 +15,9 @@ pub async fn read(
     module: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
-    let installer = asimov_installer::Installer::default();
-    let installed_modules: Vec<ModuleManifest> = installer
-        .installed_modules()
-        .await
-        .map_err(|e| {
-            ceprintln!("<s,r>error:</> unable to access installed modules: {e}");
-            match e {
-                asimov_registry::error::InstalledModulesError::DirIo(_, err)
-                    if err.kind() == std::io::ErrorKind::NotFound => {
-                        ceprintln!("<s,dim>hint:</> There appears to be no installed modules.");
-                        ceprintln!("<s,dim>hint:</> Modules may be discovered either on the site <u>https://asimov.directory/modules</>");
-                        ceprintln!("<s,dim>hint:</> or on the GitHub organization <u>https://github.com/asimov-modules</>");
-                        ceprintln!("<s,dim>hint:</> and installed with `asimov module install <<module>>`");
-                    },
-                _ => (),
-            };
-            EX_UNAVAILABLE
-        })?
-        .into_iter()
-        .map(|manifest| manifest.manifest)
-        .filter(|manifest| {
-            manifest
-                .provides
-                .programs
-                .iter()
-                .any(|program| program.ends_with("-reader"))
-        })
-        .collect();
+    let registry = asimov_registry::Registry::default();
+
+    let installed_modules = shared::installed_modules(&registry, Some("reader")).await?;
 
     let resolver = Resolver::try_from_iter(installed_modules.iter()).map_err(|e| {
         ceprintln!("<s,r>error:</> failed to build resolver: {e}");
@@ -50,10 +26,25 @@ pub async fn read(
 
     for input_url in input_urls {
         if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Reading `{}`...", input_url);
+            ceprintln!("<s,c>»</> Reading <s>{}</> ...", input_url);
         }
 
-        let input_url = normalize_url(input_url).unwrap_or_else(|e| {
+        let mime_modules = infer::get_from_path(input_url)
+            .inspect_err(|e| {
+                if flags.verbose > 1 {
+                    ceprintln!(
+                        "<s,y>warning:</> failed to determine MIME type of <s>{input_url}</>: {e}"
+                    )
+                }
+            })
+            .ok()
+            .flatten()
+            .map(|t| t.mime_type())
+            .and_then(|mt| mt.parse().ok())
+            .map(|mime_type| resolver.resolve_content_type(&mime_type))
+            .unwrap_or_default();
+
+        let normalized_url = normalize_url(input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
                     "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
@@ -62,91 +53,42 @@ pub async fn read(
             input_url.clone()
         });
 
-        let modules = resolver.resolve(&input_url).unwrap(); // FIXME
-
-        let module = if let Some(want) = module {
-            let module = modules.iter().find(|m| m.name == want).ok_or_else(|| {
-                ceprintln!("<s,r>error:</> failed to find a module named `{want}` that supports reading the URL: `{input_url}`");
-                EX_SOFTWARE
-            })?;
-
-            if installer
-                .is_module_enabled(&module.name)
-                .await
-                .map_err(|e| {
+        let url_modules = resolver
+            .resolve(&normalized_url)
+            .inspect_err(|e| {
+                if flags.verbose > 1 {
                     ceprintln!(
-                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
-                        module.name
+                        "<s,r>warning:</> failed while resolving URL <s>{normalized_url}</>: {e}"
                     );
-                    EX_IOERR
-                })?
-            {
-                module
-            } else {
-                ceprintln!(
-                    "<s,r>error:</> module <s>{}</> is not enabled.",
-                    module.name
-                );
-                ceprintln!(
-                    "<s,dim>hint:</> It can be enabled with: `asimov module enable {}`",
-                    module.name
-                );
-                return Err(EX_UNAVAILABLE);
-            }
-        } else {
-            let mut iter = modules.iter();
-            loop {
-                let module = iter.next().ok_or_else(|| {
-                    ceprintln!(
-                        "<s,r>error:</> failed to find a module to read the URL: `{input_url}`"
-                    );
-                    let module_count = modules.len();
-                    if module_count > 0 {
-                        if module_count == 1 {
-                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed module that could handle this URL but is disabled.");
-                        } else {
-                            ceprintln!("<s,dim>hint:</> Found <s>{module_count}</> installed modules that could handle this URL but are disabled.");
-                        }
-                        ceprintln!("<s,dim>hint:</> A module can be enabled with: `asimov module enable <<module>>`");
-                        ceprintln!("<s,dim>hint:</> Available modules:");
-                        for module in &modules {
-                            ceprintln!("<s,dim>hint:</>\t<s>{}</>", module.name);
-                        }
-                    }
-                    EX_UNAVAILABLE
-                })?;
-
-                if installer
-                    .is_module_enabled(&module.name)
-                    .await
-                    .map_err(|e| {
-                        ceprintln!(
-                            "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
-                            module.name
-                        );
-                        EX_IOERR
-                    })?
-                {
-                    break module;
                 }
-            }
-        };
+            })
+            .unwrap_or_default();
+
+        // mime modules first for prioritization
+        let modules = [mime_modules, url_modules].concat();
+
+        let module = shared::pick_module(&registry, &input_url, &modules, module).await?;
+
+        let input = tokio::fs::File::open(&input_url)
+            .await
+            .map(Box::new)
+            .map(|i| Input::AsyncRead(i))?;
 
         let mut reader = asimov_runner::Reader::new(
             format!("asimov-{}-reader", module.name),
-            AnyInput::Ignored, // FIXME: &input_url,
+            input,
             GraphOutput::Inherited,
             ReaderOptions::builder()
-                // TODO: .maybe_input(input)
-                // TODO: .maybe_output(output)
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
 
-        let _ = reader.execute().await.expect("should execute reader");
+        let mut output = reader.execute().await.expect("should execute reader");
+
+        tokio::io::copy(&mut output, &mut tokio::io::stdout()).await?;
 
         if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Read `{}`.", input_url);
+            ceprintln!("<s,g>✓</> Read <s>{}</>.", input_url);
         }
     }
 
