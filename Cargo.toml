@@ -18,8 +18,8 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "list", "snap"]
-unstable = ["describe", "index", "read", "search"]
+all = ["ask", "fetch", "list", "read", "snap"]
+unstable = ["describe", "index", "search"]
 
 # Optional features:
 ask = []
@@ -27,7 +27,7 @@ describe = []
 fetch = ["dep:asimov-proxy"]
 index = []
 list = []
-read = []
+read = ["dep:infer", "dep:mime"]
 search = []
 snap = ["dep:asimov-snapshot"]
 
@@ -44,23 +44,25 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0-dev.23"
-asimov-module = "25.0.0-dev.23"
-asimov-patterns = "25.0.0-dev.23"
-asimov-registry = "25.0.0-dev.23"
-asimov-runner = "25.0.0-dev.23"
-asimov-snapshot = { version = "25.0.0-dev.23", optional = true }
+asimov-env = "25.0.0-dev.24"
+asimov-module = "25.0.0-dev.24"
+asimov-patterns = "25.0.0-dev.24"
+asimov-registry = "25.0.0-dev.24"
+asimov-runner = "25.0.0-dev.24"
+asimov-snapshot = { version = "25.0.0-dev.24", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
-rayon = "1.11"
 miette = { version = "7.5", features = ["fancy"] }
+rayon = "1.11"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 url = "2.5"
 
 # Optional dependencies:
-asimov-proxy = { version = "25.0.0-dev.23", optional = true }
+asimov-proxy = { version = "25.0.0-dev.24", optional = true }
+infer = { version = "0.19", optional = true }
+mime = { version = "0.3", optional = true }
 
 [profile.release]
 opt-level = "z"
