@@ -5,7 +5,7 @@ use crate::{
     SysexitsError::{self, *},
 };
 use asimov_env::paths::asimov_root;
-use asimov_module::url::normalize_url;
+use asimov_module::normalization::normalize_url;
 use color_print::ceprintln;
 use miette::Result;
 
@@ -23,7 +23,7 @@ pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), 
                         ceprintln!("<s,dim>hint:</> There appears to be no installed modules.");
                         ceprintln!("<s,dim>hint:</> Modules may be discovered either on the site <u>https://asimov.directory/modules</>");
                         ceprintln!("<s,dim>hint:</> or on the GitHub organization <u>https://github.com/asimov-modules</>");
-                        ceprintln!("<s,dim>hint:</> and installed with `asimov module install <<module>>`");
+                        ceprintln!("<s,dim>hint:</> and installed with <s>asimov module install <<module>></>");
                     },
                 _ => (),
             };
@@ -48,7 +48,7 @@ pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), 
             input_url.clone()
         });
         snapshotter.snapshot(&input_url).await.map_err(|e| {
-            ceprintln!("<s,r>error:</> failed to create snapshot URL `{input_url}`: {e}");
+            ceprintln!("<s,r>error:</> failed to create snapshot URL <s>{input_url}</>: {e}");
             EX_UNAVAILABLE
         })?;
     }

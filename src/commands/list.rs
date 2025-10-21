@@ -5,7 +5,7 @@ use crate::{
     SysexitsError::{self, *},
     shared,
 };
-use asimov_module::{resolve::Resolver, url::normalize_url};
+use asimov_module::{normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{CatalogerOptions, GraphOutput};
 use color_print::ceprintln;
 use miette::Result;
@@ -27,7 +27,7 @@ pub async fn list(
 
     for input_url in input_urls {
         if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Cataloging `{}`...", input_url);
+            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", input_url);
         }
 
         let input_url = normalize_url(input_url).unwrap_or_else(|e| {
@@ -40,7 +40,7 @@ pub async fn list(
         });
 
         let modules = resolver.resolve(&input_url).map_err(|e| {
-            ceprintln!("<s,r>error:</> unable to handle URL `{input_url}`: {e}");
+            ceprintln!("<s,r>error:</> unable to handle URL <s>{input_url}</>: {e}");
             EX_USAGE
         })?;
 
@@ -60,7 +60,7 @@ pub async fn list(
         let _ = cataloger.execute().await.expect("should execute cataloger");
 
         if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Cataloged `{}`.", input_url);
+            ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", input_url);
         }
     }
 

@@ -5,7 +5,7 @@ use crate::{
     SysexitsError::{self, *},
     shared,
 };
-use asimov_module::{resolve::Resolver, url::normalize_url};
+use asimov_module::{normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{FetcherOptions, GraphOutput};
 use color_print::ceprintln;
 use miette::Result;
@@ -27,7 +27,7 @@ pub async fn fetch(
 
     for input_url in input_urls {
         if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Fetching `{}`...", input_url);
+            ceprintln!("<s,c>»</> Fetching <s>{}</>...", input_url);
         }
 
         let input_url = normalize_url(input_url).unwrap_or_else(|e| {
@@ -40,7 +40,7 @@ pub async fn fetch(
         });
 
         let modules = resolver.resolve(&input_url).map_err(|e| {
-            ceprintln!("<s,r>error:</> unable to handle URL `{input_url}`: {e}");
+            ceprintln!("<s,r>error:</> unable to handle URL <s>{input_url}</>: {e}");
             EX_USAGE
         })?;
 
@@ -59,7 +59,7 @@ pub async fn fetch(
         let _ = fetcher.execute().await.expect("should execute fetcher");
 
         if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Fetched `{}`.", input_url);
+            ceprintln!("<s,g>✓</> Fetched <s>{}</>.", input_url);
         }
     }
 
