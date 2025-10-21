@@ -31,7 +31,7 @@ pub async fn ask(
             .await
             .map_err(|e| {
                 ceprintln!(
-                    "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                    "<s,r>error:</> error while checking whether module <s>{}</> is enabled: {e}",
                     module.name
                 );
                 EX_IOERR
@@ -75,7 +75,7 @@ pub async fn ask(
                 .await
                 .map_err(|e| {
                     ceprintln!(
-                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                        "<s,r>error:</> error while checking whether module <s>{}</> is enabled: {e}",
                         module.name
                     );
                     EX_IOERR

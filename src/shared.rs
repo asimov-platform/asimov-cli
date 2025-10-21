@@ -71,7 +71,7 @@ pub async fn pick_module(
 
     if let Some(filter) = filter {
         let module = modules.iter().find(|m| m.name == filter).ok_or_else(|| {
-                ceprintln!("<s,r>error:</> failed to find a module named `{filter}` that supports handling the URL: `{url}`");
+                ceprintln!("<s,r>error:</> failed to find a module named `{filter}` that supports handling the URL <s>{url}</>");
                 EX_SOFTWARE
             })?;
 
@@ -80,7 +80,7 @@ pub async fn pick_module(
             .await
             .map_err(|e| {
                 ceprintln!(
-                    "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                    "<s,r>error:</> error while checking whether module <s>{}</> is enabled: {e}",
                     module.name
                 );
                 EX_IOERR
@@ -103,7 +103,7 @@ pub async fn pick_module(
         loop {
             let module = iter.next().ok_or_else(|| {
                     ceprintln!(
-                        "<s,r>error:</> failed to find a module to handle the URL: `{url}`"
+                        "<s,r>error:</> failed to find a module to handle the URL <s>{url}</>"
                     );
                     let module_count = modules.len();
                     if module_count > 0 {
@@ -126,7 +126,7 @@ pub async fn pick_module(
                 .await
                 .map_err(|e| {
                     ceprintln!(
-                        "<s,r>error:</> error while checking whether module `{}` is enabled: {e}",
+                        "<s,r>error:</> error while checking whether module <s>{}</> is enabled: {e}",
                         module.name
                     );
                     EX_IOERR
