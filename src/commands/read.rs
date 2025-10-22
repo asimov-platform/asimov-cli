@@ -69,16 +69,12 @@ pub async fn read(
 
         let module = shared::pick_module(&registry, &input_url, &modules, module).await?;
 
-        let input = tokio::fs::File::open(&input_url)
-            .await
-            .map(Box::new)
-            .map(|i| Input::AsyncRead(i))?;
-
         let mut reader = asimov_runner::Reader::new(
             format!("asimov-{}-reader", module.name),
-            input,
+            Input::Ignored,
             GraphOutput::Inherited,
             ReaderOptions::builder()
+                .other(input_url)
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
