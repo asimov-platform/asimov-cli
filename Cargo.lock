@@ -121,7 +121,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
 name = "asimov-cli"
-version = "25.0.0-dev.12"
+version = "25.0.0-dev.13"
 dependencies = [
  "asimov-env",
  "asimov-module",
