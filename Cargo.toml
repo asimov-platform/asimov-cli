@@ -44,12 +44,12 @@ temp-dir = "0.1"
 indoc = "2.0"
 
 [dependencies]
-asimov-env = "25.0.0"
-asimov-module = "25.0.0"
-asimov-patterns = "25.0.0"
-asimov-registry = "25.0.0"
-asimov-runner = "25.0.0"
-asimov-snapshot = { version = "25.0.0", optional = true }
+asimov-env = "25.0.2"
+asimov-module = "25.0.2"
+asimov-patterns = "25.0.2"
+asimov-registry = "25.0.2"
+asimov-runner = "25.0.2"
+asimov-snapshot = { version = "25.0.2", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
 color-print = "=0.3.7"
@@ -60,7 +60,7 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 
 # Optional dependencies:
-asimov-proxy = { version = "25.0.0", optional = true }
+asimov-proxy = { version = "25.0.2", optional = true }
 infer = { version = "0.19", optional = true }
 mime = { version = "0.3", optional = true }
 
