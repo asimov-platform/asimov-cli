@@ -88,7 +88,7 @@ enum Command {
         urls: Vec<String>,
     },
 
-    /// TBD
+    /// Catalog knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "list")]
     #[command(aliases = ["dir", "ls"])]
     List {
@@ -106,7 +106,7 @@ enum Command {
         urls: Vec<String>,
     },
 
-    /// TBD
+    /// Read a resource specified by a URL, utilizing enabled modules
     #[cfg(feature = "read")]
     Read {
         #[clap(long, short = 'M')]
