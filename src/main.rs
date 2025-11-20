@@ -148,9 +148,9 @@ pub async fn main() -> SysexitsError {
         // 7. `asimov help <known cmd>`   # DisplayHelp
         //
         // however it *doesn't* handle the cases:
-        // 1. `asimov <unknown cmd> -h`     # InvalidSubcommand
-        // 2. `asimov <unknown cmd> --help` # InvalidSubcommand
-        // 3. `asimov <unknown cmd> help`   # InvalidSubcommand
+        // 1. `asimov <unknown cmd> -h`
+        // 2. `asimov <unknown cmd> --help`
+        // 3. `asimov <unknown cmd> help`
         // 4. `asimov help <unknown cmd>`   # InvalidSubcommand
         //
         // where the unknown command is probably a subprogram such as:
