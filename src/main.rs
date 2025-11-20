@@ -7,35 +7,26 @@ use asimov_cli::commands::{self, External, Help, HelpCmd};
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
-    crates::clap::{CommandFactory, Parser, Subcommand as ClapSubcommand},
+    crates::clap::{CommandFactory, Parser, Subcommand},
 };
+use std::{ffi::OsString, io};
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
 #[command(name = "asimov", long_about)]
 #[command(allow_external_subcommands = true)]
 #[command(arg_required_else_help = true)]
-#[command(disable_help_flag = true)]
-#[command(disable_help_subcommand = true)]
+#[command(after_help = after_help())]
 struct Options {
     #[clap(flatten)]
     flags: StandardOptions,
-
-    #[clap(short = 'h', long, help = "Print help (see more with '--help')")]
-    help: bool,
 
     #[clap(subcommand)]
     command: Option<Command>,
 }
 
-#[derive(Debug, ClapSubcommand)]
+#[derive(Debug, Subcommand)]
 enum Command {
-    /// Print help for a subcommand
-    Help {
-        #[clap(trailing_var_arg = true)]
-        args: Vec<String>,
-    },
-
     /// Prompt an LLM with text input
     #[cfg(feature = "ask")]
     Ask {
@@ -143,9 +134,111 @@ pub async fn main() -> SysexitsError {
     };
 
     // Parse command-line options:
-    let Ok(options) = Options::try_parse_from(&args) else {
-        print_help();
-        return EX_OK;
+    let options = match Options::try_parse_from(&args) {
+        Ok(options) => options,
+
+        // VARIANT 1
+        // this handles:
+        // 1. `asimov`                    # DisplayHelpOnMissingArgumentOrSubcommand
+        // 2. `asimov -h`                 # DisplayHelp
+        // 3. `asimov --help`             # DisplayHelp
+        // 4. `asimov help`               # DisplayHelp
+        // 5. `asimov <known cmd> -h`     # DisplayHelp
+        // 6. `asimov <known cmd> --help` # DisplayHelp
+        // 7. `asimov help <known cmd>`   # DisplayHelp
+        //
+        // however it *doesn't* handle the cases:
+        // 1. `asimov <unknown cmd> -h`     # InvalidSubcommand
+        // 2. `asimov <unknown cmd> --help` # InvalidSubcommand
+        // 3. `asimov <unknown cmd> help`   # InvalidSubcommand
+        // 4. `asimov help <unknown cmd>`   # InvalidSubcommand
+        //
+        // where the unknown command is probably a subprogram such as:
+        // - `asimov-module`
+        // - `asimov-snapshot`
+        //
+        // note that cases 1, 2, and 3 are actually not clap errors and are handled by
+        // `Command::External` which passes the `-h`/`--help`/`help` as args to the subprogram.
+        //
+        // only case 4 is an error but not a `ErrorKind::DisplayHelp`, it's handled in VARIANT 2,
+        // below.
+        Err(err)
+            if err.kind() == clap::error::ErrorKind::DisplayHelp
+                || err.kind()
+                    == clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand =>
+        {
+            err.exit()
+        },
+
+        // VARIANT 2
+        // situation:
+        // - the error kind is ErrorKind::InvalidSubcommand
+        // - the first arg is `help`
+        //
+        // =>
+        //
+        // user desires help about a subprogram (`asimov-*`).
+        Err(err)
+            if err.kind() == clap::error::ErrorKind::InvalidSubcommand
+                && args
+                    .get(1)
+                    .and_then(|arg| arg.to_str())
+                    .is_some_and(|arg| arg == "help") =>
+        {
+            let debug =
+                args.contains(&OsString::from("-d")) || args.contains(&OsString::from("--debug"));
+
+            let cmd = HelpCmd { is_debug: debug };
+
+            let args = args
+                .into_iter()
+                .map(OsString::into_string)
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap();
+
+            // we know the first arg is binary itself, second arg is `help`, skip those.
+            // then skip anything starting with `-`.
+            let mut args = args
+                .into_iter()
+                .skip(2)
+                .skip_while(|arg| arg.starts_with("-"));
+
+            // next arg is subcommand
+            let Some(cmd_name) = args.next() else {
+                err.exit();
+            };
+
+            // collect rest as args to subcommand
+            let args: Vec<String> = args.collect();
+
+            // TODO: match color output. currently subprogram always outputs without colors
+
+            // TODO: enable help from external program's subcommands (e.g. `asimov help module list`)
+
+            let result = cmd.execute(&cmd_name, &args);
+            if let Ok(result) = &result {
+                if result.success {
+                    let mut stdout = std::io::stdout().lock();
+                    std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                } else {
+                    eprintln!("asimov: {} doesn't provide help", cmd_name);
+
+                    if debug {
+                        eprintln!("asimov: status code - {}", result.code);
+
+                        let mut stdout = std::io::stdout().lock();
+                        std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                    }
+                }
+            }
+
+            return result.map(|result| result.code).unwrap_or(EX_UNAVAILABLE);
+        },
+
+        // VARIANT 3
+        // some other error, issue in provided args.
+        // just let clap handle the error
+        Err(err) => err.exit(),
     };
 
     asimov_module::init_tracing_subscriber(&options.flags).expect("failed to initialize logging");
@@ -167,45 +260,7 @@ pub async fn main() -> SysexitsError {
         //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
-    // Print the help message, if requested:
-    if options.help {
-        print_help();
-        return EX_OK;
-    }
-
     let result = match options.command.as_ref().unwrap() {
-        Command::Help { args } => {
-            if let Some(cmd_name) = args.first() {
-                let cmd = HelpCmd {
-                    is_debug: options.flags.debug,
-                };
-
-                let result = cmd.execute(cmd_name, &args[1..]);
-                if let Ok(result) = &result {
-                    if result.success {
-                        let stdout = std::io::stdout();
-                        let mut stdout = stdout.lock();
-                        std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
-                    } else {
-                        eprintln!("asimov: {} doesn't provide help", cmd_name);
-
-                        if options.flags.debug {
-                            eprintln!("asimov: status code - {}", result.code);
-
-                            let stdout = std::io::stdout();
-                            let mut stdout = stdout.lock();
-                            std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
-                        }
-                    }
-                }
-
-                result.map(|result| result.code)
-            } else {
-                print_full_help();
-                Ok(EX_OK)
-            }
-        },
-
         #[cfg(feature = "ask")]
         Command::Ask {
             module,
@@ -350,8 +405,7 @@ fn print_full_help() {
         .unwrap();
 }
 
-/// Prints basic help message.
-fn print_help() {
+pub fn after_help() -> String {
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
@@ -367,8 +421,5 @@ fn print_help() {
         ));
     }
 
-    Options::command()
-        .after_long_help(help)
-        .print_long_help()
-        .unwrap();
+    help
 }
