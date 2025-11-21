@@ -173,7 +173,7 @@ pub async fn main() -> SysexitsError {
         // VARIANT 2
         // situation:
         // - the error kind is ErrorKind::InvalidSubcommand
-        // - the first arg is `help`
+        // - the second arg (first user-provided arg) is `help`
         //
         // =>
         //
