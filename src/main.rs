@@ -9,7 +9,7 @@ use clientele::{
     SysexitsError::{self, *},
     crates::clap::{CommandFactory, Parser, Subcommand},
 };
-use std::{ffi::OsString, io};
+use std::ffi::OsString;
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
