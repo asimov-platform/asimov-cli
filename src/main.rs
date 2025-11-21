@@ -17,6 +17,7 @@ use std::ffi::OsString;
 #[command(allow_external_subcommands = true)]
 #[command(arg_required_else_help = true)]
 #[command(after_help = after_help())]
+#[command(after_long_help = after_long_help())]
 struct Options {
     #[clap(flatten)]
     flags: StandardOptions,
@@ -359,8 +360,7 @@ pub async fn main() -> SysexitsError {
     result.unwrap_or_else(|e| e)
 }
 
-/// Prints full help message.
-fn print_full_help() {
+fn after_long_help() -> String {
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
@@ -399,10 +399,7 @@ fn print_full_help() {
         }
     }
 
-    Options::command()
-        .after_long_help(help)
-        .print_long_help()
-        .unwrap();
+    help
 }
 
 pub fn after_help() -> String {
