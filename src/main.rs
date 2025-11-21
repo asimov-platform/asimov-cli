@@ -191,11 +191,13 @@ pub async fn main() -> SysexitsError {
 
             let cmd = HelpCmd { is_debug: debug };
 
-            let args = args
+            let Ok(args) = args
                 .into_iter()
                 .map(OsString::into_string)
                 .collect::<Result<Vec<_>, _>>()
-                .unwrap();
+            else {
+                return EX_USAGE;
+            };
 
             // we know the first arg is binary itself, second arg is `help`, skip those.
             // then skip anything starting with `-`.
@@ -220,7 +222,9 @@ pub async fn main() -> SysexitsError {
             if let Ok(result) = &result {
                 if result.success {
                     let mut stdout = std::io::stdout().lock();
-                    std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                    if std::io::copy(&mut result.output.as_slice(), &mut stdout).is_err() {
+                        return EX_IOERR;
+                    }
                 } else {
                     eprintln!("asimov: {} doesn't provide help", cmd_name);
 
@@ -228,7 +232,9 @@ pub async fn main() -> SysexitsError {
                         eprintln!("asimov: status code - {}", result.code);
 
                         let mut stdout = std::io::stdout().lock();
-                        std::io::copy(&mut result.output.as_slice(), &mut stdout).unwrap();
+                        if std::io::copy(&mut result.output.as_slice(), &mut stdout).is_err() {
+                            return EX_IOERR;
+                        }
                     }
                 }
             }
@@ -273,7 +279,9 @@ pub async fn main() -> SysexitsError {
             } else {
                 use std::io::Read;
                 let mut buf = String::new();
-                std::io::stdin().read_to_string(&mut buf).unwrap();
+                if std::io::stdin().read_to_string(&mut buf).is_err() {
+                    return EX_IOERR;
+                };
                 buf
             };
             commands::ask::ask(input, module.as_deref(), model.as_deref(), &options.flags)
