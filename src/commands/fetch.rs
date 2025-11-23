@@ -56,7 +56,10 @@ pub async fn fetch(
                 .build(),
         );
 
-        let _ = fetcher.execute().await.expect("should execute fetcher");
+        let _ = fetcher.execute().await.map_err(|e| {
+            ceprintln!("<s,r>error:</> fetcher execution failed: {e}");
+            EX_UNAVAILABLE
+        })?;
 
         if flags.verbose > 0 {
             ceprintln!("<s,g>✓</> Fetched <s>{}</>.", input_url);

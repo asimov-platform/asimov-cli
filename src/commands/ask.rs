@@ -100,7 +100,10 @@ pub async fn ask(
             .build(),
     );
 
-    let result = prompter.execute().await.expect("should execute prompter");
+    let result = prompter.execute().await.map_err(|e| {
+        ceprintln!("<s,r>error:</> prompter execution failed: {e}");
+        EX_UNAVAILABLE
+    })?;
 
     print!("{result}");
 

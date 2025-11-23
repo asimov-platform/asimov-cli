@@ -79,7 +79,10 @@ pub async fn read(
                 .build(),
         );
 
-        let mut output = reader.execute().await.expect("should execute reader");
+        let mut output = reader.execute().await.map_err(|e| {
+            ceprintln!("<s,r>error:</> reader execution failed: {e}");
+            EX_UNAVAILABLE
+        })?;
 
         tokio::io::copy(&mut output, &mut tokio::io::stdout()).await?;
 

@@ -57,7 +57,10 @@ pub async fn list(
                 .build(),
         );
 
-        let _ = cataloger.execute().await.expect("should execute cataloger");
+        let _ = cataloger.execute().await.map_err(|e| {
+            ceprintln!("<s,r>error:</> cataloger execution failed: {e}");
+            EX_UNAVAILABLE
+        })?;
 
         if flags.verbose > 0 {
             ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", input_url);
