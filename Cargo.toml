@@ -2,7 +2,7 @@
 
 [package]
 name = "asimov-cli"
-version = "25.0.1"
+version = "25.0.2"
 authors = ["ASIMOV Community"]
 edition = "2024"
 #rust-version = "1.85"
