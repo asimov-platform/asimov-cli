@@ -105,7 +105,7 @@ pub async fn ask(
         EX_UNAVAILABLE
     })?;
 
-    print!("{result}");
+    println!("{result}");
 
     Ok(())
 }
