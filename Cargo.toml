@@ -60,7 +60,7 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 
 # Optional dependencies:
-asimov-proxy = { version = "25.0.2", optional = true }
+asimov-proxy = { version = "25.0.3", optional = true }
 infer = { version = "0.19", optional = true }
 mime = { version = "0.3", optional = true }
 
