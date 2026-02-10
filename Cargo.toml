@@ -33,7 +33,7 @@ snap = ["dep:asimov-snapshot"]
 
 [build-dependencies]
 cfg_aliases = "0.2"
-shadow-rs = { version = "1.6", features = [
+shadow-rs = { version = "1.7", features = [
   "build",
   "tzdb",
 ], default-features = false }
