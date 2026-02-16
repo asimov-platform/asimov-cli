@@ -46,7 +46,7 @@ indoc = "2.0"
 [dependencies]
 asimov-env = "25.1.0"
 asimov-module = "25.1.0"
-asimov-patterns = "25.0.3"
+asimov-patterns = "25.1.0"
 asimov-registry = "25.0.2"
 asimov-runner = "25.0.2"
 asimov-snapshot = { version = "25.0.2", optional = true }
