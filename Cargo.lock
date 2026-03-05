@@ -189,9 +189,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.0.2"
+version = "25.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fc9b7515ed8e623527501ffe314af4e62607ec7ace3d9a186c6b627c1bd2c5b"
+checksum = "e05f5d886c3da15fe82c0ec1470322821467dc94e3f82b75e48d405d537b102e"
 dependencies = [
  "bon",
  "derive_more",
@@ -238,9 +238,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.0.2"
+version = "25.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73e659770f891debc3ebbc9a83f27d4b7e156c4522584f94269717383e676d70"
+checksum = "2ae0519dcc42a25f406a1c8ea616e5e7f72a07c9f7b61dda972e28ed8ec9a56a"
 dependencies = [
  "asimov-env",
  "asimov-patterns",

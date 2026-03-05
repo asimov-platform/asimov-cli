@@ -48,7 +48,7 @@ asimov-env = "25.1.0"
 asimov-module = "25.1.0"
 asimov-patterns = "25.0.3"
 asimov-registry = "25.0.2"
-asimov-runner = "25.0.2"
+asimov-runner = "25.0.3"
 asimov-snapshot = { version = "25.0.2", optional = true }
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer"] }
