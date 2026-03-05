@@ -32,3 +32,6 @@ pub mod search;
 
 #[cfg(feature = "snap")]
 pub mod snap;
+
+#[cfg(feature = "snapshot")]
+pub mod snapshot;

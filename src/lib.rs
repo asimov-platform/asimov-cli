@@ -4,6 +4,8 @@ pub mod commands;
 pub mod features;
 pub mod shared;
 
+pub(crate) mod timestamps;
+
 use clientele::{StandardOptions, SysexitsError};
 
 pub type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E>;

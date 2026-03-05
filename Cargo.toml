@@ -18,7 +18,7 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "list", "read", "snap"]
+all = ["ask", "fetch", "list", "read", "snap", "snapshot"]
 unstable = ["describe", "index", "search"]
 
 # Optional features:
@@ -30,6 +30,7 @@ list = []
 read = ["dep:infer", "dep:mime"]
 search = []
 snap = ["dep:asimov-snapshot"]
+snapshot = ["snap", "dep:jiff", "dep:hex", "dep:sha2"]
 
 [build-dependencies]
 cfg_aliases = "0.2"
@@ -47,22 +48,29 @@ indoc = "2.0"
 asimov-env = "25.1.0"
 asimov-module = "25.1.0"
 asimov-patterns = "25.1.0"
-asimov-registry = "25.0.2"
-asimov-runner = "25.0.3"
-asimov-snapshot = { version = "25.0.2", optional = true }
+asimov-registry = "25.1.0"
+asimov-runner = "25.1.0"
 clap = { version = "4.5", default-features = false }
-clientele = { version = "0.3.8", features = ["gofer"] }
+clientele = { version = "0.3.8", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
 miette = { version = "7.5", features = ["fancy"] }
 rayon = "1.11"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
+tracing = { version = "0.1", default-features = false }
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "fmt",
+] }
 url = "2.5"
 
 # Optional dependencies:
 asimov-proxy = { version = "25.1.0", optional = true }
+asimov-snapshot = { version = "25.1.0", optional = true }
+hex = { version = "0.4", default-features = false, optional = true }
 infer = { version = "0.19", optional = true }
+jiff = { version = "0.2", default-features = false, features = ["alloc"], optional = true }
 mime = { version = "0.3", optional = true }
+sha2 = { version = "0.10", optional = true }
 
 [profile.release]
 opt-level = "z"

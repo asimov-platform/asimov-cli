@@ -9,6 +9,7 @@ use clientele::{
     SysexitsError::{self, *},
     crates::clap::{CommandFactory, Parser, Subcommand},
 };
+use color_print::ceprintln;
 use std::ffi::OsString;
 
 /// ASIMOV Command-Line Interface (CLI)
@@ -120,8 +121,35 @@ enum Command {
     #[cfg(feature = "snap")]
     Snap { urls: Vec<String> },
 
+    /// Manage snapshots stored on disk
+    #[cfg(feature = "snapshot")]
+    #[clap(subcommand)]
+    Snapshot(SnapshotCommand),
+
     #[clap(external_subcommand)]
     External(Vec<String>),
+}
+
+#[derive(Debug, Subcommand)]
+enum SnapshotCommand {
+    /// Create snapshots for URL(s)
+    #[command(external_subcommand)]
+    Snapshot(Vec<String>),
+
+    /// List snapshots
+    List,
+
+    /// Show log for a URL
+    Log {
+        /// URL to show log for
+        url: String,
+    },
+
+    /// Compact snapshots for a URL
+    Compact {
+        /// URL(s) to compact snapshots for
+        urls: Vec<String>,
+    },
 }
 
 #[tokio::main]
@@ -267,6 +295,16 @@ pub async fn main() -> SysexitsError {
         //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
+    if let Err(err) = std::fs::create_dir_all(asimov_env::paths::asimov_root().join("snapshots"))
+        .map_err(|e| {
+            ceprintln!("<s,r>error:</> failed to create snapshot directory: {e}");
+            EX_IOERR
+        })
+    {
+        return err;
+    }
+
+    // Execute the given command:
     let result = match options.command.as_ref().unwrap() {
         #[cfg(feature = "ask")]
         Command::Ask {
@@ -350,6 +388,19 @@ pub async fn main() -> SysexitsError {
         Command::Snap { urls } => commands::snap::snap(urls, &options.flags)
             .await
             .map(|_| EX_OK),
+
+        #[cfg(feature = "snapshot")]
+        Command::Snapshot(snapshot_command) => match snapshot_command {
+            SnapshotCommand::Snapshot(urls) => {
+                commands::snapshot::snapshot(urls, &options.flags).await
+            },
+            SnapshotCommand::List => commands::snapshot::list(&options.flags).await,
+            SnapshotCommand::Log { url } => commands::snapshot::log(&url, &options.flags).await,
+            SnapshotCommand::Compact { urls } => {
+                commands::snapshot::compact(&urls, &options.flags).await
+            },
+        }
+        .map(|_| EX_OK),
 
         Command::External(args) => {
             let cmd = External {
