@@ -1,13 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
 #![deny(unsafe_code)]
-#![allow(unused)]
 
 use asimov_cli::commands::{self, External, Help, HelpCmd};
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
-    crates::clap::{CommandFactory, Parser, Subcommand},
+    crates::clap::{Parser, Subcommand},
 };
 use color_print::ceprintln;
 use std::ffi::OsString;
@@ -99,6 +98,11 @@ enum Command {
         urls: Vec<String>,
     },
 
+    /// Manage modules, such as installing/enabling/disabling them
+    #[cfg(feature = "module")]
+    #[clap(subcommand)]
+    Module(ModuleCommand),
+
     /// Read a resource specified by a URL, utilizing enabled modules
     #[cfg(feature = "read")]
     Read {
@@ -149,6 +153,119 @@ enum SnapshotCommand {
     Compact {
         /// URL(s) to compact snapshots for
         urls: Vec<String>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ModuleCommand {
+    /// Open the module's package page in a web browser
+    #[clap(alias = "open")]
+    Browse {
+        /// The name of the module to browse
+        name: String,
+    },
+
+    /// Configure an installed module
+    #[clap(override_usage = CONFIG_USAGE)]
+    Config {
+        /// The name of the module to configure
+        name: String,
+
+        /// Unset configured variable(s). By default all when no arguments provided.
+        #[arg(short = 'u', long, default_value = "false")]
+        unset: bool,
+
+        /// A single configuration variable to read, or key-value pair(s) to be set.
+        #[clap(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+
+    /// Disable modules
+    Disable {
+        /// The names of the modules to disable
+        names: Vec<String>,
+    },
+
+    /// Enable modules
+    Enable {
+        /// The names of the modules to enable
+        names: Vec<String>,
+    },
+
+    /// TBD
+    #[cfg(feature = "unstable")]
+    #[clap(alias = "which")]
+    Find {
+        /// The name of the module to find
+        name: String,
+    },
+
+    /// TBD
+    #[cfg(feature = "unstable")]
+    #[clap(alias = "show")]
+    Inspect {
+        /// The name of the module to inspect
+        name: String,
+    },
+
+    /// Install an available module locally
+    Install {
+        /// The names of the modules to install
+        names: Vec<String>,
+
+        /// Optionally install a specific version instead of latest
+        #[arg(long)]
+        version: Option<String>,
+
+        /// Optionally specify desired model size to download for module.
+        /// Only affects modules which require models.
+        #[arg(long)]
+        model_size: Option<String>,
+    },
+
+    /// Print the module's package link
+    #[clap(alias = "url")]
+    Link {
+        /// The name of the module to link to
+        name: String,
+    },
+
+    /// List all available and/or installed modules
+    #[clap(alias = "ls")]
+    List {
+        /// Set the output format [default: cli] [possible values: cli, jsonl]
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
+    },
+
+    /// Resolve a given URL to modules which can handle it
+    Resolve {
+        /// The URL to resolve
+        url: String,
+    },
+
+    /// Uninstall a currently installed module
+    Uninstall {
+        /// The names of the modules to uninstall
+        names: Vec<String>,
+    },
+
+    /// Upgrade currently installed modules
+    ///
+    /// By default upgrades all installed modules.
+    #[clap(alias = "update")]
+    Upgrade {
+        /// The names of the modules to upgrade
+        names: Vec<String>,
+
+        /// Optionally upgrade to a specific version instead of latest
+        #[arg(long)]
+        version: Option<String>,
+
+        /// Optionally specify desired model size to download for module.
+        /// Only affects modules which require models.
+        #[arg(long)]
+        model_size: Option<String>,
     },
 }
 
@@ -295,6 +412,21 @@ pub async fn main() -> SysexitsError {
         //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
+    // From asimov-module-cli:
+    tokio::runtime::Builder::new_current_thread()
+        .build()
+        .unwrap()
+        .block_on(async {
+            asimov_registry::Registry::default()
+                .create_file_tree()
+                .await
+                .inspect_err(|e| {
+                    tracing::debug!("failed to create module file tree: {e}");
+                })
+                .ok();
+        });
+
+    // From asimov-snapshot-cli:
     if let Err(err) = std::fs::create_dir_all(asimov_env::paths::asimov_root().join("snapshots"))
         .map_err(|e| {
             ceprintln!("<s,r>error:</> failed to create snapshot directory: {e}");
@@ -368,6 +500,45 @@ pub async fn main() -> SysexitsError {
             &options.flags,
         )
         .await
+        .map(|_| EX_OK),
+
+        #[cfg(feature = "module")]
+        Command::Module(module_command) => match module_command {
+            ModuleCommand::Browse { name } => commands::module::browse(name, &options.flags).await,
+            ModuleCommand::Config { name, unset, args } => {
+                commands::module::config(name, *unset, &args, &options.flags).await
+            },
+            ModuleCommand::Disable { names } => {
+                commands::module::disable(names, &options.flags).await
+            },
+            ModuleCommand::Enable { names } => {
+                commands::module::enable(names, &options.flags).await
+            },
+            #[cfg(feature = "unstable")]
+            ModuleCommand::Find { name } => commands::module::find(name, &options.flags).await,
+            #[cfg(feature = "unstable")]
+            ModuleCommand::Inspect { name } => {
+                commands::module::inspect(name, &options.flags).await
+            },
+            ModuleCommand::Install {
+                names,
+                version,
+                model_size,
+            } => commands::module::install(names, version, model_size, &options.flags).await,
+            ModuleCommand::Link { name } => commands::module::link(name, &options.flags).await,
+            ModuleCommand::List { output } => {
+                commands::module::list(output.as_deref().unwrap_or(&"cli"), &options.flags).await
+            },
+            ModuleCommand::Resolve { url } => commands::module::resolve(url, &options.flags).await,
+            ModuleCommand::Uninstall { names } => {
+                commands::module::uninstall(names, &options.flags).await
+            },
+            ModuleCommand::Upgrade {
+                names,
+                version,
+                model_size,
+            } => commands::module::upgrade(names, version, model_size, &options.flags).await,
+        }
         .map(|_| EX_OK),
 
         #[cfg(feature = "read")]
@@ -479,3 +650,10 @@ pub fn after_help() -> String {
 
     help
 }
+
+// From asimov-module-cli:
+const CONFIG_USAGE: &str = r#"
+    config <module>                     # Interactive configuration
+    config <module> <key>               # Show value for key
+    config <module> [<key> <value>]...  # Set key(s) to value(s)
+"#;
