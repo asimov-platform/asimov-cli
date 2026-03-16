@@ -2,7 +2,7 @@
 
 [package]
 name = "asimov-cli"
-version = "25.1.0"
+version = "25.1.1"
 authors = ["ASIMOV Community"]
 edition = "2024"
 rust-version = "1.93"
@@ -82,7 +82,9 @@ asimov-proxy = { version = "25.1.0", optional = true }
 asimov-snapshot = { version = "25.1.0", optional = true }
 hex = { version = "0.4", default-features = false, optional = true }
 infer = { version = "0.19", optional = true }
-jiff = { version = "0.2", default-features = false, features = ["alloc"], optional = true }
+jiff = { version = "0.2", default-features = false, features = [
+  "alloc",
+], optional = true }
 mime = { version = "0.3", optional = true }
 sha2 = { version = "0.10", optional = true }
 
