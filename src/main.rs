@@ -413,18 +413,13 @@ pub async fn main() -> SysexitsError {
     }
 
     // From asimov-module-cli:
-    tokio::runtime::Builder::new_current_thread()
-        .build()
-        .unwrap()
-        .block_on(async {
-            asimov_registry::Registry::default()
-                .create_file_tree()
-                .await
-                .inspect_err(|e| {
-                    tracing::debug!("failed to create module file tree: {e}");
-                })
-                .ok();
-        });
+    asimov_registry::Registry::default()
+        .create_file_tree()
+        .await
+        .inspect_err(|e| {
+            tracing::debug!("failed to create module file tree: {e}");
+        })
+        .ok();
 
     // From asimov-snapshot-cli:
     if let Err(err) = std::fs::create_dir_all(asimov_env::paths::asimov_root().join("snapshots"))
