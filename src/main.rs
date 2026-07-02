@@ -98,6 +98,11 @@ enum Command {
         urls: Vec<String>,
     },
 
+    /// Message other peers
+    #[cfg(feature = "message")]
+    #[clap(subcommand)]
+    Message(MessageCommand),
+
     /// Manage modules, such as installing/enabling/disabling them
     #[cfg(feature = "module")]
     #[clap(subcommand)]
@@ -153,6 +158,15 @@ enum SnapshotCommand {
     Compact {
         /// URL(s) to compact snapshots for
         urls: Vec<String>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum MessageCommand {
+    /// Send a message to a peer
+    Send {
+        /// The recipient's peer ID
+        recipient: String,
     },
 }
 
@@ -495,6 +509,14 @@ pub async fn main() -> SysexitsError {
             &options.flags,
         )
         .await
+        .map(|_| EX_OK),
+
+        #[cfg(feature = "message")]
+        Command::Message(message_command) => match message_command {
+            MessageCommand::Send { recipient } => {
+                commands::message::send(recipient, &options.flags).await
+            },
+        }
         .map(|_| EX_OK),
 
         #[cfg(feature = "module")]

@@ -24,6 +24,9 @@ pub mod index;
 #[cfg(feature = "list")]
 pub mod list;
 
+#[cfg(feature = "message")]
+pub mod message;
+
 #[cfg(feature = "module")]
 pub mod module;
 

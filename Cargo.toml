@@ -19,7 +19,7 @@ publish = true
 [features]
 default = ["all"]
 all = ["ask", "fetch", "list", "module", "read", "snap", "snapshot"]
-unstable = ["describe", "index", "search"]
+unstable = ["describe", "index", "message", "search"]
 
 # Optional features:
 ask = []
@@ -27,6 +27,7 @@ describe = []
 fetch = ["dep:asimov-proxy"]
 index = []
 list = []
+message = []
 module = []
 read = ["dep:infer", "dep:mime"]
 search = []
