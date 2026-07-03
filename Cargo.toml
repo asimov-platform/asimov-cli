@@ -99,3 +99,6 @@ lto = "thin"
 [[bin]]
 name = "asimov"
 path = "src/main.rs"
+
+[patch.crates-io]
+#asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
