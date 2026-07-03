@@ -2,7 +2,7 @@
 
 use crate::{
     StandardOptions,
-    SysexitsError::{self, *},
+    SysexitsError::{self},
 };
 
 pub async fn describe(

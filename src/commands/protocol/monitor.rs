@@ -2,6 +2,7 @@
 
 use crate::{StandardOptions, SysexitsError};
 use asimov_protocol::{DefaultPreset, Endpoint, EndpointTicket, PING_ALPN, PingProtocol, Router};
+use color_print::ceprintln;
 
 pub async fn monitor(_flags: &StandardOptions) -> Result<(), SysexitsError> {
     // Create an endpoint and accept connections from peers:
@@ -16,7 +17,7 @@ pub async fn monitor(_flags: &StandardOptions) -> Result<(), SysexitsError> {
 
     // Print out the endpoint's ticket that allows connecting to it:
     let self_ticket = EndpointTicket::new(self_endpoint.addr());
-    std::println!("{}", self_ticket);
+    ceprintln!("{}", self_ticket);
 
     // Wait until the user presses Ctrl-C to terminate the program:
     tokio::signal::ctrl_c().await?;

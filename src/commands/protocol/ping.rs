@@ -2,6 +2,7 @@
 
 use crate::{StandardOptions, SysexitsError};
 use asimov_protocol::{DefaultPreset, Endpoint, EndpointTicket, PingProtocol, Ticket};
+use color_print::ceprintln;
 
 pub async fn ping(ticket: impl AsRef<str>, _flags: &StandardOptions) -> Result<(), SysexitsError> {
     // Parse the peer ticket provided by the user:
@@ -14,7 +15,7 @@ pub async fn ping(ticket: impl AsRef<str>, _flags: &StandardOptions) -> Result<(
         .ping(&self_endpoint, peer_ticket.endpoint_addr().clone())
         .await?;
 
-    std::eprintln!("Pinged the peer in {rtt:?} RTT");
+    ceprintln!("<s,g>✓</> Pinged the peer in <s>{rtt:?}</> RTT");
 
     self_endpoint.close().await;
 
