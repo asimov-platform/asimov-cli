@@ -130,6 +130,7 @@ dependencies = [
  "asimov-installer",
  "asimov-module",
  "asimov-patterns",
+ "asimov-protocol",
  "asimov-proxy",
  "asimov-registry",
  "asimov-runner",
@@ -261,6 +262,15 @@ dependencies = [
  "derive_more",
  "dogma",
  "known-types-openai",
+]
+
+[[package]]
+name = "asimov-protocol"
+version = "25.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e45dd375c5ed316f310aeaf9b245a156e7f8e8987f5fd0fa46b9af5459f77f55"
+dependencies = [
+ "dogma",
 ]
 
 [[package]]

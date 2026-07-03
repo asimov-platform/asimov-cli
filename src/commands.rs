@@ -30,6 +30,9 @@ pub mod message;
 #[cfg(feature = "module")]
 pub mod module;
 
+#[cfg(feature = "protocol")]
+pub mod protocol;
+
 #[cfg(feature = "read")]
 pub mod read;
 

@@ -108,6 +108,11 @@ enum Command {
     #[clap(subcommand)]
     Module(ModuleCommand),
 
+    /// Low-level protocol commands
+    #[cfg(feature = "protocol")]
+    #[clap(subcommand)]
+    Protocol(ProtocolCommand),
+
     /// Read a resource specified by a URL, utilizing enabled modules
     #[cfg(feature = "read")]
     Read {
@@ -280,6 +285,18 @@ enum ModuleCommand {
         /// Only affects modules which require models.
         #[arg(long)]
         model_size: Option<String>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum ProtocolCommand {
+    /// Monitor inbound traffic
+    Monitor {},
+
+    /// Ping a peer
+    Ping {
+        /// The peer ticket
+        ticket: String,
     },
 }
 
@@ -555,6 +572,15 @@ pub async fn main() -> SysexitsError {
                 version,
                 model_size,
             } => commands::module::upgrade(names, version, model_size, &options.flags).await,
+        }
+        .map(|_| EX_OK),
+
+        #[cfg(feature = "protocol")]
+        Command::Protocol(protocol_command) => match protocol_command {
+            ProtocolCommand::Monitor {} => commands::protocol::monitor(&options.flags).await,
+            ProtocolCommand::Ping { ticket } => {
+                commands::protocol::ping(ticket, &options.flags).await
+            },
         }
         .map(|_| EX_OK),
 
