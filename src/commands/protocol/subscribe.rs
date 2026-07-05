@@ -1,12 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError};
-use asimov_protocol::{EndpointTicket, Node, Ticket, Topic};
+use asimov_protocol::{EndpointTicket, GossipReceiver, Node, Ticket, Topic};
 use color_print::ceprintln;
 
-pub async fn send(
+pub async fn subscribe(
     topic: &String,
-    message: &String,
     ticket: &Option<String>,
     _flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
@@ -25,17 +24,28 @@ pub async fn send(
     ceprintln!("{}", self_ticket);
 
     // Subscribe to the given topic and wait for a peer:
-    let mut topic_subscription = node.subscribe_and_join(Topic::Handle(topic.into())).await?;
+    let topic_subscription = node.subscribe_and_join(Topic::Handle(topic.into())).await?;
     ceprintln!("<s,g>✓</> Topic=<s>{:?}</>", topic_subscription);
 
-    // Publish the given message to the topic:
-    topic_subscription.publish(message.clone()).await?;
+    // Spawn the subscriber loop as a Tokio task:
+    let (_sender, receiver) = topic_subscription.split();
+    tokio::spawn(subscribe_loop(receiver));
 
     // Wait until the user presses Ctrl-C to terminate the program:
     tokio::signal::ctrl_c().await?;
 
-    // Close the connection and shut down the node:
+    // Close all connections and shut down the node:
     node.close().await;
 
+    Ok(())
+}
+
+async fn subscribe_loop(
+    mut receiver: GossipReceiver,
+) -> Result<(), std::boxed::Box<dyn core::error::Error + Send>> {
+    use futures_lite::stream::StreamExt;
+    while let Some(event) = receiver.try_next().await.unwrap() {
+        ceprintln!("<s,g>✓</> Event=<s>{event:?}</>");
+    }
     Ok(())
 }

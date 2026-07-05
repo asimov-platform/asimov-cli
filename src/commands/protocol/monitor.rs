@@ -1,26 +1,23 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError};
-use asimov_protocol::{DefaultPreset, Endpoint, EndpointTicket, PING_ALPN, PingProtocol, Router};
+use asimov_protocol::{EndpointTicket, Node};
 use color_print::ceprintln;
 
 pub async fn monitor(_flags: &StandardOptions) -> Result<(), SysexitsError> {
-    // Create an endpoint and accept connections from peers:
-    let self_endpoint = Endpoint::bind(DefaultPreset).await.unwrap();
-    self_endpoint.online().await;
+    // Start a node and accept connections from peers:
+    let node = Node::default().bind().await?.start().await?;
+    node.online().await;
 
-    // Start the ping protocol service router:
-    let service = PingProtocol::new();
-    let _router = Router::builder(self_endpoint.clone())
-        .accept(PING_ALPN, service)
-        .spawn();
-
-    // Print out the endpoint's ticket that allows connecting to it:
-    let self_ticket = EndpointTicket::new(self_endpoint.addr());
+    // Print out our endpoint's ticket to allow connecting to it:
+    let self_ticket = EndpointTicket::new(node.endpoint_addr());
     ceprintln!("{}", self_ticket);
 
     // Wait until the user presses Ctrl-C to terminate the program:
     tokio::signal::ctrl_c().await?;
+
+    // Close the connection and shut down the node:
+    node.close().await;
 
     Ok(())
 }

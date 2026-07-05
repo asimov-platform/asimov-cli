@@ -4,7 +4,7 @@ use crate::{StandardOptions, SysexitsError};
 use asimov_protocol::{EndpointTicket, Node, Ticket, Topic};
 use color_print::ceprintln;
 
-pub async fn send(
+pub async fn publish(
     topic: &String,
     message: &String,
     ticket: &Option<String>,

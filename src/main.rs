@@ -172,6 +172,13 @@ enum MessageCommand {
     Send {
         /// The recipient's peer ID
         recipient: String,
+
+        /// The message to send
+        message: String,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
     },
 }
 
@@ -290,13 +297,39 @@ enum ModuleCommand {
 
 #[derive(Debug, Subcommand)]
 enum ProtocolCommand {
-    /// Monitor inbound traffic
+    /// Monitor inbound peer traffic
+    #[clap(alias = "pong")]
     Monitor {},
 
-    /// Ping a peer
+    /// Ping a peer node directly
     Ping {
-        /// The peer ticket
+        /// The peer ticket for the connection
         ticket: String,
+    },
+
+    /// Publish a message to a gossip topic
+    #[command(aliases = ["pub", "send"])]
+    Publish {
+        /// The topic to publish to
+        topic: String,
+
+        /// The message to publish
+        message: String,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
+    },
+
+    /// Subscribe to messages on a gossip topic
+    #[command(aliases = ["sub", "recv"])]
+    Subscribe {
+        /// The topic to publish to
+        topic: String,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
     },
 }
 
@@ -530,9 +563,11 @@ pub async fn main() -> SysexitsError {
 
         #[cfg(feature = "message")]
         Command::Message(message_command) => match message_command {
-            MessageCommand::Send { recipient } => {
-                commands::message::send(recipient, &options.flags).await
-            },
+            MessageCommand::Send {
+                recipient,
+                message,
+                ticket,
+            } => commands::message::send(recipient, message, ticket, &options.flags).await,
         }
         .map(|_| EX_OK),
 
@@ -580,6 +615,14 @@ pub async fn main() -> SysexitsError {
             ProtocolCommand::Monitor {} => commands::protocol::monitor(&options.flags).await,
             ProtocolCommand::Ping { ticket } => {
                 commands::protocol::ping(ticket, &options.flags).await
+            },
+            ProtocolCommand::Publish {
+                topic,
+                message,
+                ticket,
+            } => commands::protocol::publish(topic, message, ticket, &options.flags).await,
+            ProtocolCommand::Subscribe { topic, ticket } => {
+                commands::protocol::subscribe(topic, ticket, &options.flags).await
             },
         }
         .map(|_| EX_OK),
