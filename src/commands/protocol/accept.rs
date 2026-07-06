@@ -4,7 +4,7 @@ use crate::{StandardOptions, SysexitsError};
 use asimov_protocol::{EndpointTicket, Node};
 use color_print::ceprintln;
 
-pub async fn monitor(_flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn accept(_flags: &StandardOptions) -> Result<(), SysexitsError> {
     // Start a node and accept connections from peers:
     let node = Node::default().bind().await?.start().await?;
     node.online().await;

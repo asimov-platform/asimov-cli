@@ -42,7 +42,7 @@ enum Command {
 
     /// TBD
     #[cfg(feature = "describe")]
-    #[command(aliases = ["summarize", "tldr"])]
+    #[clap(aliases = ["summarize", "tldr"])]
     Describe {
         #[clap(long, short = 'M')]
         module: Option<String>,
@@ -56,7 +56,7 @@ enum Command {
 
     /// Fetch knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "fetch")]
-    #[command(aliases = ["extract", "get", "import", "parse"])]
+    #[clap(aliases = ["extract", "get", "import", "parse"])]
     Fetch {
         /// Optionally choose the module instead of using module resolution.
         /// The module's manifest must declare support for the URL for the
@@ -82,7 +82,7 @@ enum Command {
 
     /// Catalog knowledge from a URL, utilizing enabled modules
     #[cfg(feature = "list")]
-    #[command(aliases = ["dir", "ls"])]
+    #[clap(aliases = ["dir", "ls"])]
     List {
         #[clap(long, short = 'M')]
         module: Option<String>,
@@ -147,7 +147,7 @@ enum Command {
 #[derive(Debug, Subcommand)]
 enum SnapshotCommand {
     /// Create snapshots for URL(s)
-    #[command(external_subcommand)]
+    #[clap(external_subcommand)]
     Snapshot(Vec<String>),
 
     /// List snapshots
@@ -297,9 +297,9 @@ enum ModuleCommand {
 
 #[derive(Debug, Subcommand)]
 enum ProtocolCommand {
-    /// Monitor inbound peer traffic
-    #[clap(alias = "pong")]
-    Monitor {},
+    /// Accept and monitor inbound peer traffic
+    #[clap(aliases = ["monitor", "pong"])]
+    Accept {},
 
     /// Ping a peer node directly
     Ping {
@@ -307,8 +307,15 @@ enum ProtocolCommand {
         ticket: String,
     },
 
+    /// Connect to a peer node directly
+    #[clap(alias = "hello")]
+    Connect {
+        /// The peer ticket for the connection
+        ticket: String,
+    },
+
     /// Publish a message to a gossip topic
-    #[command(aliases = ["pub", "send"])]
+    #[clap(aliases = ["pub", "send"])]
     Publish {
         /// The topic to publish to
         topic: String,
@@ -322,7 +329,7 @@ enum ProtocolCommand {
     },
 
     /// Subscribe to messages on a gossip topic
-    #[command(aliases = ["sub", "recv"])]
+    #[clap(aliases = ["sub", "recv"])]
     Subscribe {
         /// The topic to publish to
         topic: String,
@@ -611,19 +618,21 @@ pub async fn main() -> SysexitsError {
         .map(|_| EX_OK),
 
         #[cfg(feature = "protocol")]
-        Command::Protocol(protocol_command) => match protocol_command {
-            ProtocolCommand::Monitor {} => commands::protocol::monitor(&options.flags).await,
-            ProtocolCommand::Ping { ticket } => {
-                commands::protocol::ping(ticket, &options.flags).await
-            },
-            ProtocolCommand::Publish {
-                topic,
-                message,
-                ticket,
-            } => commands::protocol::publish(topic, message, ticket, &options.flags).await,
-            ProtocolCommand::Subscribe { topic, ticket } => {
-                commands::protocol::subscribe(topic, ticket, &options.flags).await
-            },
+        Command::Protocol(protocol_command) => {
+            use commands::protocol::*;
+            match protocol_command {
+                ProtocolCommand::Accept {} => accept(&options.flags).await,
+                ProtocolCommand::Ping { ticket } => ping(ticket, &options.flags).await,
+                ProtocolCommand::Connect { ticket } => connect(ticket, &options.flags).await,
+                ProtocolCommand::Publish {
+                    topic,
+                    message,
+                    ticket,
+                } => publish(topic, message, ticket, &options.flags).await,
+                ProtocolCommand::Subscribe { topic, ticket } => {
+                    subscribe(topic, ticket, &options.flags).await
+                },
+            }
         }
         .map(|_| EX_OK),
 
