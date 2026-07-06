@@ -35,7 +35,7 @@ pub async fn publish(
     tokio::signal::ctrl_c().await?;
 
     // Close the connection and shut down the node:
-    node.close().await;
+    node.terminate().await?;
 
     Ok(())
 }

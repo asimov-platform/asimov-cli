@@ -35,7 +35,7 @@ pub async fn subscribe(
     tokio::signal::ctrl_c().await?;
 
     // Close all connections and shut down the node:
-    node.close().await;
+    node.terminate().await?;
 
     Ok(())
 }

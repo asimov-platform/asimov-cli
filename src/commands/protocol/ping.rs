@@ -19,7 +19,7 @@ pub async fn ping(ticket: &String, _flags: &StandardOptions) -> Result<(), Sysex
     ceprintln!("<s,g>✓</> Pinged the peer in <s>{rtt:?}</> RTT");
 
     // Close the connection and shut down the node:
-    node.close().await;
+    node.terminate().await?;
 
     Ok(())
 }
