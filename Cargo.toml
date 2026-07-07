@@ -90,7 +90,7 @@ jiff = { version = "0.2", default-features = false, features = [
   "alloc",
 ], optional = true }
 mime = { version = "0.3", optional = true }
-sha2 = { version = "0.10", optional = true }
+sha2 = { version = "0.11", optional = true }
 
 futures-lite = "2.6.1"
 
