@@ -12,5 +12,8 @@ pub use ping::*;
 mod publish;
 pub use publish::*;
 
+mod resolve;
+pub use resolve::*;
+
 mod subscribe;
 pub use subscribe::*;

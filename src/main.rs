@@ -3,6 +3,7 @@
 #![deny(unsafe_code)]
 
 use asimov_cli::commands::{self, External, Help, HelpCmd};
+use asimov_id::Handle;
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -328,6 +329,13 @@ enum ProtocolCommand {
         ticket: Option<String>,
     },
 
+    /// Resolve a handle into a set of peer IDs
+    #[clap(aliases = ["lookup"])]
+    Resolve {
+        /// The handle to resolve
+        handle: Handle,
+    },
+
     /// Subscribe to messages on a gossip topic
     #[clap(aliases = ["sub", "recv"])]
     Subscribe {
@@ -619,19 +627,19 @@ pub async fn main() -> SysexitsError {
 
         #[cfg(feature = "protocol")]
         Command::Protocol(protocol_command) => {
+            use ProtocolCommand::*;
             use commands::protocol::*;
             match protocol_command {
-                ProtocolCommand::Accept {} => accept(&options.flags).await,
-                ProtocolCommand::Ping { ticket } => ping(ticket, &options.flags).await,
-                ProtocolCommand::Connect { ticket } => connect(ticket, &options.flags).await,
-                ProtocolCommand::Publish {
+                Accept {} => accept(&options.flags).await,
+                Ping { ticket } => ping(ticket, &options.flags).await,
+                Connect { ticket } => connect(ticket, &options.flags).await,
+                Publish {
                     topic,
                     message,
                     ticket,
                 } => publish(topic, message, ticket, &options.flags).await,
-                ProtocolCommand::Subscribe { topic, ticket } => {
-                    subscribe(topic, ticket, &options.flags).await
-                },
+                Resolve { handle } => resolve(handle, &options.flags).await,
+                Subscribe { topic, ticket } => subscribe(topic, ticket, &options.flags).await,
             }
         }
         .map(|_| EX_OK),
