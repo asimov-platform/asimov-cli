@@ -45,7 +45,7 @@ cc = "1.2"
 
 [dev-dependencies]
 indoc = "2.0"
-temp-dir = "0.1"
+temp-dir = "0.2"
 
 [dependencies]
 asimov-env = "25.2.0"
