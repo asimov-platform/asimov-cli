@@ -3,7 +3,7 @@
 #![deny(unsafe_code)]
 
 use asimov_cli::commands::{self, External, Help, HelpCmd};
-use asimov_id::Handle;
+use asimov_id::Id;
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -333,7 +333,7 @@ enum ProtocolCommand {
     #[clap(aliases = ["lookup"])]
     Resolve {
         /// The handle to resolve
-        handle: Handle,
+        handle: Id,
     },
 
     /// Subscribe to messages on a gossip topic
