@@ -1,5 +1,78 @@
 // This is free and unencumbered software released into the public domain.
 
+use asimov_id::Id;
+use clientele::{StandardOptions, SysexitsError, crates::clap::Subcommand};
+
+#[derive(Debug, Subcommand)]
+pub enum ProtocolCommand {
+    /// Accept and monitor inbound peer traffic
+    #[clap(aliases = ["monitor", "pong"])]
+    Accept {},
+
+    /// Ping a peer node directly
+    Ping {
+        /// The peer ticket for the connection
+        ticket: String,
+    },
+
+    /// Connect to a peer node directly
+    #[clap(alias = "hello")]
+    Connect {
+        /// The peer ticket for the connection
+        ticket: String,
+    },
+
+    /// Publish a message to a gossip topic
+    #[clap(aliases = ["pub", "send"])]
+    Publish {
+        /// The topic to publish to
+        topic: String,
+
+        /// The message to publish
+        message: String,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
+    },
+
+    /// Resolve a handle into a set of peer IDs
+    #[clap(aliases = ["lookup"])]
+    Resolve {
+        /// The handle to resolve
+        handle: Id,
+    },
+
+    /// Subscribe to messages on a gossip topic
+    #[clap(aliases = ["sub", "recv"])]
+    Subscribe {
+        /// The topic to publish to
+        topic: String,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
+    },
+}
+
+impl ProtocolCommand {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), SysexitsError> {
+        use ProtocolCommand::*;
+        match self {
+            Accept {} => accept(flags).await,
+            Ping { ticket } => ping(ticket, flags).await,
+            Connect { ticket } => connect(ticket, flags).await,
+            Publish {
+                topic,
+                message,
+                ticket,
+            } => publish(topic, message, ticket, flags).await,
+            Resolve { handle } => resolve(handle, flags).await,
+            Subscribe { topic, ticket } => subscribe(topic, ticket, flags).await,
+        }
+    }
+}
+
 mod accept;
 pub use accept::*;
 
