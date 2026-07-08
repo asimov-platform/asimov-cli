@@ -1,19 +1,27 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError};
-use asimov_id::Id;
+use asimov_id::{Id, PublicKeyEncoding};
 use asimov_protocol::{CsvHandleResolver, HandleResolver};
 use color_print::ceprintln;
 use futures_lite::{pin, stream::StreamExt};
 
-pub async fn resolve(id: &Id, _flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn resolve(
+    id: &Id,
+    format: &Option<PublicKeyEncoding>,
+    _flags: &StandardOptions,
+) -> Result<(), SysexitsError> {
+    let format = format.unwrap_or_default();
     let mut resolver = CsvHandleResolver::open("examples/resolve.csv").await?; // TODO
 
-    let results = resolver.resolve_id(id.clone());
-    pin!(results);
+    let endpoints = resolver.resolve_id(id.clone());
+    pin!(endpoints);
 
-    while let Some(result) = results.next().await {
-        ceprintln!("{}", result);
+    while let Some(endpoint) = endpoints.next().await {
+        match endpoint.encode(format) {
+            Some(encoded) => ceprintln!("{}", encoded),
+            None => continue,
+        }
     }
 
     Ok(())

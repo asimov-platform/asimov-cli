@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use asimov_id::{Handle, Id, PublicKey};
+use asimov_id::{Handle, Id, PublicKey, PublicKeyEncoding};
 use clientele::{StandardOptions, SysexitsError, crates::clap::Subcommand};
 use std::path::PathBuf;
 
@@ -38,6 +38,10 @@ pub enum HandleCommand {
     Resolve {
         /// The handle to resolve
         handle: Id,
+
+        /// The output format for the public key (default: asimov)
+        #[clap(short, long)]
+        format: Option<PublicKeyEncoding>,
     },
 }
 
@@ -49,7 +53,7 @@ impl HandleCommand {
             HandleCommand::Import { inputs } => import(inputs, flags).await,
             HandleCommand::List {} => list(flags).await,
             HandleCommand::Remove { handle, endpoints } => remove(handle, endpoints, flags).await,
-            HandleCommand::Resolve { handle } => resolve(handle, flags).await,
+            HandleCommand::Resolve { handle, format } => resolve(handle, format, flags).await,
         }
     }
 }
