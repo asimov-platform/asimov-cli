@@ -17,14 +17,15 @@ categories = ["command-line-utilities", "text-processing"]
 publish = true
 
 [features]
-default = ["all"]
+default = ["all", "unstable"]
 all = ["ask", "fetch", "list", "module", "read", "snap", "snapshot"]
-unstable = ["describe", "index", "message", "protocol", "search"]
+unstable = ["describe", "handle", "index", "message", "protocol", "search"]
 
 # Optional features:
 ask = []
 describe = []
 fetch = ["dep:asimov-proxy"]
+handle = []
 index = []
 list = []
 message = []

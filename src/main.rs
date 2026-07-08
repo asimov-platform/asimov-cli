@@ -73,6 +73,11 @@ enum Command {
     },
 
     /// TBD
+    #[cfg(feature = "handle")]
+    #[clap(subcommand)]
+    Handle(HandleCommand),
+
+    /// TBD
     #[cfg(feature = "index")]
     Index {
         #[clap(long, short = 'm')]
@@ -552,6 +557,9 @@ pub async fn main() -> SysexitsError {
         } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
             .await
             .map(|_| EX_OK),
+
+        #[cfg(feature = "handle")]
+        Command::Handle(command) => command.run(&options.flags).await.map(|_| EX_OK),
 
         #[cfg(feature = "index")]
         Command::Index { module, urls } => {
