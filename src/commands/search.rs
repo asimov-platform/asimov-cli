@@ -7,8 +7,8 @@ use crate::{
 use miette::Result;
 
 pub async fn search(
-    _prompt: &str,
-    _module: Option<&str>,
+    _prompt: String,
+    _module: Option<String>,
     _flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     Ok(()) // TODO

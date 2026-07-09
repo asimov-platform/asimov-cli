@@ -11,9 +11,9 @@ use color_print::ceprintln;
 use miette::Result;
 
 pub async fn fetch(
-    input_urls: &[String],
-    module: Option<&str>,
-    output: Option<&str>,
+    input_urls: Vec<String>,
+    module: Option<String>,
+    output: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
@@ -30,7 +30,7 @@ pub async fn fetch(
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", input_url);
         }
 
-        let input_url = normalize_url(input_url).unwrap_or_else(|e| {
+        let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
                     "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
@@ -44,14 +44,16 @@ pub async fn fetch(
             EX_USAGE
         })?;
 
-        let module = shared::pick_module(&registry, &input_url, modules.as_slice(), module).await?;
+        let module =
+            shared::pick_module(&registry, &input_url, modules.as_slice(), module.as_deref())
+                .await?;
 
         let mut fetcher = asimov_runner::Fetcher::new(
             format!("asimov-{}-fetcher", module.name),
             &input_url,
             GraphOutput::Inherited,
             FetcherOptions::builder()
-                .maybe_output(output)
+                .maybe_output(output.as_deref())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );

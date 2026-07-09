@@ -11,8 +11,8 @@ use color_print::ceprintln;
 use miette::Result;
 
 pub async fn read(
-    input_urls: &Vec<String>,
-    module: Option<&str>,
+    input_urls: Vec<String>,
+    module: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
@@ -29,7 +29,7 @@ pub async fn read(
             ceprintln!("<s,c>»</> Reading <s>{}</> ...", input_url);
         }
 
-        let mime_modules = infer::get_from_path(input_url)
+        let mime_modules = infer::get_from_path(&input_url)
             .inspect_err(|e| {
                 if flags.verbose > 1 {
                     ceprintln!(
@@ -44,7 +44,7 @@ pub async fn read(
             .map(|mime_type| resolver.resolve_content_type(&mime_type))
             .unwrap_or_default();
 
-        let normalized_url = normalize_url(input_url).unwrap_or_else(|e| {
+        let normalized_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
                     "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
@@ -67,14 +67,15 @@ pub async fn read(
         // mime modules first for prioritization
         let modules = [mime_modules, url_modules].concat();
 
-        let module = shared::pick_module(&registry, &input_url, &modules, module).await?;
+        let module =
+            shared::pick_module(&registry, &input_url, &modules, module.as_deref()).await?;
 
         let mut reader = asimov_runner::Reader::new(
             format!("asimov-{}-reader", module.name),
             Input::Ignored,
             GraphOutput::Inherited,
             ReaderOptions::builder()
-                .other(input_url)
+                .other(&input_url)
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
@@ -87,7 +88,7 @@ pub async fn read(
         tokio::io::copy(&mut output, &mut tokio::io::stdout()).await?;
 
         if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Read <s>{}</>.", input_url);
+            ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);
         }
     }
 
