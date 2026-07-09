@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use asimov_cli::commands::External;
+use asimov_cli::commands::ExternalSubcommand;
 use clientele::SysexitsError::*;
 
 mod shared;
@@ -13,7 +13,7 @@ pub fn test_execute_external() -> Result<()> {
     for file in TEST_FILES.iter() {
         println!("{}: ", file.name);
 
-        let external_cmd = External {
+        let external_cmd = ExternalSubcommand {
             is_debug: false,
             pipe_output: true,
         };

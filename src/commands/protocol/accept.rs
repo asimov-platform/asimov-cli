@@ -1,10 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError};
+use crate::StandardOptions;
 use asimov_protocol::{EndpointTicket, Node};
 use color_print::ceprintln;
+use core::error::Error;
 
-pub async fn accept(_flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn accept(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     // Start a node and accept connections from peers:
     let node = Node::default().bind().await?.start().await?;
     node.online().await;

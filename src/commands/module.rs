@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::{StandardOptions, SysexitsError, crates::clap::Subcommand};
+use clientele::{StandardOptions, crates::clap::Subcommand};
+use core::error::Error;
 use std::{string::String, vec::Vec};
 
 #[derive(Debug, Subcommand)]
@@ -117,7 +118,7 @@ pub enum ModuleCommand {
 }
 
 impl ModuleCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), SysexitsError> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
         use ModuleCommand::*;
         match self {
             Browse { name } => browse(name, flags).await,

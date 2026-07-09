@@ -1,7 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_id::{Handle, Id, PublicKey, PublicKeyEncoding};
-use clientele::{StandardOptions, SysexitsError, crates::clap::Subcommand};
+use clientele::{StandardOptions, crates::clap::Subcommand};
+use core::error::Error;
 use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]
@@ -46,7 +47,7 @@ pub enum HandleCommand {
 }
 
 impl HandleCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), SysexitsError> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
         match self {
             HandleCommand::Add { handle, endpoints } => add(handle, endpoints, flags).await,
             HandleCommand::Export {} => export(flags).await,

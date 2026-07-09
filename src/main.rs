@@ -2,7 +2,7 @@
 
 #![deny(unsafe_code)]
 
-use asimov_cli::commands::{self, External, Help, HelpCmd};
+use asimov_cli::commands::{self, ExternalSubcommand, Help, HelpCmd};
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -327,9 +327,10 @@ pub async fn main() -> SysexitsError {
     }
 
     // Execute the given command:
+    use Command::*;
     let result = match options.command.as_ref().unwrap() {
         #[cfg(feature = "ask")]
-        Command::Ask {
+        Ask {
             module,
             model,
             input,
@@ -346,41 +347,47 @@ pub async fn main() -> SysexitsError {
             };
             commands::ask::ask(input, module.as_deref(), model.as_deref(), &options.flags)
                 .await
+                .map_err(|err| err.into())
                 .map(|_| EX_OK)
         },
 
         #[cfg(feature = "describe")]
-        Command::Describe {
+        Describe {
             module,
             output,
             urls,
         } => {
             commands::describe::describe(urls, module.as_deref(), output.as_deref(), &options.flags)
                 .await
+                .map_err(|err| err.into())
                 .map(|_| EX_OK)
         },
 
         #[cfg(feature = "fetch")]
-        Command::Fetch {
+        Fetch {
             module,
             output,
             urls,
         } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
             .await
+            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "handle")]
-        Command::Handle(command) => command.run(&options.flags).await.map(|_| EX_OK),
+        Handle(command) => command
+            .run(&options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "index")]
-        Command::Index { module, urls } => {
-            commands::index::index(urls, module.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        Index { module, urls } => commands::index::index(urls, module.as_deref(), &options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "list")]
-        Command::List {
+        List {
             module,
             limit,
             output,
@@ -393,45 +400,62 @@ pub async fn main() -> SysexitsError {
             &options.flags,
         )
         .await
+        .map_err(|err| err.into())
         .map(|_| EX_OK),
 
         #[cfg(feature = "message")]
-        Command::Message(command) => command.run(&options.flags).await.map(|_| EX_OK),
+        Message(command) => command
+            .run(&options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "module")]
-        Command::Module(command) => command.run(&options.flags).await.map(|_| EX_OK),
+        Module(command) => command
+            .run(&options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "protocol")]
-        Command::Protocol(command) => command.run(&options.flags).await.map(|_| EX_OK),
+        Protocol(command) => command
+            .run(&options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "read")]
-        Command::Read { module, urls } => {
-            commands::read::read(urls, module.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        Read { module, urls } => commands::read::read(urls, module.as_deref(), &options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "search")]
-        Command::Search { module, prompt } => {
+        Search { module, prompt } => {
             commands::search::search(&prompt, module.as_deref(), &options.flags)
                 .await
+                .map_err(|err| err.into())
                 .map(|_| EX_OK)
         },
 
         #[cfg(feature = "snap")]
-        Command::Snap { urls } => commands::snap::snap(urls, &options.flags)
+        Snap { urls } => commands::snap::snap(urls, &options.flags)
             .await
+            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "snapshot")]
-        Command::Snapshot(command) => command.run(&options.flags).await.map(|_| EX_OK),
+        Snapshot(command) => command
+            .run(&options.flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
-        Command::External(args) => {
-            let cmd = External {
+        External(args) => {
+            let cmd = ExternalSubcommand {
                 is_debug: options.flags.debug,
                 pipe_output: false,
             };
-
             cmd.execute(&args[0], &args[1..]).map(|result| result.code)
         },
     };

@@ -1,18 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{
-    StandardOptions,
-    SysexitsError::{self, *},
-};
+use crate::{StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
 use color_print::cprintln;
+use core::error::Error;
 
 pub async fn upgrade(
     module_names: &Vec<String>,
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
     let installer = asimov_installer::Installer::default();
 
