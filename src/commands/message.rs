@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use asimov_protocol::Topic;
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
 use std::string::String;
@@ -8,8 +9,8 @@ use std::string::String;
 pub enum MessageCommand {
     /// Send a message to a peer
     Send {
-        /// The recipient's peer ID
-        recipient: String,
+        /// The recipient for the message
+        recipient: Topic,
 
         /// The message to send
         message: String,

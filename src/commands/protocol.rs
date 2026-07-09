@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_id::Id;
+use asimov_protocol::Topic;
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
 
@@ -35,7 +36,7 @@ pub enum ProtocolCommand {
     #[clap(aliases = ["pub", "send"])]
     Publish {
         /// The topic to publish to
-        topic: String, // TODO: typed
+        topic: Topic,
 
         /// The message to publish
         message: String,
@@ -56,7 +57,7 @@ pub enum ProtocolCommand {
     #[clap(aliases = ["sub", "recv"])]
     Subscribe {
         /// The topic to publish to
-        topic: String, // TODO: typed
+        topic: Topic,
 
         /// A peer ticket for bootstrapping
         #[arg(long)]
