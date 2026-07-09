@@ -14,11 +14,11 @@ pub async fn resolve(
     let format = format.unwrap_or_default();
     let mut resolver = CsvHandleResolver::open("examples/resolve.csv").await?; // TODO
 
-    let endpoints = resolver.resolve_id(id.clone());
+    let endpoints = resolver.resolve_all(id.clone());
     pin!(endpoints);
 
     while let Some(endpoint) = endpoints.next().await {
-        match endpoint.encode(format) {
+        match endpoint?.encode(format) {
             Some(encoded) => ceprintln!("{}", encoded),
             None => continue,
         }

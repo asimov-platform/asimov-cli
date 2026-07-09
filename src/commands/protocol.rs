@@ -11,22 +11,30 @@ pub enum ProtocolCommand {
 
     /// Ping a peer node directly
     Ping {
-        /// The peer ticket for the connection
-        ticket: String,
+        /// The handle to ping
+        handle: Id,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
     },
 
     /// Connect to a peer node directly
     #[clap(alias = "hello")]
     Connect {
-        /// The peer ticket for the connection
-        ticket: String,
+        /// The handle to connect to
+        handle: Id,
+
+        /// A peer ticket for bootstrapping
+        #[arg(long)]
+        ticket: Option<String>,
     },
 
     /// Publish a message to a gossip topic
     #[clap(aliases = ["pub", "send"])]
     Publish {
         /// The topic to publish to
-        topic: String,
+        topic: String, // TODO: typed
 
         /// The message to publish
         message: String,
@@ -47,7 +55,7 @@ pub enum ProtocolCommand {
     #[clap(aliases = ["sub", "recv"])]
     Subscribe {
         /// The topic to publish to
-        topic: String,
+        topic: String, // TODO: typed
 
         /// A peer ticket for bootstrapping
         #[arg(long)]
@@ -60,8 +68,8 @@ impl ProtocolCommand {
         use ProtocolCommand::*;
         match self {
             Accept {} => accept(flags).await,
-            Ping { ticket } => ping(ticket, flags).await,
-            Connect { ticket } => connect(ticket, flags).await,
+            Ping { handle, ticket } => ping(handle, ticket, flags).await,
+            Connect { handle, ticket } => connect(handle, ticket, flags).await,
             Publish {
                 topic,
                 message,

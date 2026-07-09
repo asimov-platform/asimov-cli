@@ -10,8 +10,12 @@ pub async fn accept(_flags: &StandardOptions) -> Result<(), SysexitsError> {
     node.online().await;
 
     // Print out our endpoint's ticket to allow connecting to it:
-    let self_ticket = EndpointTicket::new(node.endpoint_addr());
-    ceprintln!("{}", self_ticket);
+    let endpoint = node.public_key();
+    ceprintln!("{}", endpoint);
+    if false {
+        let self_ticket = EndpointTicket::new(node.endpoint_addr());
+        ceprintln!("{}", self_ticket);
+    }
 
     // Wait until the user presses Ctrl-C to terminate the program:
     tokio::signal::ctrl_c().await?;

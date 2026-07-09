@@ -9,11 +9,11 @@ use futures_lite::{pin, stream::StreamExt};
 pub async fn resolve(id: &Id, _flags: &StandardOptions) -> Result<(), SysexitsError> {
     let mut resolver = CsvHandleResolver::open("examples/resolve.csv").await?; // TODO
 
-    let endpoints = resolver.resolve_id(id.clone());
+    let endpoints = resolver.resolve_all(id.clone());
     pin!(endpoints);
 
     while let Some(endpoint) = endpoints.next().await {
-        ceprintln!("{}", endpoint);
+        ceprintln!("{}", endpoint?);
     }
 
     Ok(())
