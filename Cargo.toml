@@ -49,6 +49,7 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
+asimov-directory = "25.2.0"
 asimov-env = "25.2.0"
 asimov-id = "25.2.0"
 asimov-installer = "25.2.0"
@@ -105,5 +106,6 @@ name = "asimov"
 path = "src/main.rs"
 
 [patch.crates-io]
+#asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
 #asimov-id = { path = "../asimov.rs/lib/asimov-id" }
 #asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
