@@ -86,7 +86,7 @@ enum Command {
         urls: Vec<String>,
     },
 
-    /// Add, remove, and resolve handles
+    /// Add, remove, and resolve handles and their associated endpoints
     #[cfg(feature = "handle")]
     #[clap(subcommand)]
     Handle(HandleCommand),
