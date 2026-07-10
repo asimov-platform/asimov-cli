@@ -2,7 +2,7 @@
 
 use crate::StandardOptions;
 use asimov_directory::fs::HandleResolver;
-use color_print::ceprintln;
+use color_print::cprintln;
 use core::error::Error;
 use futures_lite::{pin, stream::StreamExt};
 
@@ -12,7 +12,7 @@ pub async fn list(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     pin!(handles);
 
     while let Some(handle) = handles.next().await {
-        ceprintln!("{}", handle?);
+        cprintln!("{}", handle?);
     }
 
     Ok(())

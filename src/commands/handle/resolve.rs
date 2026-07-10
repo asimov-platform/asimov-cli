@@ -3,7 +3,7 @@
 use crate::StandardOptions;
 use asimov_directory::fs::{HandleResolver, ResolveHandle};
 use asimov_id::{Id, PublicKeyEncoding};
-use color_print::ceprintln;
+use color_print::cprintln;
 use core::error::Error;
 use futures_lite::{pin, stream::StreamExt};
 
@@ -20,7 +20,7 @@ pub async fn resolve(
 
     while let Some(endpoint) = endpoints.next().await {
         match endpoint?.encode(format) {
-            Some(encoded) => ceprintln!("{}", encoded),
+            Some(encoded) => cprintln!("{}", encoded),
             None => continue,
         }
     }
