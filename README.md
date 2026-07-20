@@ -9,7 +9,7 @@
 
 ## ✨ Features
 
-- 100% free and unencumbered public domain software.
+- Cuts red tape: 100% free and unencumbered public domain software.
 
 ## 🛠️ Prerequisites
 
@@ -17,15 +17,25 @@
 
 ## ⬇️ Installation
 
-### Installation from Source Code
+### Installation from GitHub
 
-#### Installation via Cargo
+#### Installation via [Cargo Binstall]
+
+```bash
+cargo binstall -y asimov-cli
+```
+
+<!--
+<img width="100%" alt="Installation via cargo-binstall" src="https://github.com/asimov-platform/asimov-cli/raw/master/etc/asciinema/install.gif"/>
+-->
+
+#### Installation via [Cargo]
 
 ```bash
 cargo install asimov-cli --locked
 ```
 
-### Installation using Package Manager
+### Installation using a Package Manager
 
 <details>
 <summary>Homebrew</summary>
@@ -43,7 +53,6 @@ Now you can install ASIMOV CLI with:
 ```bash
 brew install asimov-cli
 ```
-
 </details>
 
 <details>
@@ -62,7 +71,6 @@ Now, installing ASIMOV CLI is as easy as running:
 ```bash
 scoop install asimov-platform/asimov-cli
 ```
-
 </details>
 
 <details>
@@ -87,7 +95,6 @@ And then install ASIMOV CLI with:
 ```bash
 nix profile install asimov-cli#default --no-write-lock-file
 ```
-
 </details>
 
 <details>
@@ -118,7 +125,6 @@ You may want to create an alias for it:
 ```bash
 alias asimov="flatpak run so.asimov.cli"
 ```
-
 </details>
 
 ## 👉 Examples
@@ -173,7 +179,59 @@ asimov help module
 
 ## 📚 Reference
 
-TBD
+### Command-Line Interface
+
+```shellsession
+$ asimov
+```
+
+#### `asimov ask`
+
+```shellsession
+$ asimov ask --help
+```
+
+#### `asimov fetch`
+
+```shellsession
+$ asimov fetch --help
+```
+
+#### `asimov handle`
+
+```shellsession
+$ asimov handle --help
+```
+
+#### `asimov list`
+
+```shellsession
+$ asimov list --help
+```
+
+#### `asimov module`
+
+```shellsession
+$ asimov module --help
+```
+
+#### `asimov read`
+
+```shellsession
+$ asimov read --help
+```
+
+#### `asimov snap`
+
+```shellsession
+$ asimov snap --help
+```
+
+#### `asimov snapshot`
+
+```shellsession
+$ asimov snapshot --help
+```
 
 ## 👨‍💻 Development
 
@@ -191,7 +249,11 @@ git clone https://github.com/asimov-platform/asimov-cli.git
 
 [`asimov`]: https://github.com/asimov-platform/asimov-cli#command-line-interface
 
+[Crates.io]: https://crates.io/crates/asimov-cli
 [feature flags]: https://docs.rs/crate/asimov-cli/latest/features
+[naming conventions]: https://rust-lang.github.io/api-guidelines/naming.html
 
 [ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli
+[Cargo]: https://rustup.rs
+[Cargo Binstall]: https://crates.io/crates/cargo-binstall
 [Rust]: https://rust-lang.org

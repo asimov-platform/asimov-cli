@@ -6,7 +6,7 @@
 
 ## ✨ Features
 
-- 100% free and unencumbered public domain software.
+- Cuts red tape: 100% free and unencumbered public domain software.
 
 ## 🛠️ Prerequisites
 
@@ -14,15 +14,25 @@
 
 ## ⬇️ Installation
 
-### Installation from Source Code
+### Installation from GitHub
 
-#### Installation via Cargo
+#### Installation via [Cargo Binstall]
+
+```bash
+cargo binstall -y {{ package.name }}
+```
+
+<!--
+<img width="100%" alt="Installation via cargo-binstall" src="{{ github.repository.link }}/raw/master/etc/asciinema/install.gif"/>
+-->
+
+#### Installation via [Cargo]
 
 ```bash
 cargo install {{ package.name }} --locked
 ```
 
-### Installation using Package Manager
+### Installation using a Package Manager
 
 <details>
 <summary>Homebrew</summary>
@@ -40,7 +50,6 @@ Now you can install ASIMOV CLI with:
 ```bash
 brew install asimov-cli
 ```
-
 </details>
 
 <details>
@@ -59,7 +68,6 @@ Now, installing ASIMOV CLI is as easy as running:
 ```bash
 scoop install asimov-platform/asimov-cli
 ```
-
 </details>
 
 <details>
@@ -84,7 +92,6 @@ And then install ASIMOV CLI with:
 ```bash
 nix profile install asimov-cli#default --no-write-lock-file
 ```
-
 </details>
 
 <details>
@@ -115,7 +122,6 @@ You may want to create an alias for it:
 ```bash
 alias asimov="flatpak run so.asimov.cli"
 ```
-
 </details>
 
 ## 👉 Examples
@@ -170,7 +176,41 @@ asimov help module
 
 ## 📚 Reference
 
-TBD
+### Command-Line Interface
+
+{% render '.config/readmer/asimov.sh-session' %}
+
+#### `asimov ask`
+
+{% render '.config/readmer/asimov-ask.sh-session' %}
+
+#### `asimov fetch`
+
+{% render '.config/readmer/asimov-fetch.sh-session' %}
+
+#### `asimov handle`
+
+{% render '.config/readmer/asimov-handle.sh-session' %}
+
+#### `asimov list`
+
+{% render '.config/readmer/asimov-list.sh-session' %}
+
+#### `asimov module`
+
+{% render '.config/readmer/asimov-module.sh-session' %}
+
+#### `asimov read`
+
+{% render '.config/readmer/asimov-read.sh-session' %}
+
+#### `asimov snap`
+
+{% render '.config/readmer/asimov-snap.sh-session' %}
+
+#### `asimov snapshot`
+
+{% render '.config/readmer/asimov-snapshot.sh-session' %}
 
 ## 👨‍💻 Development
 
@@ -184,7 +224,11 @@ git clone {{ github.repository.url }}
 
 [`asimov`]: {{ github.repository.link }}#command-line-interface
 
+[Crates.io]: https://crates.io/crates/{{ package.name }}
 [feature flags]: https://docs.rs/crate/{{ package.name }}/latest/features
+[naming conventions]: https://rust-lang.github.io/api-guidelines/naming.html
 
 [ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli
+[Cargo]: https://rustup.rs
+[Cargo Binstall]: https://crates.io/crates/cargo-binstall
 [Rust]: https://rust-lang.org
