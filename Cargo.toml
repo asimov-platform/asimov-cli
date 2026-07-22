@@ -105,6 +105,33 @@ lto = "thin"
 name = "asimov"
 path = "src/main.rs"
 
+# See: https://github.com/cargo-bins/cargo-binstall/blob/main/SUPPORT.md
+[package.metadata.binstall]
+pkg-fmt = "tgz"
+bin-dir = "asimov{ binary-ext }"
+disabled-strategies = ["quick-install"]
+
+[package.metadata.binstall.overrides.'cfg(windows)']
+pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "linux", target_arch = "aarch64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm-{ target_env }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "linux", target_arch = "x86_64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x86-{ target_env }{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "macos", target_arch = "aarch64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "macos", target_arch = "x86_64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x86{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "windows", target_arch = "aarch64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ archive-suffix }"
+
+[package.metadata.binstall.overrides.'cfg(all(target_os = "windows", target_arch = "x86_64"))']
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
+
 [patch.crates-io]
 #asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
 #asimov-id = { path = "../asimov.rs/lib/asimov-id" }
