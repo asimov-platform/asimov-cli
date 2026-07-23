@@ -97,9 +97,10 @@ pub enum ModuleCommand {
         dir: Option<String>,
 
         /// Scaffold an initial program too, e.g. `asimov-widget-fetcher`.
+        /// May be repeated to scaffold several programs at once.
         /// By default the module is created empty, with no programs.
         #[arg(long)]
-        program: Option<String>,
+        program: Vec<String>,
 
         /// The template to generate from: a git URL or a local path.
         /// Defaults to the official `asimov-template-module`.
@@ -171,7 +172,7 @@ impl ModuleCommand {
                 new(
                     name,
                     dir.as_deref(),
-                    program.as_deref(),
+                    program,
                     template.as_deref(),
                     branch.as_deref(),
                     flags,

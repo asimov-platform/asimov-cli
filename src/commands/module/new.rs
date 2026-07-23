@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 pub async fn new(
     name: &str,
     dir: Option<&str>,
-    program: Option<&str>,
+    programs: &[String],
     template: Option<&str>,
     branch: Option<&str>,
     flags: &StandardOptions,
@@ -20,10 +20,11 @@ pub async fn new(
     };
 
     let mut options = NewModuleOptions::new(&target_dir, name);
-    match program {
-        Some(program) => options.program_name = Some(program.to_string()),
-        None => options = options.without_program(),
-    }
+    options = if programs.is_empty() {
+        options.without_program()
+    } else {
+        options.programs(programs.iter().cloned())
+    };
     if let Some(template) = template {
         options = if Path::new(template).is_dir() {
             options.template_path(template)
@@ -59,8 +60,11 @@ pub async fn new(
         created.crate_name,
         created.target_dir.display()
     );
-    if let Some(program_name) = created.program_names.first() {
-        cprintln!("<s,dim>hint:</> Initial program: <s>{program_name}</>");
+    if !created.program_names.is_empty() {
+        cprintln!(
+            "<s,dim>hint:</> Programs: <s>{}</>",
+            created.program_names.join(", ")
+        );
     }
 
     Ok(())
