@@ -86,6 +86,31 @@ pub enum ModuleCommand {
         output: Option<String>,
     },
 
+    /// Scaffold a new module
+    New {
+        /// The module's short name, e.g. `widget` for `asimov-widget-module`
+        name: String,
+
+        /// The target directory to create the module in.
+        /// Defaults to `./asimov-<name>-module`.
+        #[arg(long)]
+        dir: Option<String>,
+
+        /// Scaffold an initial program too, e.g. `asimov-widget-fetcher`.
+        /// By default the module is created empty, with no programs.
+        #[arg(long)]
+        program: Option<String>,
+
+        /// The template to generate from: a git URL or a local path.
+        /// Defaults to the official `asimov-template-module`.
+        #[arg(long)]
+        template: Option<String>,
+
+        /// The template's git branch, tag, or revision (git templates only).
+        #[arg(long)]
+        branch: Option<String>,
+    },
+
     /// Resolve a given URL to modules which can handle it
     Resolve {
         /// The URL to resolve
@@ -136,6 +161,23 @@ impl ModuleCommand {
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
             List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
+            New {
+                name,
+                dir,
+                program,
+                template,
+                branch,
+            } => {
+                new(
+                    name,
+                    dir.as_deref(),
+                    program.as_deref(),
+                    template.as_deref(),
+                    branch.as_deref(),
+                    flags,
+                )
+                .await
+            },
             Resolve { url } => resolve(url, flags).await,
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {
@@ -180,6 +222,9 @@ pub use link::*;
 
 mod list;
 pub use list::*;
+
+mod new;
+pub use new::*;
 
 mod resolve;
 pub use resolve::*;

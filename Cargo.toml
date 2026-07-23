@@ -29,7 +29,7 @@ handle = ["asimov-id/encodings"]
 index = []
 list = []
 message = []
-module = []
+module = ["dep:asimov-module-kit"]
 protocol = ["dep:asimov-protocol"]
 read = ["dep:infer", "dep:mime"]
 search = []
@@ -83,6 +83,10 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
+asimov-module-kit = { path = "../asimov.rs/lib/asimov-module-kit", default-features = false, features = [
+  "module",
+  "tracing",
+], optional = true }
 asimov-protocol = { version = "25.2.0", optional = true }
 asimov-proxy = { version = "25.2.0", optional = true }
 asimov-snapshot = { version = "25.2.0", optional = true }
@@ -133,6 +137,6 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
-#asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
-#asimov-id = { path = "../asimov.rs/lib/asimov-id" }
-#asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
+asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
+asimov-id = { path = "../asimov.rs/lib/asimov-id" }
+asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
