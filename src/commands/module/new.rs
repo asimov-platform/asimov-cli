@@ -4,14 +4,12 @@ use crate::{StandardOptions, SysexitsError::*};
 use asimov_module_kit::module::{NewModuleError, NewModuleOptions, new_module};
 use color_print::{ceprintln, cprintln};
 use core::error::Error;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub async fn new(
     name: &str,
     dir: Option<&str>,
     programs: &[String],
-    template: Option<&str>,
-    branch: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
     let target_dir: PathBuf = match dir {
@@ -22,16 +20,6 @@ pub async fn new(
     let mut options = NewModuleOptions::new(&target_dir, name);
     if !programs.is_empty() {
         options = options.programs(programs.iter().map(|kind| format!("asimov-{name}-{kind}")));
-    }
-    if let Some(template) = template {
-        options = if Path::new(template).is_dir() {
-            options.template_path(template)
-        } else {
-            options.template_git(template)
-        };
-    }
-    if let Some(branch) = branch {
-        options.branch = Some(branch.to_string());
     }
 
     if flags.verbose > 1 {

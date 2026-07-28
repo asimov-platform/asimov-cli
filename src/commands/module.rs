@@ -101,15 +101,6 @@ pub enum ModuleCommand {
         /// programs at once. Defaults to a single `emitter` program.
         #[arg(long)]
         program: Vec<String>,
-
-        /// The template to generate from: a git URL or a local path.
-        /// Defaults to the official `asimov-template-module`.
-        #[arg(long)]
-        template: Option<String>,
-
-        /// The template's git branch, tag, or revision (git templates only).
-        #[arg(long)]
-        branch: Option<String>,
     },
 
     /// Resolve a given URL to modules which can handle it
@@ -162,23 +153,7 @@ impl ModuleCommand {
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
             List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
-            New {
-                name,
-                dir,
-                program,
-                template,
-                branch,
-            } => {
-                new(
-                    name,
-                    dir.as_deref(),
-                    program,
-                    template.as_deref(),
-                    branch.as_deref(),
-                    flags,
-                )
-                .await
-            },
+            New { name, dir, program } => new(name, dir.as_deref(), program, flags).await,
             Resolve { url } => resolve(url, flags).await,
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {
