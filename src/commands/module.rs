@@ -101,6 +101,11 @@ pub enum ModuleCommand {
         /// programs at once.
         #[arg(long, default_value = "emitter")]
         program: Vec<String>,
+
+        /// A short summary of what this module does.
+        /// Defaults to a summary derived from the module's name.
+        #[arg(long)]
+        summary: Option<String>,
     },
 
     /// Resolve a given URL to modules which can handle it
@@ -153,7 +158,12 @@ impl ModuleCommand {
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
             List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
-            New { name, dir, program } => new(name, dir.as_deref(), program, flags).await,
+            New {
+                name,
+                dir,
+                program,
+                summary,
+            } => new(name, dir.as_deref(), program, summary.as_deref(), flags).await,
             Resolve { url } => resolve(url, flags).await,
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {

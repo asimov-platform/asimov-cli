@@ -14,6 +14,7 @@ pub async fn new(
     name: &str,
     dir: Option<&str>,
     programs: &[String],
+    summary: Option<&str>,
     flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
     let target_dir: PathBuf = match dir {
@@ -21,8 +22,13 @@ pub async fn new(
         None => PathBuf::from(format!("asimov-{name}-module")),
     };
 
-    let options = NewModuleOptions::new(&target_dir, name)
+    let mut options = NewModuleOptions::new(&target_dir, name)
         .programs(programs.iter().map(|kind| format!("asimov-{name}-{kind}")));
+    options.module_summary = Some(
+        summary
+            .map(String::from)
+            .unwrap_or_else(|| format!("ASIMOV {name} module.")),
+    );
 
     if flags.verbose > 1 {
         cprintln!(
