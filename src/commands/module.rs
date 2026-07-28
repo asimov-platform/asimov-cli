@@ -98,8 +98,8 @@ pub enum ModuleCommand {
 
         /// Scaffold a program of this kind, e.g. `fetcher` for
         /// `asimov-widget-fetcher`. May be repeated to scaffold several
-        /// programs at once. Defaults to a single `emitter` program.
-        #[arg(long)]
+        /// programs at once.
+        #[arg(long, default_value = "emitter")]
         program: Vec<String>,
     },
 
