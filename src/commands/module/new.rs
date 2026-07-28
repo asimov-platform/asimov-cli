@@ -21,10 +21,8 @@ pub async fn new(
         None => PathBuf::from(format!("asimov-{name}-module")),
     };
 
-    let mut options = NewModuleOptions::new(&target_dir, name);
-    if !programs.is_empty() {
-        options = options.programs(programs.iter().map(|kind| format!("asimov-{name}-{kind}")));
-    }
+    let options = NewModuleOptions::new(&target_dir, name)
+        .programs(programs.iter().map(|kind| format!("asimov-{name}-{kind}")));
 
     if flags.verbose > 1 {
         cprintln!(
@@ -57,11 +55,15 @@ pub async fn new(
         );
     }
 
+    let mut has_lint_errors = false;
     match lint_module(LintOptions::new(&created.target_dir)) {
         Ok(findings) => {
             for finding in &findings {
                 match finding.severity {
-                    Severity::Error => ceprintln!("<s,r>lint error:</> {}", finding.message),
+                    Severity::Error => {
+                        has_lint_errors = true;
+                        ceprintln!("<s,r>lint error:</> {}", finding.message);
+                    },
                     Severity::Warning if flags.verbose > 0 => {
                         cprintln!("<s,y>lint warning:</> {}", finding.message)
                     },
@@ -72,6 +74,10 @@ pub async fn new(
         Err(e) => {
             ceprintln!("<s,y>warning:</> failed to lint the generated module: {e}");
         },
+    }
+
+    if has_lint_errors {
+        return Err(EX_SOFTWARE.into());
     }
 
     Ok(())
