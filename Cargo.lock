@@ -265,9 +265,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-config"
-version = "25.2.0"
+version = "25.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab387bd249b299d6f69a8ab214e846f6af4f4fa20bb405620f901f9ee2e454a6"
+checksum = "f4ce0c564ab2fafca203d4d20fddf96b2db44d1dea0f0eb3ba0a92d5bad852a7"
 dependencies = [
  "asimov-core",
 ]
@@ -287,7 +287,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-directory"
-version = "25.2.0"
+version = "25.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ec7cacb839580c95057b6eae557b1c19dfa20fbbc62c87d62933c0beaf78fb5"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -326,7 +328,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-id"
-version = "25.2.0"
+version = "25.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc4252b4015e50f5cf0c77f0d4344e4137a24d4e16aca21019c8644eb0b7164"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -334,6 +338,7 @@ dependencies = [
  "data-encoding-macro",
  "derive_more",
  "ed25519-dalek 2.2.0",
+ "edky",
  "iroh",
  "thiserror 2.0.18",
 ]
@@ -370,9 +375,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-kb"
-version = "25.2.0"
+version = "25.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "590dc19ddc0db11ed4956787a4447e05d440141e4081656deae16c71369b2f2c"
+checksum = "9a6f707665223de245ba5c2c7970e2cc81aeb97b6c69684b18e322ba280072cd"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -452,7 +457,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-protocol"
-version = "25.2.0"
+version = "25.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c01f3020f60ace1bff40f17627c2ee9318a46bbd44e5bcae45c8d6d7914cf89"
 dependencies = [
  "asimov-core",
  "asimov-id",
@@ -1993,6 +2000,16 @@ dependencies = [
  "signature 3.0.0",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "edky"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10cc7a00e5a8983e3c77015924abcb177072764c8a1212a16377ec9688b78ec1"
+dependencies = [
+ "derive_more",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

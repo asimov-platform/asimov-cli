@@ -134,6 +134,6 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
-asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
-asimov-id = { path = "../asimov.rs/lib/asimov-id" }
-asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
+#asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
+#asimov-id = { path = "../asimov.rs/lib/asimov-id" }
+#asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
