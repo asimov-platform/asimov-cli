@@ -1,7 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError::*};
-use asimov_module_kit::module::{NewModuleError, NewModuleOptions, new_module};
+use asimov_module_kit::module::{
+    NewModuleError, NewModuleOptions,
+    lint::{LintOptions, Severity, lint_module},
+    new_module,
+};
 use color_print::{ceprintln, cprintln};
 use core::error::Error;
 use std::path::PathBuf;
@@ -51,6 +55,23 @@ pub async fn new(
             "<s,dim>hint:</> Programs: <s>{}</>",
             created.program_names.join(", ")
         );
+    }
+
+    match lint_module(LintOptions::new(&created.target_dir)) {
+        Ok(findings) => {
+            for finding in &findings {
+                match finding.severity {
+                    Severity::Error => ceprintln!("<s,r>lint error:</> {}", finding.message),
+                    Severity::Warning if flags.verbose > 0 => {
+                        cprintln!("<s,y>lint warning:</> {}", finding.message)
+                    },
+                    Severity::Warning => {},
+                }
+            }
+        },
+        Err(e) => {
+            ceprintln!("<s,y>warning:</> failed to lint the generated module: {e}");
+        },
     }
 
     Ok(())
