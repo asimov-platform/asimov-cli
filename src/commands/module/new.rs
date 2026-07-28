@@ -20,11 +20,9 @@ pub async fn new(
     };
 
     let mut options = NewModuleOptions::new(&target_dir, name);
-    options = if programs.is_empty() {
-        options.without_program()
-    } else {
-        options.programs(programs.iter().cloned())
-    };
+    if !programs.is_empty() {
+        options = options.programs(programs.iter().map(|kind| format!("asimov-{name}-{kind}")));
+    }
     if let Some(template) = template {
         options = if Path::new(template).is_dir() {
             options.template_path(template)

@@ -96,9 +96,9 @@ pub enum ModuleCommand {
         #[arg(long)]
         dir: Option<String>,
 
-        /// Scaffold an initial program too, e.g. `asimov-widget-fetcher`.
-        /// May be repeated to scaffold several programs at once.
-        /// By default the module is created empty, with no programs.
+        /// Scaffold a program of this kind, e.g. `fetcher` for
+        /// `asimov-widget-fetcher`. May be repeated to scaffold several
+        /// programs at once. Defaults to a single `emitter` program.
         #[arg(long)]
         program: Vec<String>,
 
