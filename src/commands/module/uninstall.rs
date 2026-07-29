@@ -1,15 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{
-    StandardOptions,
-    SysexitsError::{self, *},
-};
+use crate::{StandardOptions, SysexitsError::*};
 use color_print::cprintln;
+use core::error::Error;
 
 pub async fn uninstall(
     module_names: &Vec<String>,
     flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     let installer = asimov_installer::Installer::default();
     for module_name in module_names {
         if flags.verbose > 1 {

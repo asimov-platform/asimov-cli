@@ -1,15 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError};
+use crate::StandardOptions;
 use asimov_protocol::{EndpointTicket, Node, Ticket, Topic};
 use color_print::ceprintln;
+use core::error::Error;
 
 pub async fn send(
-    topic: &String,
+    topic: &Topic,
     message: &String,
     ticket: &Option<String>,
     _flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     // Start a node and accept connections from peers:
     let mut node = Node::default().bind().await?.start().await?;
     node.online().await;
@@ -20,12 +21,8 @@ pub async fn send(
         node.add_peer(peer_ticket.endpoint_addr().id);
     }
 
-    // Print out the endpoint's ticket that allows connecting to it:
-    let self_ticket = EndpointTicket::new(node.endpoint_addr());
-    ceprintln!("{}", self_ticket);
-
     // Subscribe to the given topic and wait for a peer:
-    let mut topic_subscription = node.subscribe_and_join(Topic::Handle(topic.into())).await?;
+    let mut topic_subscription = node.subscribe_and_join(topic).await?;
     ceprintln!("<s,g>✓</> Topic=<s>{:?}</>", topic_subscription);
 
     // Publish the given message to the topic:

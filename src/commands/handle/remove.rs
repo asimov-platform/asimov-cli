@@ -1,10 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::StandardOptions;
+use asimov_id::{Handle, PublicKey};
 use core::error::Error;
 
-pub async fn inspect(
-    _module_name: impl AsRef<str>,
+pub async fn remove(
+    _handle: &Handle,
+    _endpoints: &[PublicKey],
     _flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
     Ok(()) // TODO

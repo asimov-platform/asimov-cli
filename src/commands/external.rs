@@ -17,12 +17,12 @@ pub struct ExternalResult {
 }
 
 /// Executes the given subcommand.
-pub struct External {
+pub struct ExternalSubcommand {
     pub is_debug: bool,
     pub pipe_output: bool,
 }
 
-impl External {
+impl ExternalSubcommand {
     pub fn execute(&self, cmd: &str, args: impl AsRef<[String]>) -> Result<ExternalResult> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;

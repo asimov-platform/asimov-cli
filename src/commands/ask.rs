@@ -10,9 +10,9 @@ use crate::{
 };
 
 pub async fn ask(
-    input: impl AsRef<str>,
-    module_filter: Option<&str>,
-    model: Option<&str>,
+    input: String,
+    module_filter: Option<String>,
+    model: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
@@ -92,7 +92,7 @@ pub async fn ask(
 
     let mut prompter = asimov_runner::Prompter::new(
         program,
-        input.as_ref().into(),
+        input.into(),
         asimov_runner::Output::Captured,
         PrompterOptions::builder()
             .maybe_other(flags.debug.then_some("--debug"))
