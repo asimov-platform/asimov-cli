@@ -86,6 +86,28 @@ pub enum ModuleCommand {
         output: Option<String>,
     },
 
+    /// Scaffold a new module
+    New {
+        /// The module's short name, e.g. `widget` for `asimov-widget-module`
+        name: String,
+
+        /// The target directory to create the module in.
+        /// Defaults to `./asimov-<name>-module`.
+        #[arg(long)]
+        dir: Option<String>,
+
+        /// Scaffold a program of this kind, e.g. `fetcher` for
+        /// `asimov-widget-fetcher`. May be repeated to scaffold several
+        /// programs at once.
+        #[arg(long, default_value = "emitter")]
+        program: Vec<String>,
+
+        /// A short summary of what this module does.
+        /// Defaults to a summary derived from the module's name.
+        #[arg(long)]
+        summary: Option<String>,
+    },
+
     /// Resolve a given URL to modules which can handle it
     Resolve {
         /// The URL to resolve
@@ -136,6 +158,12 @@ impl ModuleCommand {
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
             List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
+            New {
+                name,
+                dir,
+                program,
+                summary,
+            } => new(name, dir.as_deref(), program, summary.as_deref(), flags).await,
             Resolve { url } => resolve(url, flags).await,
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {
@@ -180,6 +208,9 @@ pub use link::*;
 
 mod list;
 pub use list::*;
+
+mod new;
+pub use new::*;
 
 mod resolve;
 pub use resolve::*;
