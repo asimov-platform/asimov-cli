@@ -18,6 +18,9 @@ pub mod describe;
 #[cfg(feature = "fetch")]
 pub mod fetch;
 
+#[cfg(feature = "handle")]
+pub mod handle;
+
 #[cfg(feature = "index")]
 pub mod index;
 

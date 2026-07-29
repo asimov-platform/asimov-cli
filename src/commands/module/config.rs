@@ -1,11 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_env::paths::asimov_root;
-use clientele::{
-    StandardOptions,
-    SysexitsError::{self, *},
-};
+use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
+use core::error::Error;
 use std::io::{BufRead, Write};
 
 pub async fn config(
@@ -13,7 +11,7 @@ pub async fn config(
     unset: bool,
     args: &[String],
     _flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
     let manifest = registry
         .read_manifest(&module_name)
@@ -153,7 +151,7 @@ pub async fn config(
                 }
             } else {
                 ceprintln!("<s,r>error:</> unrecognized configuration variable key: `{name}`");
-                return Err(EX_USAGE);
+                return Err(EX_USAGE.into());
             }
         } else if args.len() % 2 == 0 {
             // pair(s) of (key,value), write into config file(s)
@@ -169,7 +167,7 @@ pub async fn config(
                     ceprintln!(
                         "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
                     );
-                    return Err(EX_USAGE);
+                    return Err(EX_USAGE.into());
                 }
 
                 let var_file = conf_dir.join(name);
@@ -182,7 +180,7 @@ pub async fn config(
                 args.len()
             );
 
-            return Err(EX_USAGE);
+            return Err(EX_USAGE.into());
         }
     }
 

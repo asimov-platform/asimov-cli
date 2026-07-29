@@ -9,7 +9,7 @@ use asimov_module::normalization::normalize_url;
 use color_print::ceprintln;
 use miette::Result;
 
-pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn snap(input_urls: Vec<String>, flags: &StandardOptions) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();
 
     let _enabled_modules = registry
@@ -39,7 +39,7 @@ pub async fn snap(input_urls: &[String], flags: &StandardOptions) -> Result<(), 
     let mut snapshotter = asimov_snapshot::Snapshotter::new(registry, storage, Default::default());
 
     for input_url in input_urls {
-        let input_url = normalize_url(input_url).unwrap_or_else(|e| {
+        let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
                     "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"

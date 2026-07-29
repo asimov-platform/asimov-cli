@@ -1,15 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{
-    StandardOptions,
-    SysexitsError::{self, *},
-};
+use crate::{StandardOptions, SysexitsError::*};
 use color_print::cprintln;
+use core::error::Error;
 
 pub async fn disable(
     module_names: &Vec<String>,
     flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
     for module_name in module_names {
         if flags.verbose > 1 {

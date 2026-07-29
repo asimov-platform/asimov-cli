@@ -2,8 +2,7 @@
 
 #![deny(unsafe_code)]
 
-use asimov_cli::commands::{self, External, Help, HelpCmd};
-use asimov_id::Handle;
+use asimov_cli::commands::{self, ExternalSubcommand, Help, HelpCmd};
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -11,6 +10,21 @@ use clientele::{
 };
 use color_print::ceprintln;
 use std::ffi::OsString;
+
+#[cfg(feature = "handle")]
+use crate::commands::handle::HandleCommand;
+
+#[cfg(feature = "message")]
+use crate::commands::message::MessageCommand;
+
+#[cfg(feature = "module")]
+use crate::commands::module::ModuleCommand;
+
+#[cfg(feature = "protocol")]
+use crate::commands::protocol::ProtocolCommand;
+
+#[cfg(feature = "snapshot")]
+use crate::commands::snapshot::SnapshotCommand;
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -71,6 +85,11 @@ enum Command {
 
         urls: Vec<String>,
     },
+
+    /// Add, remove, and resolve handles and their associated endpoints
+    #[cfg(feature = "handle")]
+    #[clap(subcommand)]
+    Handle(HandleCommand),
 
     /// TBD
     #[cfg(feature = "index")]
@@ -143,209 +162,6 @@ enum Command {
 
     #[clap(external_subcommand)]
     External(Vec<String>),
-}
-
-#[derive(Debug, Subcommand)]
-enum SnapshotCommand {
-    /// Create snapshots for URL(s)
-    #[clap(external_subcommand)]
-    Snapshot(Vec<String>),
-
-    /// List snapshots
-    List,
-
-    /// Show log for a URL
-    Log {
-        /// URL to show log for
-        url: String,
-    },
-
-    /// Compact snapshots for a URL
-    Compact {
-        /// URL(s) to compact snapshots for
-        urls: Vec<String>,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum MessageCommand {
-    /// Send a message to a peer
-    Send {
-        /// The recipient's peer ID
-        recipient: String,
-
-        /// The message to send
-        message: String,
-
-        /// A peer ticket for bootstrapping
-        #[arg(long)]
-        ticket: Option<String>,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum ModuleCommand {
-    /// Open the module's package page in a web browser
-    #[clap(alias = "open")]
-    Browse {
-        /// The name of the module to browse
-        name: String,
-    },
-
-    /// Configure an installed module
-    #[clap(override_usage = CONFIG_USAGE)]
-    Config {
-        /// The name of the module to configure
-        name: String,
-
-        /// Unset configured variable(s). By default all when no arguments provided.
-        #[arg(short = 'u', long, default_value = "false")]
-        unset: bool,
-
-        /// A single configuration variable to read, or key-value pair(s) to be set.
-        #[clap(trailing_var_arg = true)]
-        args: Vec<String>,
-    },
-
-    /// Disable modules
-    Disable {
-        /// The names of the modules to disable
-        names: Vec<String>,
-    },
-
-    /// Enable modules
-    Enable {
-        /// The names of the modules to enable
-        names: Vec<String>,
-    },
-
-    /// TBD
-    #[cfg(feature = "unstable")]
-    #[clap(alias = "which")]
-    Find {
-        /// The name of the module to find
-        name: String,
-    },
-
-    /// TBD
-    #[cfg(feature = "unstable")]
-    #[clap(alias = "show")]
-    Inspect {
-        /// The name of the module to inspect
-        name: String,
-    },
-
-    /// Install an available module locally
-    Install {
-        /// The names of the modules to install
-        names: Vec<String>,
-
-        /// Optionally install a specific version instead of latest
-        #[arg(long)]
-        version: Option<String>,
-
-        /// Optionally specify desired model size to download for module.
-        /// Only affects modules which require models.
-        #[arg(long)]
-        model_size: Option<String>,
-    },
-
-    /// Print the module's package link
-    #[clap(alias = "url")]
-    Link {
-        /// The name of the module to link to
-        name: String,
-    },
-
-    /// List all available and/or installed modules
-    #[clap(alias = "ls")]
-    List {
-        /// Set the output format [default: cli] [possible values: cli, jsonl]
-        #[arg(value_name = "FORMAT", short = 'o', long)]
-        output: Option<String>,
-    },
-
-    /// Resolve a given URL to modules which can handle it
-    Resolve {
-        /// The URL to resolve
-        url: String,
-    },
-
-    /// Uninstall a currently installed module
-    Uninstall {
-        /// The names of the modules to uninstall
-        names: Vec<String>,
-    },
-
-    /// Upgrade currently installed modules
-    ///
-    /// By default upgrades all installed modules.
-    #[clap(alias = "update")]
-    Upgrade {
-        /// The names of the modules to upgrade
-        names: Vec<String>,
-
-        /// Optionally upgrade to a specific version instead of latest
-        #[arg(long)]
-        version: Option<String>,
-
-        /// Optionally specify desired model size to download for module.
-        /// Only affects modules which require models.
-        #[arg(long)]
-        model_size: Option<String>,
-    },
-}
-
-#[derive(Debug, Subcommand)]
-enum ProtocolCommand {
-    /// Accept and monitor inbound peer traffic
-    #[clap(aliases = ["monitor", "pong"])]
-    Accept {},
-
-    /// Ping a peer node directly
-    Ping {
-        /// The peer ticket for the connection
-        ticket: String,
-    },
-
-    /// Connect to a peer node directly
-    #[clap(alias = "hello")]
-    Connect {
-        /// The peer ticket for the connection
-        ticket: String,
-    },
-
-    /// Publish a message to a gossip topic
-    #[clap(aliases = ["pub", "send"])]
-    Publish {
-        /// The topic to publish to
-        topic: String,
-
-        /// The message to publish
-        message: String,
-
-        /// A peer ticket for bootstrapping
-        #[arg(long)]
-        ticket: Option<String>,
-    },
-
-    /// Resolve a handle into a set of peer IDs
-    #[clap(aliases = ["lookup"])]
-    Resolve {
-        /// The handle to resolve
-        handle: Handle,
-    },
-
-    /// Subscribe to messages on a gossip topic
-    #[clap(aliases = ["sub", "recv"])]
-    Subscribe {
-        /// The topic to publish to
-        topic: String,
-
-        /// A peer ticket for bootstrapping
-        #[arg(long)]
-        ticket: Option<String>,
-    },
 }
 
 #[tokio::main]
@@ -471,23 +287,24 @@ pub async fn main() -> SysexitsError {
         // just let clap handle the error
         Err(err) => err.exit(),
     };
+    let flags = &options.flags;
 
-    asimov_module::init_tracing_subscriber(&options.flags).expect("failed to initialize logging");
+    asimov_module::init_tracing_subscriber(flags).expect("failed to initialize logging");
 
     // Print the version, if requested:
-    if options.flags.version {
+    if flags.version {
         println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
         return EX_OK;
     }
 
     // Print the license, if requested:
-    if options.flags.license {
+    if flags.license {
         print!("{}", include_str!("../UNLICENSE"));
         return EX_OK;
     }
 
     // Configure debug output:
-    if options.flags.debug {
+    if flags.debug {
         //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
@@ -511,9 +328,10 @@ pub async fn main() -> SysexitsError {
     }
 
     // Execute the given command:
-    let result = match options.command.as_ref().unwrap() {
+    use Command::*;
+    let result = match options.command.unwrap() {
         #[cfg(feature = "ask")]
-        Command::Ask {
+        Ask {
             module,
             model,
             input,
@@ -528,160 +346,107 @@ pub async fn main() -> SysexitsError {
                 };
                 buf
             };
-            commands::ask::ask(input, module.as_deref(), model.as_deref(), &options.flags)
+            commands::ask::ask(input, module, model, flags)
                 .await
+                .map_err(|err| err.into())
                 .map(|_| EX_OK)
         },
 
         #[cfg(feature = "describe")]
-        Command::Describe {
+        Describe {
             module,
             output,
             urls,
-        } => {
-            commands::describe::describe(urls, module.as_deref(), output.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        } => commands::describe::describe(urls, module, output, flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "fetch")]
-        Command::Fetch {
+        Fetch {
             module,
             output,
             urls,
-        } => commands::fetch::fetch(urls, module.as_deref(), output.as_deref(), &options.flags)
+        } => commands::fetch::fetch(urls, module, output, flags)
             .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
+
+        #[cfg(feature = "handle")]
+        Handle(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "index")]
-        Command::Index { module, urls } => {
-            commands::index::index(urls, module.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        Index { module, urls } => commands::index::index(urls, module, flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "list")]
-        Command::List {
+        List {
             module,
             limit,
             output,
             urls,
-        } => commands::list::list(
-            urls,
-            module.as_deref(),
-            *limit,
-            output.as_deref(),
-            &options.flags,
-        )
-        .await
-        .map(|_| EX_OK),
+        } => commands::list::list(urls, module, limit, output, flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "message")]
-        Command::Message(message_command) => match message_command {
-            MessageCommand::Send {
-                recipient,
-                message,
-                ticket,
-            } => commands::message::send(recipient, message, ticket, &options.flags).await,
-        }
-        .map(|_| EX_OK),
+        Message(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "module")]
-        Command::Module(module_command) => match module_command {
-            ModuleCommand::Browse { name } => commands::module::browse(name, &options.flags).await,
-            ModuleCommand::Config { name, unset, args } => {
-                commands::module::config(name, *unset, &args, &options.flags).await
-            },
-            ModuleCommand::Disable { names } => {
-                commands::module::disable(names, &options.flags).await
-            },
-            ModuleCommand::Enable { names } => {
-                commands::module::enable(names, &options.flags).await
-            },
-            #[cfg(feature = "unstable")]
-            ModuleCommand::Find { name } => commands::module::find(name, &options.flags).await,
-            #[cfg(feature = "unstable")]
-            ModuleCommand::Inspect { name } => {
-                commands::module::inspect(name, &options.flags).await
-            },
-            ModuleCommand::Install {
-                names,
-                version,
-                model_size,
-            } => commands::module::install(names, version, model_size, &options.flags).await,
-            ModuleCommand::Link { name } => commands::module::link(name, &options.flags).await,
-            ModuleCommand::List { output } => {
-                commands::module::list(output.as_deref().unwrap_or(&"cli"), &options.flags).await
-            },
-            ModuleCommand::Resolve { url } => commands::module::resolve(url, &options.flags).await,
-            ModuleCommand::Uninstall { names } => {
-                commands::module::uninstall(names, &options.flags).await
-            },
-            ModuleCommand::Upgrade {
-                names,
-                version,
-                model_size,
-            } => commands::module::upgrade(names, version, model_size, &options.flags).await,
-        }
-        .map(|_| EX_OK),
+        Module(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "protocol")]
-        Command::Protocol(protocol_command) => {
-            use ProtocolCommand::*;
-            use commands::protocol::*;
-            match protocol_command {
-                Accept {} => accept(&options.flags).await,
-                Ping { ticket } => ping(ticket, &options.flags).await,
-                Connect { ticket } => connect(ticket, &options.flags).await,
-                Publish {
-                    topic,
-                    message,
-                    ticket,
-                } => publish(topic, message, ticket, &options.flags).await,
-                Resolve { handle } => resolve(handle, &options.flags).await,
-                Subscribe { topic, ticket } => subscribe(topic, ticket, &options.flags).await,
-            }
-        }
-        .map(|_| EX_OK),
+        Protocol(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "read")]
-        Command::Read { module, urls } => {
-            commands::read::read(urls, module.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        Read { module, urls } => commands::read::read(urls, module, flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "search")]
-        Command::Search { module, prompt } => {
-            commands::search::search(&prompt, module.as_deref(), &options.flags)
-                .await
-                .map(|_| EX_OK)
-        },
+        Search { module, prompt } => commands::search::search(prompt, module, flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
         #[cfg(feature = "snap")]
-        Command::Snap { urls } => commands::snap::snap(urls, &options.flags)
+        Snap { urls } => commands::snap::snap(urls, flags)
             .await
+            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "snapshot")]
-        Command::Snapshot(snapshot_command) => match snapshot_command {
-            SnapshotCommand::Snapshot(urls) => {
-                commands::snapshot::snapshot(urls, &options.flags).await
-            },
-            SnapshotCommand::List => commands::snapshot::list(&options.flags).await,
-            SnapshotCommand::Log { url } => commands::snapshot::log(&url, &options.flags).await,
-            SnapshotCommand::Compact { urls } => {
-                commands::snapshot::compact(&urls, &options.flags).await
-            },
-        }
-        .map(|_| EX_OK),
+        Snapshot(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
 
-        Command::External(args) => {
-            let cmd = External {
-                is_debug: options.flags.debug,
+        External(args) => {
+            let cmd = ExternalSubcommand {
+                is_debug: flags.debug,
                 pipe_output: false,
             };
-
             cmd.execute(&args[0], &args[1..]).map(|result| result.code)
         },
     };
@@ -753,10 +518,3 @@ pub fn after_help() -> String {
 
     help
 }
-
-// From asimov-module-cli:
-const CONFIG_USAGE: &str = r#"
-    config <module>                     # Interactive configuration
-    config <module> <key>               # Show value for key
-    config <module> [<key> <value>]...  # Set key(s) to value(s)
-"#;

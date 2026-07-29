@@ -1,9 +1,6 @@
-# ASIMOV Command-Line Interface (CLI)
+# {{ package.description }}
 
-[![License](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://unlicense.org)
-[![Compatibility](https://img.shields.io/badge/rust-1.93%2B-blue)](https://endoflife.date/rust)
-[![Package on Crates.io](https://img.shields.io/crates/v/asimov-cli)](https://crates.io/crates/asimov-cli)
-[![Documentation](https://img.shields.io/docsrs/asimov-cli?label=docs.rs)](https://docs.rs/asimov-cli)
+{% render 'header/badges/rust', package: package %}
 
 🚧 _We are building in public. This is presently under heavy construction._
 
@@ -13,7 +10,7 @@
 
 ## 🛠️ Prerequisites
 
-- [Rust] 1.93+ (2024 edition)
+- [{{ package.language.label }}] {{ package.language.minimum_version }}+ (2024 edition)
 
 ## ⬇️ Installation
 
@@ -22,17 +19,17 @@
 #### Installation via [Cargo Binstall]
 
 ```bash
-cargo binstall -y asimov-cli
+cargo binstall -y {{ package.name }}
 ```
 
 <!--
-<img width="100%" alt="Installation via cargo-binstall" src="https://github.com/asimov-platform/asimov-cli/raw/master/etc/asciinema/install.gif"/>
+<img width="100%" alt="Installation via cargo-binstall" src="{{ github.repository.link }}/raw/master/etc/asciinema/install.gif"/>
 -->
 
 #### Installation via [Cargo]
 
 ```bash
-cargo install asimov-cli --locked
+cargo install {{ package.name }} --locked
 ```
 
 ### Installation using a Package Manager
@@ -181,76 +178,54 @@ asimov help module
 
 ### Command-Line Interface
 
-```shellsession
-$ asimov
-```
+{% render '.config/readmer/asimov.sh-session' %}
 
 #### `asimov ask`
 
-```shellsession
-$ asimov ask --help
-```
+{% render '.config/readmer/asimov-ask.sh-session' %}
 
 #### `asimov fetch`
 
-```shellsession
-$ asimov fetch --help
-```
+{% render '.config/readmer/asimov-fetch.sh-session' %}
 
 #### `asimov handle`
 
-```shellsession
-$ asimov handle --help
-```
+{% render '.config/readmer/asimov-handle.sh-session' %}
 
 #### `asimov list`
 
-```shellsession
-$ asimov list --help
-```
+{% render '.config/readmer/asimov-list.sh-session' %}
 
 #### `asimov module`
 
-```shellsession
-$ asimov module --help
-```
+{% render '.config/readmer/asimov-module.sh-session' %}
 
 #### `asimov read`
 
-```shellsession
-$ asimov read --help
-```
+{% render '.config/readmer/asimov-read.sh-session' %}
 
 #### `asimov snap`
 
-```shellsession
-$ asimov snap --help
-```
+{% render '.config/readmer/asimov-snap.sh-session' %}
 
 #### `asimov snapshot`
 
-```shellsession
-$ asimov snapshot --help
-```
+{% render '.config/readmer/asimov-snapshot.sh-session' %}
 
 ## 👨‍💻 Development
 
 ```bash
-git clone https://github.com/asimov-platform/asimov-cli.git
+git clone {{ github.repository.url }}
 ```
 
 ---
 
-[![Share on X](https://img.shields.io/badge/share%20on-x-03A9F4?logo=x)](https://x.com/intent/post?url=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli&text=ASIMOV%20Command-Line%20Interface%20%28CLI%29)
-[![Share on Reddit](https://img.shields.io/badge/share%20on-reddit-red?logo=reddit)](https://reddit.com/submit?url=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli&title=ASIMOV%20Command-Line%20Interface%20%28CLI%29)
-[![Share on Hacker News](https://img.shields.io/badge/share%20on-hn-orange?logo=ycombinator)](https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli&t=ASIMOV%20Command-Line%20Interface%20%28CLI%29)
-[![Share on Facebook](https://img.shields.io/badge/share%20on-fb-1976D2?logo=facebook)](https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli)
-[![Share on LinkedIn](https://img.shields.io/badge/share%20on-linkedin-3949AB?logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli)
+{% render 'footer/share', title: package.description, url: github.repository.link %}
 
-[`asimov`]: https://github.com/asimov-platform/asimov-cli#command-line-interface
+[`asimov`]: {{ github.repository.link }}#command-line-interface
 
-[Crates.io]: https://crates.io/crates/asimov-cli
-[feature flags]: https://docs.rs/crate/asimov-cli/latest/features
+[Crates.io]: https://crates.io/crates/{{ package.name }}
+[feature flags]: https://docs.rs/crate/{{ package.name }}/latest/features
 [naming conventions]: https://rust-lang.github.io/api-guidelines/naming.html
 
 [ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli

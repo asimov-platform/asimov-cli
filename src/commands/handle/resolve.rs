@@ -2,18 +2,27 @@
 
 use crate::StandardOptions;
 use asimov_directory::fs::{HandleResolver, ResolveHandle};
-use asimov_id::Id;
-use color_print::ceprintln;
+use asimov_id::{Id, PublicKeyEncoding};
+use color_print::cprintln;
 use core::error::Error;
 use futures_lite::{pin, stream::StreamExt};
 
-pub async fn resolve(id: &Id, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn resolve(
+    id: &Id,
+    format: &Option<PublicKeyEncoding>,
+    _flags: &StandardOptions,
+) -> Result<(), Box<dyn Error>> {
+    let format = format.unwrap_or_default();
+
     let mut resolver = HandleResolver::default().await?;
     let endpoints = resolver.resolve_all(id.clone());
     pin!(endpoints);
 
     while let Some(endpoint) = endpoints.next().await {
-        ceprintln!("{}", endpoint?);
+        match endpoint?.encode(format) {
+            Some(encoded) => cprintln!("{}", encoded),
+            None => continue,
+        }
     }
 
     Ok(())

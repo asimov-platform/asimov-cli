@@ -7,8 +7,8 @@ use crate::{
 use miette::Result;
 
 pub async fn index(
-    _input_urls: &Vec<String>,
-    _module: Option<&str>,
+    _input_urls: Vec<String>,
+    _module: Option<String>,
     _flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     Ok(()) // TODO

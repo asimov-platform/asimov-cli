@@ -1,14 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{
-    StandardOptions,
-    SysexitsError::{self, *},
-};
+use crate::{StandardOptions, SysexitsError::*};
+use core::error::Error;
 
 pub async fn browse(
     module_name: impl AsRef<str>,
     _flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), Box<dyn Error>> {
     let module_name = module_name.as_ref();
     let registry = asimov_registry::Registry::default();
 
@@ -30,5 +28,5 @@ pub async fn browse(
     }
 
     eprintln!("unable to browse module: {module_name}");
-    Err(EX_UNAVAILABLE)
+    Err(EX_UNAVAILABLE.into())
 }
