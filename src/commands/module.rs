@@ -87,6 +87,7 @@ pub enum ModuleCommand {
     },
 
     /// Scaffold a new module
+    #[cfg(feature = "module-new")]
     New {
         /// The module's short name, e.g. `widget` for `asimov-widget-module`
         name: String,
@@ -158,6 +159,7 @@ impl ModuleCommand {
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
             List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
+            #[cfg(feature = "module-new")]
             New {
                 name,
                 dir,
@@ -209,7 +211,9 @@ pub use link::*;
 mod list;
 pub use list::*;
 
+#[cfg(feature = "module-new")]
 mod new;
+#[cfg(feature = "module-new")]
 pub use new::*;
 
 mod resolve;

@@ -17,9 +17,9 @@ categories = ["command-line-utilities", "text-processing"]
 publish = true
 
 [features]
-default = ["all", "unstable"]
+default = ["all"]
 all = ["ask", "fetch", "handle", "list", "module", "read", "snap", "snapshot"]
-unstable = ["describe", "index", "message", "protocol", "search"]
+unstable = ["describe", "index", "message", "module-new", "protocol", "search"]
 
 # Optional features:
 ask = []
@@ -29,7 +29,8 @@ handle = ["asimov-id/encodings"]
 index = []
 list = []
 message = []
-module = ["dep:asimov-module-kit"]
+module = []
+module-new = ["module", "dep:asimov-module-kit"]
 protocol = ["dep:asimov-protocol"]
 read = ["dep:infer", "dep:mime"]
 search = []
