@@ -2,7 +2,7 @@
 
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
-use std::{string::String, vec::Vec};
+use std::string::String;
 
 #[derive(Debug, Subcommand)]
 pub enum PackageCommand {

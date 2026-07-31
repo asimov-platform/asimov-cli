@@ -4,7 +4,7 @@ use crate::StandardOptions;
 use core::error::Error;
 use tracing::{info, warn};
 
-pub async fn init(_name: &Option<String>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn init(name: &Option<String>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     // mkdir -p .asimov/
     if !std::fs::exists(".asimov")? {
         info!("Creating the directory `{}`...", ".asimov");
@@ -13,18 +13,26 @@ pub async fn init(_name: &Option<String>, _flags: &StandardOptions) -> Result<()
     }
 
     // echo "name: $NAME" > .asimov/module.yaml
-    if !std::fs::exists(".asimov/module.yaml")? && std::fs::exists("Cargo.toml")? {
-        let cargo_toml = distrib::rust::load_cargo_toml("Cargo.toml")?;
-        let package_name = cargo_toml.package().name();
-        let module_name = package_name
-            .strip_prefix("asimov-")
-            .and_then(|s| s.strip_suffix("-module"));
+    if !std::fs::exists(".asimov/module.yaml")? {
+        let module_name = if let Some(name) = name {
+            name.clone()
+        } else if std::fs::exists("Cargo.toml")? {
+            let cargo_toml = distrib::rust::load_cargo_toml("Cargo.toml")?;
+            let package_name = cargo_toml.package().name();
+            package_name
+                .strip_prefix("asimov-")
+                .and_then(|s| s.strip_suffix("-module"))
+                .unwrap_or(package_name)
+                .to_string()
+        } else {
+            "mymodule".to_string() // a dummy default name
+        };
         info!("Creating the file `{}`...", ".asimov/module.yaml");
         std::fs::write(
             ".asimov/module.yaml",
             format!(
                 "# See: https://asimov-specs.github.io/module-manifest/\n---\nname: {}\n",
-                module_name.unwrap_or(package_name)
+                module_name
             ),
         )?;
         warn!("Created the file `{}`.", ".asimov/module.yaml");
