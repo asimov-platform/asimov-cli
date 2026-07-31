@@ -20,6 +20,9 @@ use crate::commands::message::MessageCommand;
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
 
+#[cfg(feature = "package")]
+use crate::commands::package::PackageCommand;
+
 #[cfg(feature = "protocol")]
 use crate::commands::protocol::ProtocolCommand;
 
@@ -127,6 +130,11 @@ enum Command {
     #[cfg(feature = "module")]
     #[clap(subcommand)]
     Module(ModuleCommand),
+
+    /// Package development commands
+    #[cfg(feature = "package")]
+    #[clap(subcommand)]
+    Package(PackageCommand),
 
     /// Low-level protocol commands
     #[cfg(feature = "protocol")]
@@ -405,6 +413,13 @@ pub async fn main() -> SysexitsError {
 
         #[cfg(feature = "module")]
         Module(command) => command
+            .run(flags)
+            .await
+            .map_err(|err| err.into())
+            .map(|_| EX_OK),
+
+        #[cfg(feature = "package")]
+        Package(command) => command
             .run(flags)
             .await
             .map_err(|err| err.into())

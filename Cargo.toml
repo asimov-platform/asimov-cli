@@ -19,7 +19,7 @@ publish = true
 [features]
 default = ["all"]
 all = ["ask", "fetch", "handle", "list", "module", "read", "snap", "snapshot"]
-unstable = ["describe", "index", "message", "module-new", "protocol", "search"]
+unstable = ["describe", "index", "message", "module-new", "package", "protocol", "search"]
 
 # Optional features:
 ask = []
@@ -31,6 +31,7 @@ list = []
 message = []
 module = []
 module-new = ["module", "dep:asimov-module-kit"]
+package = ["dep:distrib"]
 protocol = ["dep:asimov-protocol"]
 read = ["dep:infer", "dep:mime"]
 search = []
@@ -97,6 +98,7 @@ mime = { version = "0.3", optional = true }
 sha2 = { version = "0.11", optional = true }
 
 futures-lite = "2.6.1"
+distrib = { version = "0.0.2", default-features = false, features = ["rust", "std"], optional = true }
 
 [profile.release]
 opt-level = "z"

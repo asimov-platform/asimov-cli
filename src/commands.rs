@@ -33,6 +33,9 @@ pub mod message;
 #[cfg(feature = "module")]
 pub mod module;
 
+#[cfg(feature = "package")]
+pub mod package;
+
 #[cfg(feature = "protocol")]
 pub mod protocol;
 

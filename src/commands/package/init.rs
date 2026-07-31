@@ -1,0 +1,34 @@
+// This is free and unencumbered software released into the public domain.
+
+use crate::StandardOptions;
+use core::error::Error;
+use tracing::{info, warn};
+
+pub async fn init(_name: &Option<String>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    // mkdir -p .asimov/
+    if !std::fs::exists(".asimov")? {
+        info!("Creating the directory `{}`...", ".asimov");
+        std::fs::create_dir_all(".asimov/")?;
+        warn!("Created the directory `{}`.", ".asimov");
+    }
+
+    // echo "name: $NAME" > .asimov/module.yaml
+    if !std::fs::exists(".asimov/module.yaml")? && std::fs::exists("Cargo.toml")? {
+        let cargo_toml = distrib::rust::load_cargo_toml("Cargo.toml")?;
+        let package_name = cargo_toml.package().name();
+        let module_name = package_name
+            .strip_prefix("asimov-")
+            .and_then(|s| s.strip_suffix("-module"));
+        info!("Creating the file `{}`...", ".asimov/module.yaml");
+        std::fs::write(
+            ".asimov/module.yaml",
+            format!(
+                "# See: https://asimov-specs.github.io/module-manifest/\n---\nname: {}\n",
+                module_name.unwrap_or(package_name)
+            ),
+        )?;
+        warn!("Created the file `{}`.", ".asimov/module.yaml");
+    }
+
+    Ok(())
+}

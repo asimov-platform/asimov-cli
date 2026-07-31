@@ -238,6 +238,7 @@ dependencies = [
  "clientele",
  "color-print",
  "derive_more",
+ "distrib",
  "futures-lite",
  "hex",
  "indoc",
@@ -280,7 +281,7 @@ checksum = "2f1bad0ce57d971f6d31fa68823e247f5f3814d3bde2afe54820dba066347d1d"
 dependencies = [
  "cap-directories",
  "cap-std 4.0.2",
- "dogma",
+ "dogma 0.1.11",
  "know",
  "tracing",
 ]
@@ -395,7 +396,7 @@ dependencies = [
  "asimov-core",
  "asimov-env",
  "clientele",
- "dogma",
+ "dogma 0.1.11",
  "getenv",
  "iri-string",
  "mime",
@@ -847,6 +848,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "boxcar"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36f64beae40a84da1b4b26ff2761a5b895c12adc41dc25aaee1c4f2bbfe97a6e"
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1044,6 +1051,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_toml"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa61aec073ec94791433ddf3df2323ff9d1711557c2a0eefb0f99cb4f8dca520"
+dependencies = [
+ "semver",
+ "serde",
+ "toml 1.1.3+spec-1.1.0",
+]
+
+[[package]]
 name = "cc"
 version = "1.2.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1181,7 +1199,7 @@ dependencies = [
  "camino",
  "clap",
  "dirs",
- "dogma",
+ "dogma 0.1.11",
  "dotenvy",
  "duration-str",
  "error-stack",
@@ -1908,6 +1926,110 @@ dependencies = [
 ]
 
 [[package]]
+name = "distrib"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19de5dd9fb82400e58e01454a0cad16ef2ae275a17e6d8691100cec7abb7a9da"
+dependencies = [
+ "derive_more",
+ "distrib-dart",
+ "distrib-js",
+ "distrib-macros",
+ "distrib-python",
+ "distrib-ruby",
+ "distrib-rust",
+ "distrib-wasm",
+ "dogma 0.2.1",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-dart"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b054b2a0d0075bced1c9a012910b2386cf1a29589f71a6d98ed5c538ae002bbc"
+dependencies = [
+ "derive_more",
+ "dogma 0.2.1",
+ "indexmap 2.14.0",
+ "serde_norway",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-js"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4614c2c73bf973d607a58a93145f1a9f3526b7a88f41e72745d1e8557dbbec4"
+dependencies = [
+ "derive_more",
+ "dogma 0.2.1",
+ "package_json_schema",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-macros"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "193d64ca2bb7ae562056f842b4150a9d15f2ca7d2ea0b075856bb92964cb4962"
+dependencies = [
+ "darling 0.20.11",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "distrib-python"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43ec247591fe33bcaece2b9df021f3c0e164932e02838671e0e3108a26b60842"
+dependencies = [
+ "derive_more",
+ "dogma 0.2.1",
+ "pyproject-toml",
+ "thiserror 2.0.18",
+ "toml 0.9.12+spec-1.1.0",
+]
+
+[[package]]
+name = "distrib-ruby"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2775cbc3034b9d4c02fd983cc2af8e8d5a0cdec3d8952dc5aaea808e42d523d2"
+dependencies = [
+ "derive_more",
+ "dogma 0.2.1",
+ "indexmap 2.14.0",
+ "serde_norway",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-rust"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc96b19809f7c61ee182557c47f8a1033e7031e6152e949c6bb0913d4b9e4dde"
+dependencies = [
+ "cargo_toml",
+ "derive_more",
+ "dogma 0.2.1",
+ "thiserror 2.0.18",
+ "toml 1.1.3+spec-1.1.0",
+]
+
+[[package]]
+name = "distrib-wasm"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcbc56152f8d6b53a4de426967214e926cf907ba65829f98d0a6219e0488c494"
+dependencies = [
+ "derive_more",
+ "dogma 0.2.1",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "dlopen2"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1919,10 +2041,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "doc-comment"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "780955b8b195a21ab8e4ac6b60dd1dbdcec1dc6c51c0617964b08c81785e12c9"
+
+[[package]]
 name = "dogma"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ba51e88eeeb6858fc7528ed1727f135646230f30c49f2e922b4ffe9c952f9a5"
+dependencies = [
+ "iri-string",
+ "known-schemes",
+ "serde",
+]
+
+[[package]]
+name = "dogma"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2613a308ba56b339d7d33b6481f02be2380e20c24f5c0ed0ec84bcbfe1f094fe"
 dependencies = [
  "iri-string",
  "known-schemes",
@@ -2406,7 +2545,7 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08b5c1c21911873fcb901979b0fa4287d3a5ac4296a88cd4764333c0567f26c9"
 dependencies = [
- "dogma",
+ "dogma 0.1.11",
  "secrecy",
 ]
 
@@ -2759,7 +2898,7 @@ checksum = "fd6761a81efac6a3b56c289383c0e94539ee8ad7441feb682436778019a5bfb0"
 dependencies = [
  "clap",
  "data-url",
- "dogma",
+ "dogma 0.1.11",
  "percent-encoding",
  "thiserror 2.0.18",
 ]
@@ -2772,7 +2911,7 @@ checksum = "608d83327e4bfb7500fb13b02da07d0247174225eff32fe443a70c14b7adff2a"
 dependencies = [
  "clap",
  "data-url",
- "dogma",
+ "dogma 0.1.11",
  "miette",
  "percent-encoding",
  "suppaftp",
@@ -4920,6 +5059,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "package_json_schema"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64dd3d4f4077fc37ea51e6c31d5e342af4268d0da38ee9bb8f7edcd10011f900"
+dependencies = [
+ "cfg-if",
+ "doc-comment",
+ "indexmap 2.14.0",
+ "lazy_static",
+ "regex",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "typed-builder",
+]
+
+[[package]]
 name = "papaya"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4977,6 +5134,41 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6305423e0e7738146434843d1694d621cce767262b2a86910beab705e4493d9"
 dependencies = [
  "base64ct",
+]
+
+[[package]]
+name = "pep440_rs"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31095ca1f396e3de32745f42b20deef7bc09077f918b085307e8eab6ddd8fb9c"
+dependencies = [
+ "once_cell",
+ "serde",
+ "unicode-width 0.2.2",
+ "unscanny",
+ "version-ranges",
+]
+
+[[package]]
+name = "pep508_rs"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "faee7227064121fcadcd2ff788ea26f0d8f2bd23a0574da11eca23bc935bcc05"
+dependencies = [
+ "boxcar",
+ "indexmap 2.14.0",
+ "itertools 0.13.0",
+ "once_cell",
+ "pep440_rs",
+ "regex",
+ "rustc-hash",
+ "serde",
+ "smallvec",
+ "thiserror 1.0.69",
+ "unicode-width 0.2.2",
+ "url",
+ "urlencoding",
+ "version-ranges",
 ]
 
 [[package]]
@@ -5323,6 +5515,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pyproject-toml"
+version = "0.13.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6d755483ad14b49e76713b52285235461a5b4f73f17612353e11a5de36a5fd2"
+dependencies = [
+ "indexmap 2.14.0",
+ "pep440_rs",
+ "pep508_rs",
+ "serde",
+ "thiserror 2.0.18",
+ "toml 0.9.12+spec-1.1.0",
+]
+
+[[package]]
 name = "quick-xml"
 version = "0.39.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5582,7 +5788,7 @@ version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b179c5cc75c6b194a7d1b15b77992073eb0bb2f6915aecbf3a28c81f3ded9c93"
 dependencies = [
- "dogma",
+ "dogma 0.1.11",
  "known-languages",
  "oxrdf",
  "serde",
@@ -6135,6 +6341,19 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "serde_norway"
+version = "0.9.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e408f29489b5fd500fab51ff1484fc859bb655f32c671f307dcd733b72e8168c"
+dependencies = [
+ "indexmap 2.14.0",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml-norway",
 ]
 
 [[package]]
@@ -6932,9 +7151,13 @@ version = "0.9.12+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf92845e79fc2e2def6a5d828f0801e29a2f8acc037becc5ab08595c7d5e9863"
 dependencies = [
+ "indexmap 2.14.0",
  "serde_core",
  "serde_spanned 1.1.1",
  "toml_datetime 0.7.5+spec-1.1.0",
+ "toml_parser",
+ "toml_writer",
+ "winnow 0.7.15",
 ]
 
 [[package]]
@@ -7140,6 +7363,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "typed-builder"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd9d30e3a08026c78f246b173243cf07b3696d274debd26680773b6773c2afc7"
+dependencies = [
+ "typed-builder-macro",
+]
+
+[[package]]
+name = "typed-builder-macro"
+version = "0.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c36781cc0e46a83726d9879608e4cf6c2505237e263a8eb8c24502989cfdb28"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "typeid"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7269,6 +7512,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
+name = "unsafe-libyaml-norway"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b39abd59bf32521c7f2301b52d05a6a2c975b6003521cbd0c6dc1582f0a22104"
+
+[[package]]
+name = "unscanny"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e9df2af067a7953e9c3831320f35c1cc0600c30d44d9f7a12b01db1cd88d6b47"
+
+[[package]]
 name = "untrusted"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7341,6 +7596,12 @@ dependencies = [
  "serde",
  "serde_derive",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
 
 [[package]]
 name = "utf8-zero"
@@ -7436,6 +7697,15 @@ dependencies = [
  "anyhow",
  "derive_builder",
  "rustversion",
+]
+
+[[package]]
+name = "version-ranges"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31e9bd4e9c9ff6a2a9b5969462ba26216af3e010df0377dad8320ab515262ef8"
+dependencies = [
+ "smallvec",
 ]
 
 [[package]]
@@ -8109,7 +8379,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e9985f027b1353c63b85723fa9e7e2914afd70452f1fffc64bbca62a7dd8f3f"
 dependencies = [
  "decorum",
- "dogma",
+ "dogma 0.1.11",
  "heapless 0.9.3",
  "jiff",
  "oxrdf",
