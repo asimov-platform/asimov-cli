@@ -48,12 +48,15 @@ pub enum ModuleCommand {
         name: String,
     },
 
-    /// TBD
-    #[cfg(feature = "unstable")]
+    /// Inspect a module's manifest, state, and configuration status
     #[clap(alias = "show")]
     Inspect {
         /// The name of the module to inspect
         name: String,
+
+        /// Set the output format [default: cli] [possible values: cli, json]
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
     },
 
     /// Install an available module locally
@@ -150,8 +153,9 @@ impl ModuleCommand {
             Enable { names } => enable(names, flags).await,
             #[cfg(feature = "unstable")]
             Find { name } => find(name, flags).await,
-            #[cfg(feature = "unstable")]
-            Inspect { name } => inspect(name, flags).await,
+            Inspect { name, output } => {
+                inspect(name, output.as_deref().unwrap_or(&"cli"), flags).await
+            },
             Install {
                 names,
                 version,
