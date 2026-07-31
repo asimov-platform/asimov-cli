@@ -2,21 +2,22 @@
 
 use crate::StandardOptions;
 use core::error::Error;
+use std::fs::exists;
 use tracing::{info, warn};
 
 pub async fn init(name: &Option<String>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     // mkdir -p .asimov/
-    if !std::fs::exists(".asimov")? {
+    if !exists(".asimov")? {
         info!("Creating the directory `{}`...", ".asimov");
         std::fs::create_dir_all(".asimov/")?;
         warn!("Created the directory `{}`.", ".asimov");
     }
 
     // echo "name: $NAME" > .asimov/module.yaml
-    if !std::fs::exists(".asimov/module.yaml")? {
+    if !exists(".asimov/module.yaml")? {
         let module_name = if let Some(name) = name {
             name.clone()
-        } else if std::fs::exists("Cargo.toml")? {
+        } else if exists("Cargo.toml")? {
             let cargo_toml = distrib::rust::load_cargo_toml("Cargo.toml")?;
             let package_name = cargo_toml.package().name();
             package_name

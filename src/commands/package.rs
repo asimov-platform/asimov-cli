@@ -11,6 +11,9 @@ pub enum PackageCommand {
         /// The name of the module
         name: Option<String>,
     },
+
+    /// Check the package directory for missing files/directories.
+    Check {},
 }
 
 impl PackageCommand {
@@ -18,9 +21,13 @@ impl PackageCommand {
         use PackageCommand::*;
         match self {
             Init { name } => init(name, flags).await,
+            Check {} => check(flags).await,
         }
     }
 }
+
+mod check;
+pub use check::*;
 
 mod init;
 pub use init::*;
