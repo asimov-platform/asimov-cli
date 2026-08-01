@@ -14,6 +14,9 @@ pub enum PackageCommand {
 
     /// Check the package directory for missing files/directories.
     Check {},
+
+    /// Display the package directory tree.
+    Tree {},
 }
 
 impl PackageCommand {
@@ -22,6 +25,7 @@ impl PackageCommand {
         match self {
             Init { name } => init(name, flags).await,
             Check {} => check(flags).await,
+            Tree {} => tree(flags).await,
         }
     }
 }
@@ -31,3 +35,6 @@ pub use check::*;
 
 mod init;
 pub use init::*;
+
+mod tree;
+pub use tree::*;

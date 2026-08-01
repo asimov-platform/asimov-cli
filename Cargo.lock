@@ -261,6 +261,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "treelog",
  "url",
 ]
 
@@ -1974,7 +1975,7 @@ version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "193d64ca2bb7ae562056f842b4150a9d15f2ca7d2ea0b075856bb92964cb4962"
 dependencies = [
- "darling 0.20.11",
+ "darling 0.23.0",
  "quote",
  "syn",
 ]
@@ -7354,6 +7355,15 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
+]
+
+[[package]]
+name = "treelog"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8ef568e76b5fb29dcccd133677bc93c9588383651506351ccf101a7374496c6"
+dependencies = [
+ "walkdir",
 ]
 
 [[package]]
