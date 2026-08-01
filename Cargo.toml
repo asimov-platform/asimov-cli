@@ -96,7 +96,7 @@ jiff = { version = "0.2", default-features = false, features = [
 ], optional = true }
 mime = { version = "0.3", optional = true }
 sha2 = { version = "0.11", optional = true }
-treelog = { version = "0.0.6", default-features = false, features = ["walkdir"], optional = true }
+treelog = { version = "0.0.6", default-features = false, features = ["transform", "walkdir"], optional = true }
 
 futures-lite = "2.6.1"
 distrib = { version = "0.0.2", default-features = false, features = ["rust", "std"], optional = true }
