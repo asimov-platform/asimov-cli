@@ -500,9 +500,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.2.0"
+version = "25.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55cf18ed0be88fbefcae08bb1ba9af5da127c4a4f450990209d6d5e95069ada6"
+checksum = "68ccd1d8cc3e4ba4d98ed4d4b67bcd44614613fc4b19f7694a4ac63b0ae6b818"
 dependencies = [
  "asimov-core",
  "asimov-env",
