@@ -11,18 +11,15 @@ pub async fn inspect(
 ) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
 
-    let installed = registry
-        .read_manifest(module_name)
-        .await
-        .map_err(|e| {
-            tracing::error!("failed to read manifest for module `{module_name}`: {e}");
-            if let asimov_registry::error::ManifestError::NotInstalled = e {
-                ceprintln!(
-                    "<s,dim>hint:</> Check if the module is installed with: <s>asimov module list</>"
-                );
-            }
-            EX_UNAVAILABLE
-        })?;
+    let installed = registry.read_manifest(module_name).await.map_err(|e| {
+        tracing::error!("failed to read manifest for module `{module_name}`: {e}");
+        if let asimov_registry::error::ManifestError::NotInstalled = e {
+            ceprintln!(
+                "<s,dim>hint:</> Check if the module is installed with: <s>asimov module list</>"
+            );
+        }
+        EX_UNAVAILABLE
+    })?;
 
     let is_enabled = registry.is_module_enabled(module_name).await.map_err(|e| {
         tracing::error!("failed to check if module is enabled: {e}");
