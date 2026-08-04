@@ -118,6 +118,17 @@ pub enum ModuleCommand {
         url: String,
     },
 
+    /// Search the index of available modules
+    Search {
+        /// The terms to search for, all of which must match
+        #[clap(required = true)]
+        query: Vec<String>,
+
+        /// Set the output format [default: cli] [possible values: cli, jsonl]
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        output: Option<String>,
+    },
+
     /// Uninstall a currently installed module
     Uninstall {
         /// The names of the modules to uninstall
@@ -171,6 +182,9 @@ impl ModuleCommand {
                 summary,
             } => new(name, dir.as_deref(), program, summary.as_deref(), flags).await,
             Resolve { url } => resolve(url, flags).await,
+            Search { query, output } => {
+                search(query, output.as_deref().unwrap_or(&"cli"), flags).await
+            },
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {
                 names,
@@ -222,6 +236,9 @@ pub use new::*;
 
 mod resolve;
 pub use resolve::*;
+
+mod search;
+pub use search::*;
 
 mod uninstall;
 pub use uninstall::*;
