@@ -193,8 +193,7 @@ pub async fn config(
             // pair(s) of (key,value), write into config file(s);
             // validate every key first so a typo doesn't apply half the batch
 
-            for pair in args.chunks_exact(2) {
-                let name = &pair[0];
+            for [name, _] in args.as_chunks().0 {
                 if !conf_vars.iter().any(|var| var.name == *name) {
                     ceprintln!(
                         "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
@@ -209,8 +208,7 @@ pub async fn config(
                 )
             })?;
 
-            for pair in args.chunks_exact(2) {
-                let [name, value] = pair else { unreachable!() };
+            for [name, value] in args.as_chunks().0 {
                 write_var_file(&conf_dir.join(name), value).await?;
             }
         } else {
