@@ -1,7 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_env::paths::asimov_root;
-use clientele::{StandardOptions, SysexitsError::*};
+use clientele::{
+    StandardOptions,
+    SysexitsError::{self, *},
+};
 use color_print::ceprintln;
 use core::error::Error;
 use std::io::{BufRead, Write};
@@ -205,21 +208,35 @@ pub async fn config(
         }
     }
 
-    let configurator_name = format!("asimov-{module_name}-configurator");
+    // A configurator is an interactive setup program; only run it in
+    // interactive mode, never as a side effect of get/set/unset.
+    if args.is_empty() && !unset {
+        let configurator_name = format!("asimov-{module_name}-configurator");
 
-    let provides_configurator = manifest.provides.programs.contains(&configurator_name);
+        if manifest.provides.programs.contains(&configurator_name) {
+            let conf_bin = asimov_root().join("libexec").join(&configurator_name);
 
-    let conf_bin = asimov_root().join("libexec").join(configurator_name);
+            if !tokio::fs::try_exists(&conf_bin).await.unwrap_or(false) {
+                ceprintln!(
+                    "<s,r>error:</> module <s>{module_name}</> declares configurator `{configurator_name}`, but it is not installed"
+                );
+                return Err(EX_UNAVAILABLE.into());
+            }
 
-    let configurator_exists = tokio::fs::try_exists(&conf_bin).await.unwrap_or(false);
+            let status = std::process::Command::new(&conf_bin)
+                .stdin(std::process::Stdio::inherit())
+                .stdout(std::process::Stdio::inherit())
+                .stderr(std::process::Stdio::inherit())
+                .status()
+                .inspect_err(|e| tracing::error!("failed to execute configurator: {e}"))?;
 
-    if provides_configurator && configurator_exists {
-        std::process::Command::new(&conf_bin)
-            .stdin(std::process::Stdio::inherit())
-            .stdout(std::process::Stdio::inherit())
-            .stderr(std::process::Stdio::inherit())
-            .status()
-            .inspect_err(|e| tracing::error!("failed to execute configurator: {e}"))?;
+            if !status.success() {
+                ceprintln!("<s,r>error:</> configurator `{configurator_name}` failed: {status}");
+                return Err(SysexitsError::try_from(status)
+                    .unwrap_or(EX_SOFTWARE)
+                    .into());
+            }
+        }
     }
 
     Ok(())
