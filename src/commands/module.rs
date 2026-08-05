@@ -24,7 +24,6 @@ pub enum ModuleCommand {
         unset: bool,
 
         /// A single configuration variable to read, or key-value pair(s) to be set.
-        #[clap(trailing_var_arg = true)]
         args: Vec<String>,
     },
 
