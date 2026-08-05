@@ -121,20 +121,15 @@ pub async fn config(
 
             writeln!(&mut stdout, "Configuration:")?;
             for var in conf_vars {
-                manifest
-                    .variable(&var.name, Some(profile))
-                    .inspect(|val| {
-                        writeln!(&mut stdout, "\t{}: {}", var.name, val).unwrap();
-                    })
-                    .inspect_err(|e| match e {
-                        asimov_module::ReadVarError::UnconfiguredVar(_) => {
-                            ceprintln!("\t{}: <s,y>warn:</> {e}", var.name);
-                        },
-                        _ => {
-                            ceprintln!("\t{}: <s,r>error:</> {e}", var.name);
-                        },
-                    })
-                    .unwrap();
+                match manifest.variable(&var.name, Some(profile)) {
+                    Ok(val) => writeln!(&mut stdout, "\t{}: {}", var.name, val)?,
+                    Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
+                        ceprintln!("\t{}: <s,y>warn:</> {e}", var.name);
+                    },
+                    Err(e) => {
+                        ceprintln!("\t{}: <s,r>error:</> {e}", var.name);
+                    },
+                }
             }
         } else if args.len() == 1 {
             // one arg, fetch the value
