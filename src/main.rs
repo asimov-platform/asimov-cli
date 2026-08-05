@@ -366,7 +366,7 @@ pub async fn main() -> SysexitsError {
             urls,
         } => commands::describe::describe(urls, module, output, flags)
             .await
-            .map_err(|err| err.into())
+            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "fetch")]
@@ -379,16 +379,12 @@ pub async fn main() -> SysexitsError {
             .map(|_| EX_OK),
 
         #[cfg(feature = "handle")]
-        Handle(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Handle(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "index")]
         Index { module, urls } => commands::index::index(urls, module, flags)
             .await
-            .map_err(|err| err.into())
+            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "list")]
@@ -402,32 +398,16 @@ pub async fn main() -> SysexitsError {
             .map(|_| EX_OK),
 
         #[cfg(feature = "message")]
-        Message(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Message(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "module")]
-        Module(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "package")]
-        Package(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Package(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "protocol")]
-        Protocol(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Protocol(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "read")]
         Read { module, urls } => commands::read::read(urls, module, flags)
@@ -437,7 +417,7 @@ pub async fn main() -> SysexitsError {
         #[cfg(feature = "search")]
         Search { module, prompt } => commands::search::search(prompt, module, flags)
             .await
-            .map_err(|err| err.into())
+            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "snap")]
@@ -521,4 +501,12 @@ pub fn after_help() -> String {
     }
 
     help
+}
+
+// `From<Box<dyn Error>> for SysexitsError` discards the original code,
+// mapping everything to EX_SOFTWARE; recover it by downcasting instead.
+fn sysexits(err: Box<dyn std::error::Error>) -> SysexitsError {
+    err.downcast_ref::<SysexitsError>()
+        .copied()
+        .unwrap_or(EX_SOFTWARE)
 }
