@@ -168,15 +168,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
 
 [[package]]
-name = "arbitrary"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
-dependencies = [
- "derive_arbitrary",
-]
-
-[[package]]
 name = "arc-swap"
 version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -267,21 +258,21 @@ dependencies = [
 
 [[package]]
 name = "asimov-config"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4ce0c564ab2fafca203d4d20fddf96b2db44d1dea0f0eb3ba0a92d5bad852a7"
+checksum = "f7ac6ef2b7906cba60b65718a9d1df0572b2232f047fbf998c1954e549735304"
 dependencies = [
  "asimov-core",
 ]
 
 [[package]]
 name = "asimov-core"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f1bad0ce57d971f6d31fa68823e247f5f3814d3bde2afe54820dba066347d1d"
+checksum = "774cf04500481749ae075cfbf8cfec0d364174cd36e1604f8b48187326aec460"
 dependencies = [
  "cap-directories",
- "cap-std 4.0.2",
+ "cap-std",
  "dogma 0.1.11",
  "know",
  "tracing",
@@ -289,9 +280,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-directory"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ec7cacb839580c95057b6eae557b1c19dfa20fbbc62c87d62933c0beaf78fb5"
+checksum = "43212e40efd89d8840dae1aaf8806eca23be44a298f620adc42e2ee5259cf02f"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -306,21 +297,21 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf260e28212771f5f377dc364dab7ff905601728ebb2614114be65200083f28b"
+checksum = "b5f805ffeae596a6f29cb579d71808234038ce6657f93fcea20e10bd501172c8"
 dependencies = [
  "asimov-core",
  "cap-directories",
- "cap-std 4.0.2",
+ "cap-std",
  "getenv",
 ]
 
 [[package]]
 name = "asimov-huggingface"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6be4f8a4ef9f152eaca1086a7f3b65faf7112465aec226bf7b41b39052adc1ba"
+checksum = "e8d5b62e993095ceb7329ef07dbd56f7bdd6f005236842fd095e20dc04068cfd"
 dependencies = [
  "asimov-core",
  "hf-hub",
@@ -330,9 +321,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-id"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc4252b4015e50f5cf0c77f0d4344e4137a24d4e16aca21019c8644eb0b7164"
+checksum = "bbc776e62ed9bcb31b7a163670493edb798c930496350998ebf99b93ea443460"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -347,9 +338,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-installer"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9825510cb28239468fe837f3d0b5bb83735fb894e1415b7b5b34c7944fe28922"
+checksum = "6855e39601ba05bf06f37cb335d641c675e6cbf9b7f27c903ae6517b8bd22aa6"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -377,9 +368,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-kb"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a6f707665223de245ba5c2c7970e2cc81aeb97b6c69684b18e322ba280072cd"
+checksum = "30497c66f25f20eab220b74e0873b3f8813d5f589baa033d0fb602d88f85a8d4"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -390,9 +381,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3be4e3cfc3b6b073020fb9d8b6082222daf9bde56e1d1db81a149a721c6514b5"
+checksum = "cb2840cdf252c94544ddc703b7844630db06c0ad93d4586ba44d4aed083d75ef"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -401,6 +392,7 @@ dependencies = [
  "getenv",
  "iri-string",
  "mime",
+ "reqwest 0.12.28",
  "secrecy",
  "serde",
  "serde_json",
@@ -414,9 +406,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module-kit"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ae05d989b23d0c76b22851e0a7bd8dc93e34916aa6b7cc04e0dd286f7303ba1"
+checksum = "2ebdcd9a97dfea4e84afeb5daee93e7139c541f19727e1a476a158758d2e37ec"
 dependencies = [
  "anyhow",
  "asimov-module",
@@ -435,9 +427,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a89de361beaa9ffde6420288e6f29070d91e9654859e21a4c1067899ac785800"
+checksum = "19980dec4e673b03a0704b1611fe221ebbb3b08270603496379f0d6c71967bcd"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -447,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d31e1f47e456791b2fb28c7ec4735398356697db73c1bec9bcff911b633efd34"
+checksum = "fc817ea0b3eba497fa452a638484b357f699ced9af0445caa26aa410bc84e152"
 dependencies = [
  "asimov-core",
  "bon",
@@ -459,9 +451,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-protocol"
-version = "25.3.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c01f3020f60ace1bff40f17627c2ee9318a46bbd44e5bcae45c8d6d7914cf89"
+checksum = "350daf380da1c131ae70ee5f033539e48ebfdd660097f59079550cdeec3f8ded"
 dependencies = [
  "asimov-core",
  "asimov-id",
@@ -488,9 +480,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99f17e108fa58ca74a919e575b4d3e614f0d637ae74e18fd6e05e3dbec9c8d75"
+checksum = "aad2096b340925ac304a9033b931268afbd2428a8b6568b542871c58508682ca"
 dependencies = [
  "asimov-core",
  "gofer 0.2.0",
@@ -500,9 +492,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55cf18ed0be88fbefcae08bb1ba9af5da127c4a4f450990209d6d5e95069ada6"
+checksum = "d221364c772c84bd03824d901df8c7d72a3dc3327d20d510e270e7c59e4419da"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -510,7 +502,6 @@ dependencies = [
  "bon",
  "clientele",
  "getenv",
- "reqwest 0.12.28",
  "secrecy",
  "serde",
  "serde_json",
@@ -525,9 +516,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5090160ce04871d9106ae303a87ea501e5c603535a572842d4ca43589fa1c96"
+checksum = "79ccaf919c063e810e49befc5e90e23b9e8c159e3de8911406bcd9a548e92737"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -543,9 +534,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.2.0"
+version = "25.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa29eebd5d8e964ca5ce295c0fcd3c4277397d3bbe751665026b855521ee528c"
+checksum = "161408726d098bdeb8e90b2432a9ae6445424ffe66dac70298d1b2255f3ed9b3"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -555,7 +546,7 @@ dependencies = [
  "asimov-runner",
  "async-trait",
  "bon",
- "cap-std 3.4.5",
+ "cap-std",
  "cap-tempfile",
  "hex",
  "jiff",
@@ -910,28 +901,10 @@ version = "4.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "65fa3600bd82a7782ae602d755a9725b3bba3aa8147d731b350aea0101036799"
 dependencies = [
- "cap-std 4.0.2",
+ "cap-std",
  "directories",
  "rustix",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "cap-primitives"
-version = "3.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6cf3aea8a5081171859ef57bc1606b1df6999df4f1110f8eef68b30098d1d3a"
-dependencies = [
- "ambient-authority",
- "fs-set-times",
- "io-extras 0.18.4",
- "io-lifetimes 2.0.4",
- "ipnet",
- "maybe-owned",
- "rustix",
- "rustix-linux-procfs",
- "windows-sys 0.59.0",
- "winx",
 ]
 
 [[package]]
@@ -942,7 +915,7 @@ checksum = "cdadbd7c002d3a484b35243669abdae85a0ebaded5a61117169dc3400f9a7ff0"
 dependencies = [
  "ambient-authority",
  "fs-set-times",
- "io-extras 0.19.0",
+ "io-extras",
  "io-lifetimes 3.0.1",
  "ipnet",
  "maybe-owned",
@@ -954,41 +927,29 @@ dependencies = [
 
 [[package]]
 name = "cap-std"
-version = "3.4.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6dc3090992a735d23219de5c204927163d922f42f575a0189b005c62d37549a"
-dependencies = [
- "camino",
- "cap-primitives 3.4.5",
- "io-extras 0.18.4",
- "io-lifetimes 2.0.4",
- "rustix",
-]
-
-[[package]]
-name = "cap-std"
 version = "4.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7281235d6e96d3544ca18bba9049be92f4190f8d923e3caef1b5f66cfa752608"
 dependencies = [
  "camino",
- "cap-primitives 4.0.2",
- "io-extras 0.19.0",
+ "cap-primitives",
+ "io-extras",
  "io-lifetimes 3.0.1",
  "rustix",
 ]
 
 [[package]]
 name = "cap-tempfile"
-version = "3.4.5"
+version = "4.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68d8ad5cfac469e58e632590f033d45c66415ef7a8aa801409884818036706f5"
+checksum = "42f22d5c0b1147e8bd9105fa004450f673c139d7e632f7edc3980f94a51f20f3"
 dependencies = [
- "cap-std 3.4.5",
- "rand 0.8.6",
+ "cap-std",
+ "rand 0.9.4",
  "rustix",
  "rustix-linux-procfs",
  "uuid",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1767,17 +1728,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7cd812cc2bc1d69d4764bd80df88b4317eaef9e773c75226407d9bc0876b211c"
 dependencies = [
  "serde_core",
-]
-
-[[package]]
-name = "derive_arbitrary"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -3502,16 +3452,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "879f10e63c20629ecabbb64a8010319738c66a5cd0c29b02d63d272b03751d01"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "io-extras"
-version = "0.18.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2285ddfe3054097ef4b2fe909ef8c3bcd1ea52a8f0d274416caebeef39f04a65"
-dependencies = [
- "io-lifetimes 2.0.4",
- "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -7393,6 +7333,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "typed-path"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
+
+[[package]]
 name = "typeid"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8529,15 +8475,15 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "4.6.1"
+version = "8.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "caa8cd6af31c3b31c6631b8f483848b91589021b28fffe50adada48d4f4d2ed1"
+checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
 dependencies = [
- "arbitrary",
  "crc32fast",
  "flate2",
  "indexmap 2.14.0",
  "memchr",
+ "typed-path",
  "zopfli",
 ]
 
