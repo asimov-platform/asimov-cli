@@ -88,8 +88,6 @@ pub async fn config(
             for var in conf_vars {
                 let var_file = conf_dir.join(&var.name);
 
-                let _md = tokio::fs::metadata(&var_file).await;
-
                 let current_value = tokio::fs::read_to_string(&var_file).await.ok();
 
                 let info_text = if current_value.is_some() {
