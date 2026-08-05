@@ -7,7 +7,7 @@ use clientele::{
 };
 use color_print::ceprintln;
 use core::error::Error;
-use std::io::{BufRead, Write};
+use std::io::{BufRead, IsTerminal, Write};
 
 pub async fn config(
     module_name: &str,
@@ -99,6 +99,14 @@ pub async fn config(
 
         if args.is_empty() {
             // interactively prompt for each value in the config
+
+            if !std::io::stdin().is_terminal() {
+                ceprintln!("<s,r>error:</> interactive configuration requires a terminal");
+                ceprintln!(
+                    "<s,dim>hint:</> Set values non-interactively with: <s>asimov module config {module_name} KEY VALUE</>"
+                );
+                return Err(EX_UNAVAILABLE.into());
+            }
 
             create_conf_dir(&conf_dir).await.inspect_err(|e| {
                 tracing::error!(
