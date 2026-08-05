@@ -158,17 +158,20 @@ pub async fn config(
             // one arg, fetch the value
 
             let name = &args[0];
-            if manifest
-                .config
-                .is_some_and(|conf| conf.variables.iter().any(|var| var.name == *name))
-            {
-                let var_file = conf_dir.join(name);
-                if let Ok(current) = tokio::fs::read_to_string(&var_file).await {
-                    println!("{}", current.trim());
-                }
-            } else {
-                ceprintln!("<s,r>error:</> unrecognized configuration variable key: `{name}`");
-                return Err(EX_USAGE.into());
+            match manifest.variable(name, Some(profile)) {
+                Ok(value) => println!("{}", value.trim()),
+                Err(asimov_module::ReadVarError::UnknownVar(_)) => {
+                    ceprintln!("<s,r>error:</> unrecognized configuration variable key: `{name}`");
+                    return Err(EX_USAGE.into());
+                },
+                Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
+                    ceprintln!("<s,r>error:</> {e}");
+                    return Err(EX_CONFIG.into());
+                },
+                Err(e) => {
+                    ceprintln!("<s,r>error:</> {e}");
+                    return Err(EX_IOERR.into());
+                },
             }
         } else if args.len().is_multiple_of(2) {
             // pair(s) of (key,value), write into config file(s)
