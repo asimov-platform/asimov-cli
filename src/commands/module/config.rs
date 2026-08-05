@@ -34,6 +34,23 @@ pub async fn config(
         .map(|c| c.variables.as_slice())
         .unwrap_or_default();
 
+    // Variable names become file names under the configuration directory;
+    // reject anything that could escape it or hide files.
+    let is_valid_name = |name: &str| {
+        !name.is_empty()
+            && !name.starts_with('.')
+            && name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+    };
+    if let Some(var) = conf_vars.iter().find(|var| !is_valid_name(&var.name)) {
+        ceprintln!(
+            "<s,r>error:</> module <s>{module_name}</> declares an invalid configuration variable name: `{}`",
+            var.name
+        );
+        return Err(EX_DATAERR.into());
+    }
+
     if !conf_vars.is_empty() {
         let profile = "default"; // TODO
 
@@ -51,13 +68,19 @@ pub async fn config(
             })?;
 
         if unset {
-            let vars: Vec<String> = if !args.is_empty() {
-                args.to_vec()
-            } else if let Some(conf) = manifest.config {
-                // unset all vars
-                conf.variables.into_iter().map(|v| v.name).collect()
+            let vars: Vec<&str> = if !args.is_empty() {
+                for name in args {
+                    if !conf_vars.iter().any(|var| var.name == *name) {
+                        ceprintln!(
+                            "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
+                        );
+                        return Err(EX_USAGE.into());
+                    }
+                }
+                args.iter().map(String::as_str).collect()
             } else {
-                return Ok(());
+                // unset all vars
+                conf_vars.iter().map(|var| var.name.as_str()).collect()
             };
 
             for var in &vars {
