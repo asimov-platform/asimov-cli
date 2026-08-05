@@ -174,21 +174,22 @@ pub async fn config(
                 },
             }
         } else if args.len().is_multiple_of(2) {
-            // pair(s) of (key,value), write into config file(s)
+            // pair(s) of (key,value), write into config file(s);
+            // validate every key first so a typo doesn't apply half the batch
 
-            let mut chunks = args.chunks_exact(2);
-            while let Some([name, value]) = chunks.next() {
-                // must be a known configuration variable, otherwise stop
+            for pair in args.chunks_exact(2) {
+                let name = &pair[0];
                 if !conf_vars.iter().any(|var| var.name == *name) {
                     ceprintln!(
                         "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
                     );
                     return Err(EX_USAGE.into());
                 }
+            }
 
-                let var_file = conf_dir.join(name);
-
-                tokio::fs::write(&var_file, &value).await?;
+            for pair in args.chunks_exact(2) {
+                let [name, value] = pair else { unreachable!() };
+                tokio::fs::write(&conf_dir.join(name), value).await?;
             }
         } else {
             ceprintln!(
