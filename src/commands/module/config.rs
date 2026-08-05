@@ -54,6 +54,11 @@ pub async fn config(
         return Err(EX_DATAERR.into());
     }
 
+    if conf_vars.is_empty() && (!args.is_empty() || unset) {
+        ceprintln!("<s,r>error:</> module <s>{module_name}</> has no configuration variables");
+        return Err(EX_USAGE.into());
+    }
+
     if !conf_vars.is_empty() {
         let profile = "default"; // TODO
 
@@ -246,6 +251,8 @@ pub async fn config(
                     .unwrap_or(EX_SOFTWARE)
                     .into());
             }
+        } else if conf_vars.is_empty() {
+            ceprintln!("<s,dim>note:</> module <s>{module_name}</> has no configuration");
         }
     }
 
