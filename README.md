@@ -1,7 +1,7 @@
 # ASIMOV Command-Line Interface (CLI)
 
 [![License](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://unlicense.org)
-[![Compatibility](https://img.shields.io/badge/rust-1.93%2B-blue)](https://endoflife.date/rust)
+[![Compatibility](https://img.shields.io/badge/rust-1.97%2B-blue)](https://endoflife.date/rust)
 [![Package on Crates.io](https://img.shields.io/crates/v/asimov-cli)](https://crates.io/crates/asimov-cli)
 [![Documentation](https://img.shields.io/docsrs/asimov-cli?label=docs.rs)](https://docs.rs/asimov-cli)
 
@@ -13,7 +13,7 @@
 
 ## 🛠️ Prerequisites
 
-- [Rust] 1.93+ (2024 edition)
+- [Rust] 1.97+ (2024 edition)
 
 ## ⬇️ Installation
 
