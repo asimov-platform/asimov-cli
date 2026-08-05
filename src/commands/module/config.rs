@@ -97,7 +97,7 @@ pub async fn config(
         if args.is_empty() {
             // interactively prompt for each value in the config
 
-            tokio::fs::create_dir_all(&conf_dir).await.inspect_err(|e| {
+            create_conf_dir(&conf_dir).await.inspect_err(|e| {
                 tracing::error!(
                     "failed to create configuration directory for module `{module_name}`: {e}"
                 )
@@ -137,7 +137,7 @@ pub async fn config(
                     continue;
                 }
 
-                tokio::fs::write(&var_file, &value).await?;
+                write_var_file(&var_file, value).await?;
             }
 
             writeln!(&mut stdout, "Configuration:")?;
@@ -185,7 +185,7 @@ pub async fn config(
                 }
             }
 
-            tokio::fs::create_dir_all(&conf_dir).await.inspect_err(|e| {
+            create_conf_dir(&conf_dir).await.inspect_err(|e| {
                 tracing::error!(
                     "failed to create configuration directory for module `{module_name}`: {e}"
                 )
@@ -193,7 +193,7 @@ pub async fn config(
 
             for pair in args.chunks_exact(2) {
                 let [name, value] = pair else { unreachable!() };
-                tokio::fs::write(&conf_dir.join(name), value).await?;
+                write_var_file(&conf_dir.join(name), value).await?;
             }
         } else {
             ceprintln!(
@@ -223,4 +223,25 @@ pub async fn config(
     }
 
     Ok(())
+}
+
+async fn create_conf_dir(dir: &std::path::Path) -> tokio::io::Result<()> {
+    let mut builder = tokio::fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    builder.mode(0o700);
+    builder.create(dir).await
+}
+
+async fn write_var_file(path: &std::path::Path, value: &str) -> tokio::io::Result<()> {
+    use tokio::io::AsyncWriteExt;
+    let mut opts = tokio::fs::OpenOptions::new();
+    opts.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    opts.mode(0o600);
+    let mut file = opts.open(path).await?;
+    #[cfg(unix)]
+    file.set_permissions(std::os::unix::fs::PermissionsExt::from_mode(0o600))
+        .await?;
+    file.write_all(value.as_bytes()).await
 }
