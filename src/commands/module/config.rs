@@ -59,14 +59,6 @@ pub async fn config(
             .join(profile)
             .join(module_name.as_str());
 
-        tokio::fs::create_dir_all(&conf_dir)
-            .await
-            .inspect_err(|e| {
-                tracing::error!(
-                    "failed to create configuration directory for module `{module_name}`: {e}"
-                )
-            })?;
-
         if unset {
             let vars: Vec<&str> = if !args.is_empty() {
                 for name in args {
@@ -104,6 +96,12 @@ pub async fn config(
 
         if args.is_empty() {
             // interactively prompt for each value in the config
+
+            tokio::fs::create_dir_all(&conf_dir).await.inspect_err(|e| {
+                tracing::error!(
+                    "failed to create configuration directory for module `{module_name}`: {e}"
+                )
+            })?;
 
             let mut stdout = std::io::stdout().lock();
             let mut stdin = std::io::stdin().lock().lines();
@@ -186,6 +184,12 @@ pub async fn config(
                     return Err(EX_USAGE.into());
                 }
             }
+
+            tokio::fs::create_dir_all(&conf_dir).await.inspect_err(|e| {
+                tracing::error!(
+                    "failed to create configuration directory for module `{module_name}`: {e}"
+                )
+            })?;
 
             for pair in args.chunks_exact(2) {
                 let [name, value] = pair else { unreachable!() };
