@@ -114,7 +114,8 @@ pub async fn config(
                 )
             })?;
 
-            let mut stdout = std::io::stdout().lock();
+            // prompts go to stderr so stdout stays clean for actual output
+            let mut stderr = std::io::stderr().lock();
             let mut stdin = std::io::stdin().lock().lines();
 
             for var in conf_vars {
@@ -130,18 +131,18 @@ pub async fn config(
                     "(required)"
                 };
 
-                writeln!(&mut stdout, "Enter value for `{}` {info_text}", var.name)?;
+                writeln!(&mut stderr, "Enter value for `{}` {info_text}", var.name)?;
 
                 if let Some(current) = &current_value {
-                    writeln!(&mut stdout, "Current value: `{}`", current.trim())?;
+                    writeln!(&mut stderr, "Current value: `{}`", current.trim())?;
                 }
 
                 if let Some(desc) = &var.description {
-                    writeln!(&mut stdout, "Description: {desc}")?;
+                    writeln!(&mut stderr, "Description: {desc}")?;
                 }
 
-                write!(&mut stdout, "> ")?;
-                stdout.flush()?;
+                write!(&mut stderr, "> ")?;
+                stderr.flush()?;
                 let value = stdin.next().ok_or(EX_NOINPUT)??;
                 let value = value.trim();
                 if value.is_empty() {
@@ -151,6 +152,7 @@ pub async fn config(
                 write_var_file(&var_file, value).await?;
             }
 
+            let mut stdout = std::io::stdout().lock();
             writeln!(&mut stdout, "Configuration:")?;
             for var in conf_vars {
                 match manifest.variable(&var.name, Some(profile)) {
