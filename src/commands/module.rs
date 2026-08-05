@@ -196,9 +196,11 @@ impl ModuleCommand {
 
 // From asimov-module-cli:
 const CONFIG_USAGE: &str = r#"
-    config <module>                     # Interactive configuration
-    config <module> <key>               # Show value for key
-    config <module> [<key> <value>]...  # Set key(s) to value(s)
+    asimov module config <module>                     # Interactive configuration
+    asimov module config <module> <key>               # Show value for key
+    asimov module config <module> [<key> <value>]...  # Set key(s) to value(s)
+    asimov module config <module> --unset <key>...    # Unset the given key(s)
+    asimov module config <module> --unset             # Unset all keys
 "#;
 
 mod browse;
