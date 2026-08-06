@@ -22,10 +22,9 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
             "jsonl" => {
                 let version = module.version.unwrap_or_default();
                 let label = module.manifest.label;
-                let uri = format!("https://asimov.directory/modules/{}", name);
+                let uri = format!("https://asimov.directory/modules/{name}");
                 println!(
-                    r#"{{"@type": "{}", "@id": "{}", "name": "{}", "label": "{}", "enabled": {}, "version": "{}"}}"#,
-                    "AsimovModule",
+                    r#"{{"@type": "AsimovModule", "@id": "{}", "name": "{}", "label": "{}", "enabled": {}, "version": "{}"}}"#,
                     uri,
                     name,
                     label.unwrap_or_default(),
@@ -33,7 +32,7 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
                     version
                 );
             },
-            "cli" | _ => {
+            _ => {
                 if is_enabled {
                     cprintln!("<s,g>✓</> {}", name);
                 } else {

@@ -29,10 +29,10 @@ impl SnapshotCommand {
     pub async fn run(&self, flags: &StandardOptions) -> Result<(), SysexitsError> {
         use SnapshotCommand::*;
         match self {
-            Snapshot(urls) => snapshot(urls, &flags).await,
-            List => list(&flags).await,
-            Log { url } => log(&url, &flags).await,
-            Compact { urls } => compact(&urls, &flags).await,
+            Snapshot(urls) => create(urls, flags).await,
+            List => list(flags).await,
+            Log { url } => log(url, flags).await,
+            Compact { urls } => compact(urls, flags).await,
         }
     }
 }
@@ -40,11 +40,11 @@ impl SnapshotCommand {
 mod compact;
 pub use compact::*;
 
+mod create;
+pub use create::*;
+
 mod list;
 pub use list::*;
 
 mod log;
 pub use log::*;
-
-mod snapshot;
-pub use snapshot::*;

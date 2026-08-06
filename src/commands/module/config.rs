@@ -7,7 +7,7 @@ use core::error::Error;
 use std::io::{BufRead, Write};
 
 pub async fn config(
-    module_name: &String,
+    module_name: &str,
     unset: bool,
     args: &[String],
     _flags: &StandardOptions,
@@ -154,15 +154,11 @@ pub async fn config(
                 ceprintln!("<s,r>error:</> unrecognized configuration variable key: `{name}`");
                 return Err(EX_USAGE.into());
             }
-        } else if args.len() % 2 == 0 {
+        } else if args.len().is_multiple_of(2) {
             // pair(s) of (key,value), write into config file(s)
 
             let mut chunks = args.chunks_exact(2);
-            loop {
-                let Some([name, value]) = chunks.next() else {
-                    break;
-                };
-
+            while let Some([name, value]) = chunks.next() {
                 // must be a known configuration variable, otherwise stop
                 if !conf_vars.iter().any(|var| var.name == *name) {
                     ceprintln!(

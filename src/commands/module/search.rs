@@ -39,7 +39,7 @@ pub async fn search(
                 })?;
                 println!("{json}");
             },
-            "cli" | _ => {
+            _ => {
                 let name = format!("{:width$}", module.name);
                 let summary = module.summary.as_deref().unwrap_or_default();
                 cprintln!("<s,c>{name}</>  {summary}");

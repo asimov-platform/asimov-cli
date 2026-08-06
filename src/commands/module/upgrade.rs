@@ -6,7 +6,7 @@ use color_print::cprintln;
 use core::error::Error;
 
 pub async fn upgrade(
-    module_names: &Vec<String>,
+    module_names: &[String],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -15,7 +15,7 @@ pub async fn upgrade(
     let installer = asimov_installer::Installer::default();
 
     let module_names = if !module_names.is_empty() {
-        module_names.clone()
+        module_names.to_vec()
     } else {
         registry
             .installed_modules()

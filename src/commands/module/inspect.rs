@@ -74,7 +74,7 @@ pub async fn inspect(
                 }))?
             );
         },
-        "cli" | _ => {
+        _ => {
             if is_enabled {
                 cprintln!("<s,g>✓</> <s>{}</> (enabled)", manifest.name);
             } else {

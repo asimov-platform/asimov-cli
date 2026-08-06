@@ -31,9 +31,7 @@ pub fn extract_module_names(json_str: impl AsRef<str>) -> serde_json::Result<Vec
         .into_iter()
         .filter_map(|dep| {
             // Extract the module name part (before any version specifiers):
-            let dep_name = dep
-                .split(|c| c == ' ' || c == '<' || c == '>' || c == ';' || c == '[')
-                .next()?;
+            let dep_name = dep.split([' ', '<', '>', ';', '[']).next()?;
 
             // Handle the special case of "asimov-module" separately:
             if dep_name == "asimov-module" {

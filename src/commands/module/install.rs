@@ -7,7 +7,7 @@ use color_print::{ceprintln, cprintln};
 use core::error::Error;
 
 pub async fn install(
-    module_names: &Vec<String>,
+    module_names: &[String],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -26,7 +26,7 @@ pub async fn install(
             EX_UNAVAILABLE
         })?
     } else {
-        module_names.clone()
+        module_names.to_vec()
     };
 
     for module_name in module_names {
