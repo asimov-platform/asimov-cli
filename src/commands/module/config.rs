@@ -36,6 +36,10 @@ pub enum ConfigCommand {
 
         /// The configuration variable to read
         key: String,
+
+        /// Read the stored value only, ignoring the environment and any default
+        #[arg(long)]
+        stored: bool,
     },
 
     /// Set configuration variables
@@ -43,9 +47,19 @@ pub enum ConfigCommand {
         /// The name of the module
         name: String,
 
-        /// The variables to set, as `key=value` pairs
-        #[arg(value_name = "KEY=VALUE", required = true)]
+        /// The variables to set, as `key=value` pairs.
+        /// With --stdin, a single bare key instead.
+        #[arg(value_name = "KEY=VALUE", required_unless_present = "from_json")]
         assignments: Vec<String>,
+
+        /// Read the value for a single key from standard input,
+        /// keeping it out of the command line
+        #[arg(long, conflicts_with = "from_json")]
+        stdin: bool,
+
+        /// Read a JSON object of key-value pairs from standard input
+        #[arg(long, conflicts_with = "assignments")]
+        from_json: bool,
     },
 
     /// Unset configuration variables
@@ -76,8 +90,13 @@ impl ConfigCommand {
             Show { name, output } => {
                 show::show(name, output.as_deref().unwrap_or("cli"), flags).await
             },
-            Get { name, key } => get::get(name, key, flags).await,
-            Set { name, assignments } => set::set(name, assignments, flags).await,
+            Get { name, key, stored } => get::get(name, key, *stored, flags).await,
+            Set {
+                name,
+                assignments,
+                stdin,
+                from_json,
+            } => set::set(name, assignments, *stdin, *from_json, flags).await,
             Unset { name, keys, all } => unset::unset(name, keys, *all, flags).await,
             Setup { name } => setup::setup(name, flags).await,
         }
