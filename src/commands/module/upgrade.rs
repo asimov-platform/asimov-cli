@@ -35,6 +35,8 @@ pub async fn upgrade(
         .build();
 
     for module_name in module_names {
+        let module_name = module_name.parse()?;
+
         let current = registry.module_version(&module_name).await.map_err(|_| {
             tracing::error!("failed to read installed version of `{module_name}`");
             EX_UNAVAILABLE
@@ -74,7 +76,7 @@ pub async fn upgrade(
         }
 
         installer
-            .upgrade_module(module_name.clone(), &install_options)
+            .upgrade_module(&module_name, &install_options)
             .await
             .map_err(|e| {
                 tracing::error!("module upgrade failed for `{module_name}`: {e}");

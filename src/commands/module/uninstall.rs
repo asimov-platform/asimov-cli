@@ -10,6 +10,8 @@ pub async fn uninstall(
 ) -> Result<(), Box<dyn Error>> {
     let installer = asimov_installer::Installer::default();
     for module_name in module_names {
+        let module_name = module_name.parse()?;
+
         if flags.verbose > 1 {
             cprintln!("<s,c>»</> Uninstalling the module <s>{module_name}</>...");
         }

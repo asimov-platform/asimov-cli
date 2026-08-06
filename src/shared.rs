@@ -75,8 +75,13 @@ pub async fn pick_module(
                 EX_SOFTWARE
             })?;
 
+        let module_name = module.name.parse().map_err(|e| {
+            ceprintln!("<s,r>error:</> {e}");
+            EX_DATAERR
+        })?;
+
         if !registry
-            .is_module_enabled(&module.name)
+            .is_module_enabled(&module_name)
             .await
             .map_err(|e| {
                 ceprintln!(
@@ -121,8 +126,13 @@ pub async fn pick_module(
                     EX_UNAVAILABLE
                 })?;
 
+            let module_name = module.name.parse().map_err(|e| {
+                ceprintln!("<s,r>error:</> {e}");
+                EX_DATAERR
+            })?;
+
             if registry
-                .is_module_enabled(&module.name)
+                .is_module_enabled(&module_name)
                 .await
                 .map_err(|e| {
                     ceprintln!(

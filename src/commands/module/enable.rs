@@ -10,6 +10,8 @@ pub async fn enable(
 ) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
     for module_name in module_names {
+        let module_name = module_name.parse()?;
+
         if flags.verbose > 1 {
             cprintln!("<s,c>»</> Enabling module <s>{module_name}</>...");
         }

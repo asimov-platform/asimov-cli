@@ -12,7 +12,7 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
     })?;
 
     for module in modules {
-        let name = module.manifest.name;
+        let name = module.manifest.name.parse()?;
         let is_enabled = registry.is_module_enabled(&name).await.map_err(|e| {
             tracing::error!("failed to check if module is enabled: {e}");
             EX_UNAVAILABLE

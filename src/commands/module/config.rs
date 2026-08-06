@@ -12,6 +12,7 @@ pub async fn config(
     args: &[String],
     _flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
+    let module_name = module_name.parse()?;
     let registry = asimov_registry::Registry::default();
     let manifest = registry
         .read_manifest(&module_name)
@@ -39,7 +40,7 @@ pub async fn config(
         let conf_dir = asimov_root()
             .join("configs")
             .join(profile)
-            .join(&module_name);
+            .join(module_name.as_str());
 
         tokio::fs::create_dir_all(&conf_dir)
             .await

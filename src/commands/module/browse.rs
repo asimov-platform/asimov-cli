@@ -7,7 +7,7 @@ pub async fn browse(
     module_name: impl AsRef<str>,
     _flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
-    let module_name = module_name.as_ref();
+    let module_name = module_name.as_ref().parse()?;
     let registry = asimov_registry::Registry::default();
 
     let manifest = registry
