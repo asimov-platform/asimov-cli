@@ -1,27 +1,113 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_env::paths::asimov_root;
+use asimov_module::{ConfigurationVariable, ModuleManifest};
 use clientele::{
     StandardOptions,
-    SysexitsError::{self, *},
+    SysexitsError::*,
+    crates::clap::{Subcommand, builder::PossibleValuesParser},
 };
 use color_print::ceprintln;
 use core::error::Error;
-use std::io::{IsTerminal, Write};
+use std::{
+    path::{Path, PathBuf},
+    string::String,
+    vec::Vec,
+};
+
+#[derive(Debug, Subcommand)]
+pub enum ConfigCommand {
+    /// Show a module's configuration variables and their status
+    #[clap(alias = "list")]
+    Show {
+        /// The name of the module
+        name: String,
+
+        /// Set the output format [default: cli] [possible values: cli, json]
+        #[arg(value_name = "FORMAT", short = 'o', long)]
+        #[arg(value_parser = PossibleValuesParser::new(["cli", "json"]), hide_possible_values = true)]
+        output: Option<String>,
+    },
+
+    /// Print the value of a configuration variable
+    Get {
+        /// The name of the module
+        name: String,
+
+        /// The configuration variable to read
+        key: String,
+    },
+
+    /// Set configuration variables
+    Set {
+        /// The name of the module
+        name: String,
+
+        /// The variables to set, as `key=value` pairs
+        #[arg(value_name = "KEY=VALUE", required = true)]
+        assignments: Vec<String>,
+    },
+
+    /// Unset configuration variables
+    Unset {
+        /// The name of the module
+        name: String,
+
+        /// The configuration variables to unset
+        #[arg(required_unless_present = "all")]
+        keys: Vec<String>,
+
+        /// Unset every configuration variable of the module
+        #[arg(long, conflicts_with = "keys")]
+        all: bool,
+    },
+
+    /// Configure a module interactively
+    Setup {
+        /// The name of the module
+        name: String,
+    },
+}
+
+impl ConfigCommand {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+        use ConfigCommand::*;
+        match self {
+            Show { name, output } => {
+                show::show(name, output.as_deref().unwrap_or("cli"), flags).await
+            },
+            Get { name, key } => get::get(name, key, flags).await,
+            Set { name, assignments } => set::set(name, assignments, flags).await,
+            Unset { name, keys, all } => unset::unset(name, keys, *all, flags).await,
+            Setup { name } => setup::setup(name, flags).await,
+        }
+    }
+}
+
+mod get;
+mod set;
+mod setup;
+mod show;
+mod unset;
 
 /// Stands in for secret values, which are never displayed unless requested
 /// explicitly by name.
-const MASK: &str = "••••••";
+pub(super) const MASK: &str = "******";
 
-pub async fn config(
-    module_name: &str,
-    unset: bool,
-    args: &[String],
-    _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
-    let module_name = module_name.parse()?;
-    let registry = asimov_registry::Registry::default();
-    let manifest = registry
+/// An installed module together with the location of its configuration.
+pub(super) struct Module {
+    pub name: String,
+    pub manifest: ModuleManifest,
+    pub profile: &'static str,
+    pub conf_dir: PathBuf,
+}
+
+/// Reads the manifest of an installed module, rejecting manifests whose
+/// variable names cannot be used as file names.
+pub(super) async fn open(module_name: &str) -> Result<Module, Box<dyn Error>> {
+    let module_name = module_name.parse::<asimov_module::ModuleName>()?;
+
+    let manifest = asimov_registry::Registry::default()
         .read_manifest(&module_name)
         .await
         .map_err(|e| {
@@ -35,12 +121,6 @@ pub async fn config(
         })?
         .manifest;
 
-    let conf_vars = manifest
-        .config
-        .as_ref()
-        .map(|c| c.variables.as_slice())
-        .unwrap_or_default();
-
     // Variable names become file names under the configuration directory;
     // reject anything that could escape it or hide files.
     let is_valid_name = |name: &str| {
@@ -50,7 +130,14 @@ pub async fn config(
                 .chars()
                 .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
     };
-    if let Some(var) = conf_vars.iter().find(|var| !is_valid_name(&var.name)) {
+
+    let variables = manifest
+        .config
+        .as_ref()
+        .map(|c| c.variables.as_slice())
+        .unwrap_or_default();
+
+    if let Some(var) = variables.iter().find(|var| !is_valid_name(&var.name)) {
         ceprintln!(
             "<s,r>error:</> module <s>{module_name}</> declares an invalid configuration variable name: `{}`",
             var.name
@@ -58,224 +145,118 @@ pub async fn config(
         return Err(EX_DATAERR.into());
     }
 
-    if conf_vars.is_empty() && (!args.is_empty() || unset) {
-        ceprintln!("<s,r>error:</> module <s>{module_name}</> has no configuration variables");
-        return Err(EX_USAGE.into());
+    let profile = "default"; // TODO
+    let conf_dir = asimov_root()
+        .join("configs")
+        .join(profile)
+        .join(module_name.as_str());
+
+    Ok(Module {
+        name: module_name.into_string(),
+        manifest,
+        profile,
+        conf_dir,
+    })
+}
+
+impl Module {
+    pub fn variables(&self) -> &[ConfigurationVariable] {
+        self.manifest
+            .config
+            .as_ref()
+            .map(|c| c.variables.as_slice())
+            .unwrap_or_default()
     }
 
-    if !conf_vars.is_empty() {
-        let profile = "default"; // TODO
-
-        let conf_dir = asimov_root()
-            .join("configs")
-            .join(profile)
-            .join(module_name.as_str());
-
-        if unset {
-            let vars: Vec<&str> = if !args.is_empty() {
-                for name in args {
-                    if !conf_vars.iter().any(|var| var.name == *name) {
-                        ceprintln!(
-                            "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
-                        );
-                        return Err(EX_USAGE.into());
-                    }
-                }
-                args.iter().map(String::as_str).collect()
-            } else {
-                // unset all vars
-                conf_vars.iter().map(|var| var.name.as_str()).collect()
-            };
-
-            for var in &vars {
-                let var_file = conf_dir.join(var);
-                tokio::fs::remove_file(&var_file)
-                    .await
-                    .or_else(|e| {
-                        if e.kind() == tokio::io::ErrorKind::NotFound {
-                            Ok(())
-                        } else {
-                            Err(e)
-                        }
-                    })
-                    .inspect_err(|e| {
-                        tracing::error!("failed to unset configuration variable `{var}`: {e}")
-                    })?;
-            }
-
-            return Ok(()); // exit, without calling configurator
-        }
-
-        if args.is_empty() {
-            // interactively prompt for each value in the config
-
-            if !std::io::stdin().is_terminal() {
-                ceprintln!("<s,r>error:</> interactive configuration requires a terminal");
+    /// Looks up a declared variable, reporting unknown keys as a usage error.
+    pub fn variable(&self, key: &str) -> Result<&ConfigurationVariable, Box<dyn Error>> {
+        self.variables()
+            .iter()
+            .find(|var| var.name == key)
+            .ok_or_else(|| {
                 ceprintln!(
-                    "<s,dim>hint:</> Set values non-interactively with: <s>asimov module config {module_name} KEY VALUE</>"
+                    "<s,r>error:</> `{key}` is not the name of a configuration variable for <s>{}</> module",
+                    self.name
                 );
-                return Err(EX_UNAVAILABLE.into());
-            }
+                EX_USAGE.into()
+            })
+    }
 
-            create_conf_dir(&conf_dir).await.inspect_err(|e| {
-                tracing::error!(
-                    "failed to create configuration directory for module `{module_name}`: {e}"
-                )
-            })?;
-
-            // prompts go to stderr so stdout stays clean for actual output
-            let mut stderr = std::io::stderr().lock();
-
-            for var in conf_vars {
-                let var_file = conf_dir.join(&var.name);
-
-                let current_value = tokio::fs::read_to_string(&var_file).await.ok();
-
-                let info_text = if current_value.is_some() {
-                    "(press Enter to keep current)"
-                } else if var.secret {
-                    "(secret, input is hidden)"
-                } else if let Some(default_value) = &var.default_value {
-                    &format!("(optional, default: `{default_value}`)")
-                } else if var.is_required() {
-                    "(required)"
-                } else {
-                    "(optional)"
-                };
-
-                writeln!(&mut stderr, "Enter value for `{}` {info_text}", var.name)?;
-
-                if let Some(current) = &current_value {
-                    if var.secret {
-                        writeln!(&mut stderr, "Current value: {MASK}")?;
-                    } else {
-                        writeln!(&mut stderr, "Current value: `{}`", current.trim())?;
-                    }
-                }
-
-                if let Some(desc) = &var.description {
-                    writeln!(&mut stderr, "Description: {desc}")?;
-                }
-
-                write!(&mut stderr, "> ")?;
-                stderr.flush()?;
-
-                let value = read_tty_line(var.secret)?;
-                writeln!(&mut stderr)?;
-
-                let value = value.trim();
-                if value.is_empty() {
-                    continue;
-                }
-
-                write_var_file(&var_file, value).await?;
-            }
-
-            let mut stdout = std::io::stdout().lock();
-            writeln!(&mut stdout, "Configuration:")?;
-            for var in conf_vars {
-                match manifest.variable(&var.name, Some(profile)) {
-                    Ok(_) if var.secret => writeln!(&mut stdout, "\t{}: {MASK}", var.name)?,
-                    Ok(val) => writeln!(&mut stdout, "\t{}: {}", var.name, val)?,
-                    Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
-                        ceprintln!("\t{}: <s,y>warn:</> {e}", var.name);
-                    },
-                    Err(e) => {
-                        ceprintln!("\t{}: <s,r>error:</> {e}", var.name);
-                    },
-                }
-            }
-        } else if args.len() == 1 {
-            // one arg, fetch the value
-
-            let name = &args[0];
-            match manifest.variable(name, Some(profile)) {
-                Ok(value) => println!("{}", value.trim()),
-                Err(asimov_module::ReadVarError::UnknownVar(_)) => {
-                    ceprintln!("<s,r>error:</> unrecognized configuration variable key: `{name}`");
-                    return Err(EX_USAGE.into());
-                },
-                Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
-                    ceprintln!("<s,r>error:</> {e}");
-                    return Err(EX_CONFIG.into());
-                },
-                Err(e) => {
-                    ceprintln!("<s,r>error:</> {e}");
-                    return Err(EX_IOERR.into());
-                },
-            }
-        } else if args.len().is_multiple_of(2) {
-            // pair(s) of (key,value), write into config file(s);
-            // validate every key first so a typo doesn't apply half the batch
-
-            for [name, _] in args.as_chunks().0 {
-                if !conf_vars.iter().any(|var| var.name == *name) {
-                    ceprintln!(
-                        "<s,r>error:</> `{name}` is not the name of a configuration variable for <s>{module_name}</> module"
-                    );
-                    return Err(EX_USAGE.into());
-                }
-            }
-
-            create_conf_dir(&conf_dir).await.inspect_err(|e| {
-                tracing::error!(
-                    "failed to create configuration directory for module `{module_name}`: {e}"
-                )
-            })?;
-
-            for [name, value] in args.as_chunks().0 {
-                write_var_file(&conf_dir.join(name), value).await?;
-            }
-        } else {
+    /// Reports modules that declare no configuration variables as a usage
+    /// error, so that operating on their variables is never silently a no-op.
+    pub fn require_variables(&self) -> Result<&[ConfigurationVariable], Box<dyn Error>> {
+        let variables = self.variables();
+        if variables.is_empty() {
             ceprintln!(
-                "<s,r>error:</> invalid number of arguments: expected 0, 1, or key-value pairs (even count), got {}",
-                args.len()
+                "<s,r>error:</> module <s>{}</> has no configuration variables",
+                self.name
             );
-
             return Err(EX_USAGE.into());
         }
+        Ok(variables)
     }
 
-    // A configurator is an interactive setup program; only run it in
-    // interactive mode, never as a side effect of get/set/unset.
-    if args.is_empty() && !unset {
-        let configurator_name = format!("asimov-{module_name}-configurator");
+    pub fn var_file(&self, key: &str) -> PathBuf {
+        self.conf_dir.join(key)
+    }
 
-        if manifest.provides.programs.contains(&configurator_name) {
-            let conf_bin = asimov_root().join("libexec").join(&configurator_name);
+    /// Where the effective value of a variable comes from, in the same
+    /// precedence the SDK resolves them: environment, then stored, then default.
+    pub async fn source(&self, var: &ConfigurationVariable) -> Source {
+        if let Some(env_name) = var.environment.as_deref()
+            && std::env::var(env_name).is_ok()
+        {
+            return Source::Environment;
+        }
+        if tokio::fs::try_exists(self.var_file(&var.name))
+            .await
+            .unwrap_or(false)
+        {
+            return Source::Stored;
+        }
+        if var.default_value.is_some() {
+            return Source::Default;
+        }
+        Source::Unset
+    }
 
-            if !tokio::fs::try_exists(&conf_bin).await.unwrap_or(false) {
-                ceprintln!(
-                    "<s,r>error:</> module <s>{module_name}</> declares configurator `{configurator_name}`, but it is not installed"
-                );
-                return Err(EX_UNAVAILABLE.into());
-            }
+    pub async fn create_conf_dir(&self) -> tokio::io::Result<()> {
+        let mut builder = tokio::fs::DirBuilder::new();
+        builder.recursive(true);
+        #[cfg(unix)]
+        builder.mode(0o700);
+        builder.create(&self.conf_dir).await.inspect_err(|e| {
+            tracing::error!(
+                "failed to create configuration directory for module `{}`: {e}",
+                self.name
+            )
+        })
+    }
+}
 
-            let status = std::process::Command::new(&conf_bin)
-                .stdin(std::process::Stdio::inherit())
-                .stdout(std::process::Stdio::inherit())
-                .stderr(std::process::Stdio::inherit())
-                .status()
-                .inspect_err(|e| tracing::error!("failed to execute configurator: {e}"))?;
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Source {
+    Environment,
+    Stored,
+    Default,
+    Unset,
+}
 
-            if !status.success() {
-                ceprintln!("<s,r>error:</> configurator `{configurator_name}` failed: {status}");
-                return Err(SysexitsError::try_from(status)
-                    .unwrap_or(EX_SOFTWARE)
-                    .into());
-            }
-        } else if conf_vars.is_empty() {
-            ceprintln!("<s,dim>note:</> module <s>{module_name}</> has no configuration");
+impl Source {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Source::Environment => "environment",
+            Source::Stored => "stored",
+            Source::Default => "default",
+            Source::Unset => "unset",
         }
     }
-
-    Ok(())
 }
 
 // Read from the terminal rather than stdin: a buffered read of stdin can
 // consume bytes that the hidden-input reader would then never see. Echoing is
 // expressed as a mask that never starts masking.
-fn read_tty_line(secret: bool) -> std::io::Result<String> {
+pub(super) fn read_tty_line(secret: bool) -> std::io::Result<String> {
     let config = rpassword::ConfigBuilder::new();
     let config = if secret {
         config.password_feedback_hide()
@@ -285,15 +266,8 @@ fn read_tty_line(secret: bool) -> std::io::Result<String> {
     rpassword::read_password_with_config(config.build())
 }
 
-async fn create_conf_dir(dir: &std::path::Path) -> tokio::io::Result<()> {
-    let mut builder = tokio::fs::DirBuilder::new();
-    builder.recursive(true);
-    #[cfg(unix)]
-    builder.mode(0o700);
-    builder.create(dir).await
-}
-
-async fn write_var_file(path: &std::path::Path, value: &str) -> tokio::io::Result<()> {
+/// Config values are often credentials; keep them private to the user.
+pub(super) async fn write_var_file(path: &Path, value: &str) -> tokio::io::Result<()> {
     use tokio::io::AsyncWriteExt;
     let mut opts = tokio::fs::OpenOptions::new();
     opts.write(true).create(true).truncate(true);
