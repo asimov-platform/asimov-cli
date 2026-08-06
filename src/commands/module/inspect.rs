@@ -59,7 +59,9 @@ pub async fn inspect(
                     serde_json::json!({
                         "name": var.name,
                         "description": var.description,
-                        "default": var.default_value,
+                        "default": var.default_value.as_deref().filter(|_| !var.secret),
+                        "secret": var.secret,
+                        "required": var.is_required(),
                         "set": is_set,
                     })
                 })
@@ -139,7 +141,11 @@ pub async fn inspect(
                         println!("      {description}");
                     }
                     if let Some(default_value) = &var.default_value {
-                        println!("      default: {default_value}");
+                        if var.secret {
+                            println!("      default: ******");
+                        } else {
+                            println!("      default: {default_value}");
+                        }
                     }
                 }
             }

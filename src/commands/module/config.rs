@@ -7,7 +7,11 @@ use clientele::{
 };
 use color_print::ceprintln;
 use core::error::Error;
-use std::io::{BufRead, IsTerminal, Write};
+use std::io::{IsTerminal, Write};
+
+/// Stands in for secret values, which are never displayed unless requested
+/// explicitly by name.
+const MASK: &str = "••••••";
 
 pub async fn config(
     module_name: &str,
@@ -121,7 +125,6 @@ pub async fn config(
 
             // prompts go to stderr so stdout stays clean for actual output
             let mut stderr = std::io::stderr().lock();
-            let mut stdin = std::io::stdin().lock().lines();
 
             for var in conf_vars {
                 let var_file = conf_dir.join(&var.name);
@@ -130,16 +133,24 @@ pub async fn config(
 
                 let info_text = if current_value.is_some() {
                     "(press Enter to keep current)"
+                } else if var.secret {
+                    "(secret, input is hidden)"
                 } else if let Some(default_value) = &var.default_value {
                     &format!("(optional, default: `{default_value}`)")
-                } else {
+                } else if var.is_required() {
                     "(required)"
+                } else {
+                    "(optional)"
                 };
 
                 writeln!(&mut stderr, "Enter value for `{}` {info_text}", var.name)?;
 
                 if let Some(current) = &current_value {
-                    writeln!(&mut stderr, "Current value: `{}`", current.trim())?;
+                    if var.secret {
+                        writeln!(&mut stderr, "Current value: {MASK}")?;
+                    } else {
+                        writeln!(&mut stderr, "Current value: `{}`", current.trim())?;
+                    }
                 }
 
                 if let Some(desc) = &var.description {
@@ -148,7 +159,10 @@ pub async fn config(
 
                 write!(&mut stderr, "> ")?;
                 stderr.flush()?;
-                let value = stdin.next().ok_or(EX_NOINPUT)??;
+
+                let value = read_tty_line(var.secret)?;
+                writeln!(&mut stderr)?;
+
                 let value = value.trim();
                 if value.is_empty() {
                     continue;
@@ -161,6 +175,7 @@ pub async fn config(
             writeln!(&mut stdout, "Configuration:")?;
             for var in conf_vars {
                 match manifest.variable(&var.name, Some(profile)) {
+                    Ok(_) if var.secret => writeln!(&mut stdout, "\t{}: {MASK}", var.name)?,
                     Ok(val) => writeln!(&mut stdout, "\t{}: {}", var.name, val)?,
                     Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
                         ceprintln!("\t{}: <s,y>warn:</> {e}", var.name);
@@ -255,6 +270,19 @@ pub async fn config(
     }
 
     Ok(())
+}
+
+// Read from the terminal rather than stdin: a buffered read of stdin can
+// consume bytes that the hidden-input reader would then never see. Echoing is
+// expressed as a mask that never starts masking.
+fn read_tty_line(secret: bool) -> std::io::Result<String> {
+    let config = rpassword::ConfigBuilder::new();
+    let config = if secret {
+        config.password_feedback_hide()
+    } else {
+        config.password_feedback_partial_mask('*', usize::MAX)
+    };
+    rpassword::read_password_with_config(config.build())
 }
 
 async fn create_conf_dir(dir: &std::path::Path) -> tokio::io::Result<()> {
