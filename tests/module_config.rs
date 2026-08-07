@@ -15,7 +15,8 @@ use temp_dir::TempDir;
 
 type Result<T = (), E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
 
-/// The environment variable that the `host` variable reads from.
+/// The environment variables that the fixture's variables read from.
+const KEY_ENV: &str = "ASIMOV_TEST_MODULE_CONFIG_KEY";
 const HOST_ENV: &str = "ASIMOV_TEST_MODULE_CONFIG_HOST";
 
 const MANIFEST: &str = indoc! {r#"
@@ -23,7 +24,11 @@ const MANIFEST: &str = indoc! {r#"
       "name": "demo",
       "config": {
         "variables": [
-          { "name": "api-key", "secret": true },
+          {
+            "name": "api-key",
+            "secret": true,
+            "environment": "ASIMOV_TEST_MODULE_CONFIG_KEY"
+          },
           {
             "name": "host",
             "environment": "ASIMOV_TEST_MODULE_CONFIG_HOST",
@@ -66,23 +71,34 @@ impl Sandbox {
             .join(key)
     }
 
-    fn run(&self, args: &[&str]) -> Result<Run> {
-        self.run_with_env(args, None)
+    /// Runs `asimov module config <args>`.
+    fn config(&self, args: &[&str]) -> Result<Run> {
+        self.config_env(args, &[])
     }
 
-    fn run_with_env(&self, args: &[&str], host: Option<&str>) -> Result<Run> {
+    fn config_env(&self, args: &[&str], env: &[(&str, &str)]) -> Result<Run> {
+        let mut all = vec!["config"];
+        all.extend_from_slice(args);
+        self.module_env(&all, env)
+    }
+
+    /// Runs `asimov module <args>`.
+    fn module(&self, args: &[&str]) -> Result<Run> {
+        self.module_env(args, &[])
+    }
+
+    fn module_env(&self, args: &[&str], env: &[(&str, &str)]) -> Result<Run> {
         let mut command = Command::new(env!("CARGO_BIN_EXE_asimov"));
         command
-            .args(["module", "config"])
+            .arg("module")
             .args(args)
             .env("ASIMOV_ROOT", self.root())
+            // start from a known environment, whatever the developer's shell has
+            .env_remove(KEY_ENV)
+            .env_remove(HOST_ENV)
+            .envs(env.iter().copied())
             // never inherit a terminal: a test must fail rather than block
             .stdin(Stdio::null());
-
-        match host {
-            Some(value) => command.env(HOST_ENV, value),
-            None => command.env_remove(HOST_ENV),
-        };
 
         let output = command.output()?;
         Ok(Run {
@@ -105,7 +121,7 @@ fn unset_cannot_remove_files_outside_the_configuration_directory() -> Result {
         victim.to_str().expect("path should be UTF-8"),
         "../../victim",
     ] {
-        let run = sandbox.run(&["unset", "demo", key])?;
+        let run = sandbox.config(&["unset", "demo", key])?;
         assert_eq!(run.code, EX_USAGE as i32, "should reject `{key}`");
         assert!(victim.exists(), "`{key}` removed a file outside the config");
     }
@@ -132,7 +148,7 @@ fn a_manifest_declaring_an_unusable_variable_name_is_rejected() -> Result {
         vec!["set", "demo", "../escape=value"],
         vec!["unset", "demo", "--all"],
     ] {
-        let run = sandbox.run(&args)?;
+        let run = sandbox.config(&args)?;
         assert_eq!(run.code, EX_DATAERR as i32, "should reject {args:?}");
     }
 
@@ -146,9 +162,9 @@ fn a_manifest_declaring_an_unusable_variable_name_is_rejected() -> Result {
 #[test]
 fn secret_values_are_shown_only_when_read_by_name() -> Result {
     let sandbox = Sandbox::new()?;
-    sandbox.run(&["set", "demo", "api-key=s3cret-value"])?;
+    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
 
-    let shown = sandbox.run(&["show", "demo"])?;
+    let shown = sandbox.config(&["show", "demo"])?;
     assert!(
         !shown.stdout.contains("s3cret-value"),
         "`show` disclosed a secret: {}",
@@ -156,7 +172,7 @@ fn secret_values_are_shown_only_when_read_by_name() -> Result {
     );
     assert!(shown.stdout.contains("api-key"), "`show` omitted the name");
 
-    let got = sandbox.run(&["get", "demo", "api-key"])?;
+    let got = sandbox.config(&["get", "demo", "api-key"])?;
     assert_eq!(got.stdout.trim(), "s3cret-value");
 
     Ok(())
@@ -166,12 +182,12 @@ fn secret_values_are_shown_only_when_read_by_name() -> Result {
 #[test]
 fn a_rejected_batch_changes_nothing() -> Result {
     let sandbox = Sandbox::new()?;
-    sandbox.run(&["set", "demo", "host=first"])?;
+    sandbox.config(&["set", "demo", "host=first"])?;
 
-    let run = sandbox.run(&["set", "demo", "host=second", "nonexistent=value"])?;
+    let run = sandbox.config(&["set", "demo", "host=second", "nonexistent=value"])?;
     assert_eq!(run.code, EX_USAGE as i32);
 
-    let host = sandbox.run(&["get", "demo", "host", "--stored"])?;
+    let host = sandbox.config(&["get", "demo", "host", "--stored"])?;
     assert_eq!(host.stdout.trim(), "first", "a rejected batch was applied");
 
     Ok(())
@@ -185,7 +201,7 @@ fn stored_values_are_private_to_the_user() -> Result {
     use std::os::unix::fs::PermissionsExt;
 
     let sandbox = Sandbox::new()?;
-    sandbox.run(&["set", "demo", "api-key=s3cret-value"])?;
+    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
 
     let mode =
         |path: &Path| -> Result<u32> { Ok(std::fs::metadata(path)?.permissions().mode() & 0o777) };
@@ -202,19 +218,47 @@ fn stored_values_are_private_to_the_user() -> Result {
 fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Result {
     let sandbox = Sandbox::new()?;
 
-    let run = sandbox.run(&["get", "demo", "host"])?;
+    let run = sandbox.config(&["get", "demo", "host"])?;
     assert_eq!(run.stdout.trim(), "default.example");
 
-    sandbox.run(&["set", "demo", "host=stored.example"])?;
-    let run = sandbox.run(&["get", "demo", "host"])?;
+    sandbox.config(&["set", "demo", "host=stored.example"])?;
+    let run = sandbox.config(&["get", "demo", "host"])?;
     assert_eq!(run.stdout.trim(), "stored.example");
 
-    let run = sandbox.run_with_env(&["get", "demo", "host"], Some("env.example"))?;
+    let env = [(HOST_ENV, "env.example")];
+    let run = sandbox.config_env(&["get", "demo", "host"], &env)?;
     assert_eq!(run.stdout.trim(), "env.example");
 
     // `--stored` answers a different question, and ignores the environment
-    let run = sandbox.run_with_env(&["get", "demo", "host", "--stored"], Some("env.example"))?;
+    let run = sandbox.config_env(&["get", "demo", "host", "--stored"], &env)?;
     assert_eq!(run.stdout.trim(), "stored.example");
+
+    Ok(())
+}
+
+/// Readiness is reported by `inspect` through its exit status, so that
+/// inspecting a module doubles as checking whether it can be used.
+#[test]
+fn inspect_reports_unmet_configuration_through_its_exit_status() -> Result {
+    let sandbox = Sandbox::new()?;
+
+    let run = sandbox.module(&["inspect", "demo"])?;
+    assert_eq!(
+        run.code, EX_CONFIG as i32,
+        "`api-key` is required and unset"
+    );
+
+    // `host` is unset too, but its default satisfies it
+    assert!(run.stdout.contains("host"));
+
+    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
+    let run = sandbox.module(&["inspect", "demo"])?;
+    assert_eq!(run.code, EX_OK as i32);
+
+    // a value from the environment counts just as much as a stored one
+    sandbox.config(&["unset", "demo", "api-key"])?;
+    let run = sandbox.module_env(&["inspect", "demo"], &[(KEY_ENV, "from-env")])?;
+    assert_eq!(run.code, EX_OK as i32);
 
     Ok(())
 }
@@ -225,7 +269,7 @@ fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Resu
 fn setup_without_a_terminal_fails_rather_than_waiting() -> Result {
     let sandbox = Sandbox::new()?;
 
-    let run = sandbox.run(&["setup", "demo"])?;
+    let run = sandbox.config(&["setup", "demo"])?;
     assert_eq!(run.code, EX_UNAVAILABLE as i32);
 
     Ok(())
