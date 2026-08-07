@@ -1,10 +1,5 @@
 // This is free and unencumbered software released into the public domain.
 
-//! Tests for `asimov module config`, covering the guarantees that callers and
-//! agents rely on: secrets are not disclosed, stored values are private, a
-//! rejected batch changes nothing, values resolve in the documented order, and
-//! nothing ever blocks waiting for input that cannot arrive.
-
 use clientele::SysexitsError::*;
 use indoc::indoc;
 use std::{
@@ -108,8 +103,6 @@ impl Sandbox {
     }
 }
 
-/// Variable names are joined onto the configuration directory, so `unset` must
-/// not accept anything that resolves outside of it.
 #[test]
 fn unset_cannot_remove_files_outside_the_configuration_directory() -> Result {
     let sandbox = Sandbox::new()?;
@@ -129,8 +122,6 @@ fn unset_cannot_remove_files_outside_the_configuration_directory() -> Result {
     Ok(())
 }
 
-/// The manifest is the other way a bad name reaches a path, and it is not
-/// covered by the check that rejects undeclared keys.
 #[test]
 fn a_manifest_declaring_an_unusable_variable_name_is_rejected() -> Result {
     let sandbox = Sandbox::with_manifest(indoc! {r#"
@@ -157,8 +148,6 @@ fn a_manifest_declaring_an_unusable_variable_name_is_rejected() -> Result {
     Ok(())
 }
 
-/// Secret values may be read by name, but must not appear in output that the
-/// caller did not ask to contain them.
 #[test]
 fn secret_values_are_shown_only_when_read_by_name() -> Result {
     let sandbox = Sandbox::new()?;
@@ -178,7 +167,6 @@ fn secret_values_are_shown_only_when_read_by_name() -> Result {
     Ok(())
 }
 
-/// A rejected assignment must not leave part of the batch applied.
 #[test]
 fn a_rejected_batch_changes_nothing() -> Result {
     let sandbox = Sandbox::new()?;
@@ -193,8 +181,6 @@ fn a_rejected_batch_changes_nothing() -> Result {
     Ok(())
 }
 
-/// Stored values are frequently credentials, so neither they nor the directory
-/// holding them may be readable by other users.
 #[cfg(unix)]
 #[test]
 fn stored_values_are_private_to_the_user() -> Result {
@@ -212,8 +198,6 @@ fn stored_values_are_private_to_the_user() -> Result {
     Ok(())
 }
 
-/// `get` reports what a module will actually receive, which means resolving in
-/// the same order the SDK does.
 #[test]
 fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Result {
     let sandbox = Sandbox::new()?;
@@ -236,8 +220,6 @@ fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Resu
     Ok(())
 }
 
-/// Readiness is reported by `inspect` through its exit status, so that
-/// inspecting a module doubles as checking whether it can be used.
 #[test]
 fn inspect_reports_unmet_configuration_through_its_exit_status() -> Result {
     let sandbox = Sandbox::new()?;
@@ -263,8 +245,6 @@ fn inspect_reports_unmet_configuration_through_its_exit_status() -> Result {
     Ok(())
 }
 
-/// Interactive setup is the one subcommand that prompts; without a terminal it
-/// has to fail, because waiting would hang a script or an agent forever.
 #[test]
 fn setup_without_a_terminal_fails_rather_than_waiting() -> Result {
     let sandbox = Sandbox::new()?;
