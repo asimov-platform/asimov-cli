@@ -37,7 +37,7 @@ handle = ["asimov-id/encodings"]
 index = []
 list = []
 message = []
-module = []
+module = ["dep:dialoguer"]
 module-new = ["module", "dep:asimov-module-kit"]
 package = ["dep:distrib", "dep:treelog"]
 protocol = ["dep:asimov-protocol"]
@@ -81,7 +81,6 @@ reqwest = { version = "0.12", default-features = false, features = [
   "rustls-tls",
   "rustls-tls-native-roots",
 ] }
-rpassword = "7.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yml = { version = "0.0.13", default-features = false }
@@ -98,6 +97,9 @@ asimov-module-kit = { version = "25.3.3", optional = true }
 asimov-protocol = { version = "25.3.3", optional = true }
 asimov-proxy = { version = "25.3.3", optional = true }
 asimov-snapshot = { version = "25.3.3", optional = true }
+dialoguer = { version = "0.12", default-features = false, features = [
+  "password",
+], optional = true }
 hex = { version = "0.4", default-features = false, optional = true }
 infer = { version = "0.19", optional = true }
 jiff = { version = "0.2", default-features = false, features = [

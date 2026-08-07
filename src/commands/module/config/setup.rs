@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{MASK, open, read_tty_line, write_var_file};
+use super::{MASK, open, prompt_for_value, write_var_file};
 use asimov_env::paths::asimov_root;
 use clientele::{
     StandardOptions,
@@ -61,7 +61,9 @@ pub async fn setup(module_name: &str, _flags: &StandardOptions) -> Result<(), Bo
                 "(optional)"
             };
 
-            writeln!(&mut stderr, "Enter value for `{}` {info_text}", var.name)?;
+            if let Some(desc) = &var.description {
+                writeln!(&mut stderr, "{desc}")?;
+            }
 
             if let Some(current) = &current_value {
                 if var.secret {
@@ -71,15 +73,10 @@ pub async fn setup(module_name: &str, _flags: &StandardOptions) -> Result<(), Bo
                 }
             }
 
-            if let Some(desc) = &var.description {
-                writeln!(&mut stderr, "Description: {desc}")?;
-            }
-
-            write!(&mut stderr, "> ")?;
-            stderr.flush()?;
-
-            let value = read_tty_line(var.secret)?;
-            writeln!(&mut stderr)?;
+            let value = prompt_for_value(
+                format!("Enter value for `{}` {info_text}", var.name),
+                var.secret,
+            )?;
 
             let value = value.trim();
             if value.is_empty() {

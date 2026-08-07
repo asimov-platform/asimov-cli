@@ -272,17 +272,26 @@ impl Source {
     }
 }
 
-// Read from the terminal rather than stdin: a buffered read of stdin can
-// consume bytes that the hidden-input reader would then never see. Echoing is
-// expressed as a mask that never starts masking.
-pub(super) fn read_tty_line(secret: bool) -> std::io::Result<String> {
-    let config = rpassword::ConfigBuilder::new();
-    let config = if secret {
-        config.password_feedback_hide()
+/// Prompts for one value on the terminal, hiding what is typed when the value
+/// is secret. Reads via the terminal rather than stdin, so that a buffered read
+/// cannot consume bytes a later prompt needs.
+pub(super) fn prompt_for_value(prompt: String, secret: bool) -> Result<String, Box<dyn Error>> {
+    let input = if secret {
+        dialoguer::Password::new()
+            .with_prompt(prompt)
+            .allow_empty_password(true)
+            .interact()
     } else {
-        config.password_feedback_partial_mask('*', usize::MAX)
+        dialoguer::Input::<String>::new()
+            .with_prompt(prompt)
+            .allow_empty(true)
+            .interact_text()
     };
-    rpassword::read_password_with_config(config.build())
+
+    input.map_err(|e| {
+        tracing::error!("failed to read a value from the terminal: {e}");
+        EX_IOERR.into()
+    })
 }
 
 /// Config values are often credentials; keep them private to the user.
