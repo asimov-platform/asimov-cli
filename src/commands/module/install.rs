@@ -97,7 +97,7 @@ pub async fn install(
 
         let mut missing_variables = Vec::new();
         for var in variables {
-            if var.default_value.is_some() {
+            if !var.is_required() {
                 continue;
             }
             match manifest.manifest.variable(&var.name, None) {
