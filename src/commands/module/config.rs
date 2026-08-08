@@ -9,11 +9,7 @@ use clientele::{
 };
 use color_print::ceprintln;
 use core::error::Error;
-use std::{
-    path::{Path, PathBuf},
-    string::String,
-    vec::Vec,
-};
+use std::{path::PathBuf, string::String, vec::Vec};
 
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommand {
@@ -240,13 +236,59 @@ impl Module {
     }
 
     pub async fn create_conf_dir(&self) -> tokio::io::Result<()> {
-        let mut builder = tokio::fs::DirBuilder::new();
-        builder.recursive(true);
-        #[cfg(unix)]
-        builder.mode(0o700);
-        builder.create(&self.conf_dir).await.inspect_err(|e| {
+        tokio::fs::create_dir_all(&self.conf_dir)
+            .await
+            .inspect_err(|e| {
+                tracing::error!(
+                    "failed to create configuration directory for module `{}`: {e}",
+                    self.name
+                )
+            })
+    }
+
+    #[cfg(not(unix))]
+    pub async fn set_permissions(&self) -> tokio::io::Result<()> {
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    pub async fn set_permissions(&self) -> tokio::io::Result<()> {
+        async {
+            use std::os::unix::fs::PermissionsExt;
+
+            let metadata = match tokio::fs::symlink_metadata(&self.conf_dir).await {
+                Ok(metadata) => metadata,
+                Err(e) if e.kind() == tokio::io::ErrorKind::NotFound => return Ok(()),
+                Err(e) => return Err(e),
+            };
+            if metadata.is_symlink() {
+                return Ok(());
+            }
+
+            let mut directories = vec![self.conf_dir.clone()];
+            while let Some(directory) = directories.pop() {
+                tokio::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700))
+                    .await?;
+
+                let mut entries = tokio::fs::read_dir(&directory).await?;
+                while let Some(entry) = entries.next_entry().await? {
+                    let path = entry.path();
+                    let metadata = tokio::fs::symlink_metadata(&path).await?;
+                    if metadata.is_dir() {
+                        directories.push(path);
+                    } else if metadata.is_file() {
+                        tokio::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))
+                            .await?;
+                    }
+                }
+            }
+
+            Ok(())
+        }
+        .await
+        .inspect_err(|e| {
             tracing::error!(
-                "failed to create configuration directory for module `{}`: {e}",
+                "failed to set configuration permissions for module `{}`: {e}",
                 self.name
             )
         })
@@ -292,18 +334,4 @@ pub(super) fn prompt_for_value(prompt: String, secret: bool) -> Result<String, B
         tracing::error!("failed to read a value from the terminal: {e}");
         EX_IOERR.into()
     })
-}
-
-/// Config values are often credentials; keep them private to the user.
-pub(super) async fn write_var_file(path: &Path, value: &str) -> tokio::io::Result<()> {
-    use tokio::io::AsyncWriteExt;
-    let mut opts = tokio::fs::OpenOptions::new();
-    opts.write(true).create(true).truncate(true);
-    #[cfg(unix)]
-    opts.mode(0o600);
-    let mut file = opts.open(path).await?;
-    #[cfg(unix)]
-    file.set_permissions(std::os::unix::fs::PermissionsExt::from_mode(0o600))
-        .await?;
-    file.write_all(value.as_bytes()).await
 }

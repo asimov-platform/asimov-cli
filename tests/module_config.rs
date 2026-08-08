@@ -198,6 +198,50 @@ fn stored_values_are_private_to_the_user() -> Result {
     Ok(())
 }
 
+#[cfg(unix)]
+#[test]
+fn setting_a_value_repairs_only_that_modules_configuration_permissions() -> Result {
+    use std::os::unix::fs::PermissionsExt;
+
+    let sandbox = Sandbox::new()?;
+    let profile_dir = sandbox.root().join("configs/default");
+    let demo_dir = profile_dir.join("demo");
+    let nested_dir = demo_dir.join("nested");
+    let other_dir = profile_dir.join("other");
+    std::fs::create_dir_all(&nested_dir)?;
+    std::fs::create_dir_all(&other_dir)?;
+
+    let old_value = demo_dir.join("api-key");
+    let nested_value = nested_dir.join("old");
+    let other_value = other_dir.join("key");
+    std::fs::write(&old_value, "old-secret")?;
+    std::fs::write(&nested_value, "old-secret")?;
+    std::fs::write(&other_value, "other-secret")?;
+
+    for dir in [&profile_dir, &demo_dir, &nested_dir, &other_dir] {
+        std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o755))?;
+    }
+    for file in [&old_value, &nested_value, &other_value] {
+        std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o644))?;
+    }
+
+    sandbox.config(&["set", "demo", "host=example.test"])?;
+
+    let mode = |path: &Path| -> Result<u32> {
+        Ok(std::fs::symlink_metadata(path)?.permissions().mode() & 0o777)
+    };
+    assert_eq!(mode(&demo_dir)?, 0o700);
+    assert_eq!(mode(&nested_dir)?, 0o700);
+    assert_eq!(mode(&old_value)?, 0o600);
+    assert_eq!(mode(&nested_value)?, 0o600);
+    assert_eq!(mode(&sandbox.value_file("host"))?, 0o600);
+    assert_eq!(mode(&profile_dir)?, 0o755);
+    assert_eq!(mode(&other_dir)?, 0o755);
+    assert_eq!(mode(&other_value)?, 0o644);
+
+    Ok(())
+}
+
 #[test]
 fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Result {
     let sandbox = Sandbox::new()?;

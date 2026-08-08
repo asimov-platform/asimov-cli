@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{open, write_var_file};
+use super::open;
 use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
 use core::error::Error;
@@ -77,8 +77,10 @@ pub async fn set(
     module.create_conf_dir().await?;
 
     for (key, value) in &pairs {
-        write_var_file(&module.var_file(key), value).await?;
+        tokio::fs::write(module.var_file(key), value).await?;
     }
+
+    module.set_permissions().await?;
 
     Ok(())
 }

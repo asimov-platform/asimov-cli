@@ -40,5 +40,7 @@ pub async fn unset(
             })?;
     }
 
+    module.set_permissions().await?;
+
     Ok(())
 }

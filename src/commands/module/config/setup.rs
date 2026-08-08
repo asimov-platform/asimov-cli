@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{MASK, open, prompt_for_value, write_var_file};
+use super::{MASK, open, prompt_for_value};
 use asimov_env::paths::asimov_root;
 use clientele::{
     StandardOptions,
@@ -83,7 +83,7 @@ pub async fn setup(module_name: &str, _flags: &StandardOptions) -> Result<(), Bo
                 continue;
             }
 
-            write_var_file(&var_file, value).await?;
+            tokio::fs::write(&var_file, value).await?;
         }
 
         let mut stdout = std::io::stdout().lock();
@@ -127,6 +127,8 @@ pub async fn setup(module_name: &str, _flags: &StandardOptions) -> Result<(), Bo
                 .into());
         }
     }
+
+    module.set_permissions().await?;
 
     Ok(())
 }
