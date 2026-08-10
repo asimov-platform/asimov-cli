@@ -59,7 +59,9 @@ pub async fn inspect(
                     serde_json::json!({
                         "name": var.name,
                         "description": var.description,
-                        "default": var.default_value,
+                        "default": var.default_value.as_deref().filter(|_| !var.secret),
+                        "secret": var.secret,
+                        "required": var.is_required(),
                         "set": is_set,
                     })
                 })
@@ -132,18 +134,40 @@ pub async fn inspect(
                 for (var, is_set) in conf_vars.iter().zip(&conf_status) {
                     if *is_set {
                         cprintln!("  <s,g>✓</> <s>{}</> (set)", var.name);
+                    } else if var.is_required() {
+                        cprintln!("  <s,r>✗</> <s>{}</> (required)", var.name);
                     } else {
-                        cprintln!("  <s,r>✗</> <s>{}</> (unset)", var.name);
+                        cprintln!("  <dim>-</> <s>{}</> (unset)", var.name);
                     }
                     if let Some(description) = &var.description {
                         println!("      {description}");
                     }
                     if let Some(default_value) = &var.default_value {
-                        println!("      default: {default_value}");
+                        if var.secret {
+                            println!("      default: ******");
+                        } else {
+                            println!("      default: {default_value}");
+                        }
                     }
                 }
             }
         },
+    }
+
+    // The report is the output; whether the module is ready to use is the
+    // exit status, so that inspecting one doubles as checking it.
+    let missing: Vec<&str> = conf_vars
+        .iter()
+        .zip(&conf_status)
+        .filter(|(var, is_set)| var.is_required() && !**is_set)
+        .map(|(var, _)| var.name.as_str())
+        .collect();
+
+    if !missing.is_empty() {
+        ceprintln!(
+            "<s,dim>hint:</> Configure the missing variable(s) interactively with: <s>asimov module config setup {module_name}</>"
+        );
+        return Err(EX_CONFIG.into());
     }
 
     Ok(())

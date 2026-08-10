@@ -97,7 +97,7 @@ pub async fn install(
 
         let mut missing_variables = Vec::new();
         for var in variables {
-            if var.default_value.is_some() {
+            if !var.is_required() {
                 continue;
             }
             match manifest.manifest.variable(&var.name, None) {
@@ -146,7 +146,9 @@ pub async fn install(
                 }
             }
 
-            ceprintln!("<s,dim>hint:</>   To configure: <s>asimov module config {module_name}</s>");
+            ceprintln!(
+                "<s,dim>hint:</>   To configure: <s>asimov module config setup {module_name}</s>"
+            );
             ceprintln!("<s,dim>hint:</>   To enable: <s>asimov module enable {module_name}</s>");
         }
     }

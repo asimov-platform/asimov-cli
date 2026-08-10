@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::{StandardOptions, crates::clap::Subcommand};
+use clientele::{StandardOptions, SysexitsError::*, crates::clap::Subcommand};
+use color_print::ceprintln;
 use core::error::Error;
 use std::{string::String, vec::Vec};
 
@@ -13,19 +14,14 @@ pub enum ModuleCommand {
         name: String,
     },
 
-    /// Configure an installed module
-    #[clap(override_usage = CONFIG_USAGE)]
+    /// Show or change an installed module's configuration
+    #[clap(args_conflicts_with_subcommands = true)]
     Config {
-        /// The name of the module to configure
-        name: String,
+        #[clap(subcommand)]
+        command: Option<ConfigCommand>,
 
-        /// Unset configured variable(s). By default all when no arguments provided.
-        #[arg(short = 'u', long, default_value = "false")]
-        unset: bool,
-
-        /// A single configuration variable to read, or key-value pair(s) to be set.
-        #[clap(trailing_var_arg = true)]
-        args: Vec<String>,
+        /// The name of the module whose configuration to show
+        name: Option<String>,
     },
 
     /// Disable modules
@@ -159,7 +155,25 @@ impl ModuleCommand {
         use ModuleCommand::*;
         match self {
             Browse { name } => browse(name, flags).await,
-            Config { name, unset, args } => config(name, *unset, args, flags).await,
+            Config { command, name } => match (command, name) {
+                (Some(command), _) => command.run(flags).await,
+                // a bare module name lists its configuration
+                (None, Some(name)) => {
+                    ConfigCommand::Show {
+                        name: name.clone(),
+                        output: None,
+                    }
+                    .run(flags)
+                    .await
+                },
+                (None, None) => {
+                    ceprintln!("<s,r>error:</> missing module name or subcommand");
+                    ceprintln!(
+                        "<s,dim>hint:</> See the available subcommands with: <s>asimov module config --help</>"
+                    );
+                    Err(EX_USAGE.into())
+                },
+            },
             Disable { names } => disable(names, flags).await,
             Enable { names } => enable(names, flags).await,
             #[cfg(feature = "unstable")]
@@ -194,13 +208,6 @@ impl ModuleCommand {
         }
     }
 }
-
-// From asimov-module-cli:
-const CONFIG_USAGE: &str = r#"
-    config <module>                     # Interactive configuration
-    config <module> <key>               # Show value for key
-    config <module> [<key> <value>]...  # Set key(s) to value(s)
-"#;
 
 mod browse;
 pub use browse::*;
