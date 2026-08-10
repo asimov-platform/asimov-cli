@@ -366,7 +366,6 @@ pub async fn main() -> SysexitsError {
             urls,
         } => commands::describe::describe(urls, module, output, flags)
             .await
-            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "fetch")]
@@ -384,7 +383,6 @@ pub async fn main() -> SysexitsError {
         #[cfg(feature = "index")]
         Index { module, urls } => commands::index::index(urls, module, flags)
             .await
-            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "list")]
@@ -417,7 +415,6 @@ pub async fn main() -> SysexitsError {
         #[cfg(feature = "search")]
         Search { module, prompt } => commands::search::search(prompt, module, flags)
             .await
-            .map_err(sysexits)
             .map(|_| EX_OK),
 
         #[cfg(feature = "snap")]
