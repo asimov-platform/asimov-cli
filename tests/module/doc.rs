@@ -29,9 +29,13 @@ fn doc(root: &TempDir) -> Result<Run> {
 #[test]
 fn doc_prints_the_installed_readme() -> Result {
     let root = TempDir::new()?;
-    let doc_dir = root.child("modules/installed/demo/doc");
-    std::fs::create_dir_all(&doc_dir)?;
-    std::fs::write(doc_dir.join("README.md"), "# Demo\n\nHow to use it.\n")?;
+    let module_dir = root.child("modules/installed/demo");
+    std::fs::create_dir_all(module_dir.join("doc"))?;
+    std::fs::write(module_dir.join("manifest.json"), r#"{ "name": "demo" }"#)?;
+    std::fs::write(
+        module_dir.join("doc/README.md"),
+        "# Demo\n\nHow to use it.\n",
+    )?;
 
     let run = doc(&root)?;
 
