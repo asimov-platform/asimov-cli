@@ -12,7 +12,7 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
     })?;
 
     for module in modules {
-        let name = module.manifest.name;
+        let name = module.manifest.name.parse()?;
         let is_enabled = registry.is_module_enabled(&name).await.map_err(|e| {
             tracing::error!("failed to check if module is enabled: {e}");
             EX_UNAVAILABLE
@@ -22,10 +22,9 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
             "jsonl" => {
                 let version = module.version.unwrap_or_default();
                 let label = module.manifest.label;
-                let uri = format!("https://asimov.directory/modules/{}", name);
+                let uri = format!("https://asimov.directory/modules/{name}");
                 println!(
-                    r#"{{"@type": "{}", "@id": "{}", "name": "{}", "label": "{}", "enabled": {}, "version": "{}"}}"#,
-                    "AsimovModule",
+                    r#"{{"@type": "AsimovModule", "@id": "{}", "name": "{}", "label": "{}", "enabled": {}, "version": "{}"}}"#,
                     uri,
                     name,
                     label.unwrap_or_default(),
@@ -33,7 +32,7 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn 
                     version
                 );
             },
-            "cli" | _ => {
+            _ => {
                 if is_enabled {
                     cprintln!("<s,g>✓</> {}", name);
                 } else {

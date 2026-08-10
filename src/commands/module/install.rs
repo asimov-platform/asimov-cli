@@ -7,7 +7,7 @@ use color_print::{ceprintln, cprintln};
 use core::error::Error;
 
 pub async fn install(
-    module_names: &Vec<String>,
+    module_names: &[String],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -26,10 +26,12 @@ pub async fn install(
             EX_UNAVAILABLE
         })?
     } else {
-        module_names.clone()
+        module_names.to_vec()
     };
 
     for module_name in module_names {
+        let module_name = module_name.parse()?;
+
         if !registry
             .is_module_installed(&module_name)
             .await
@@ -60,7 +62,7 @@ pub async fn install(
             }
 
             installer
-                .install_module(module_name.clone(), &install_options)
+                .install_module(&module_name, &install_options)
                 .await
                 .map_err(|e| {
                     tracing::error!("failed to install module `{module_name}`: {e}");

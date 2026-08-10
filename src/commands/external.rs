@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use clientele::SysexitsError::{self, *};
-use std::process::{ExitStatus, Stdio};
+use std::process::Stdio;
 
 use crate::{Result, shared::locate_subcommand};
 
@@ -28,24 +28,23 @@ impl ExternalSubcommand {
         let cmd = locate_subcommand(cmd)?;
 
         // Prepare the process:
-        let result: std::io::Result<(ExitStatus, Option<Vec<u8>>, Option<Vec<u8>>)> =
-            if self.pipe_output {
-                std::process::Command::new(&cmd.path)
-                    .args(args.as_ref())
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::piped())
-                    .stderr(Stdio::piped())
-                    .output()
-                    .map(|x| (x.status, Some(x.stdout), Some(x.stderr)))
-            } else {
-                std::process::Command::new(&cmd.path)
-                    .args(args.as_ref())
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit())
-                    .status()
-                    .map(|x| (x, None, None))
-            };
+        let result = if self.pipe_output {
+            std::process::Command::new(&cmd.path)
+                .args(args.as_ref())
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output()
+                .map(|x| (x.status, Some(x.stdout), Some(x.stderr)))
+        } else {
+            std::process::Command::new(&cmd.path)
+                .args(args.as_ref())
+                .stdin(Stdio::inherit())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .status()
+                .map(|x| (x, None, None))
+        };
 
         match result {
             Err(error) => {

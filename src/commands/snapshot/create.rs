@@ -6,7 +6,7 @@ use asimov_registry::Registry;
 use asimov_snapshot::{Options, Snapshotter};
 use clientele::{StandardOptions, SysexitsError};
 
-pub async fn snapshot(urls: &[String], _flags: &StandardOptions) -> Result<(), SysexitsError> {
+pub async fn create(urls: &[String], _flags: &StandardOptions) -> Result<(), SysexitsError> {
     let storage = asimov_snapshot::storage::Fs::for_dir(asimov_root().join("snapshots"))?;
     let mut ss = Snapshotter::new(Registry::default(), storage, Options::default());
 

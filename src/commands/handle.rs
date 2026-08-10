@@ -1,8 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
-use asimov_id::{Handle, Id, PublicKey, PublicKeyEncoding};
+#[cfg(feature = "unstable")]
+use asimov_id::{Handle, PublicKey};
+use asimov_id::{Id, PublicKeyEncoding};
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
+#[cfg(feature = "unstable")]
 use std::path::PathBuf;
 
 #[derive(Debug, Subcommand)]

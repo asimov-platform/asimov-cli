@@ -356,7 +356,6 @@ pub async fn main() -> SysexitsError {
             };
             commands::ask::ask(input, module, model, flags)
                 .await
-                .map_err(|err| err.into())
                 .map(|_| EX_OK)
         },
 
@@ -377,7 +376,6 @@ pub async fn main() -> SysexitsError {
             urls,
         } => commands::fetch::fetch(urls, module, output, flags)
             .await
-            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "handle")]
@@ -401,7 +399,6 @@ pub async fn main() -> SysexitsError {
             urls,
         } => commands::list::list(urls, module, limit, output, flags)
             .await
-            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "message")]
@@ -435,7 +432,6 @@ pub async fn main() -> SysexitsError {
         #[cfg(feature = "read")]
         Read { module, urls } => commands::read::read(urls, module, flags)
             .await
-            .map_err(|err| err.into())
             .map(|_| EX_OK),
 
         #[cfg(feature = "search")]
@@ -445,17 +441,10 @@ pub async fn main() -> SysexitsError {
             .map(|_| EX_OK),
 
         #[cfg(feature = "snap")]
-        Snap { urls } => commands::snap::snap(urls, flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Snap { urls } => commands::snap::snap(urls, flags).await.map(|_| EX_OK),
 
         #[cfg(feature = "snapshot")]
-        Snapshot(command) => command
-            .run(flags)
-            .await
-            .map_err(|err| err.into())
-            .map(|_| EX_OK),
+        Snapshot(command) => command.run(flags).await.map(|_| EX_OK),
 
         External(args) => {
             let cmd = ExternalSubcommand {

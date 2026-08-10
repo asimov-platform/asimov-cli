@@ -159,13 +159,13 @@ impl ModuleCommand {
         use ModuleCommand::*;
         match self {
             Browse { name } => browse(name, flags).await,
-            Config { name, unset, args } => config(name, *unset, &args, flags).await,
+            Config { name, unset, args } => config(name, *unset, args, flags).await,
             Disable { names } => disable(names, flags).await,
             Enable { names } => enable(names, flags).await,
             #[cfg(feature = "unstable")]
             Find { name } => find(name, flags).await,
             Inspect { name, output } => {
-                inspect(name, output.as_deref().unwrap_or(&"cli"), flags).await
+                inspect(name, output.as_deref().unwrap_or("cli"), flags).await
             },
             Install {
                 names,
@@ -173,7 +173,7 @@ impl ModuleCommand {
                 model_size,
             } => install(names, version, model_size, flags).await,
             Link { name } => link(name, flags).await,
-            List { output } => list(output.as_deref().unwrap_or(&"cli"), flags).await,
+            List { output } => list(output.as_deref().unwrap_or("cli"), flags).await,
             #[cfg(feature = "module-new")]
             New {
                 name,
@@ -183,7 +183,7 @@ impl ModuleCommand {
             } => new(name, dir.as_deref(), program, summary.as_deref(), flags).await,
             Resolve { url } => resolve(url, flags).await,
             Search { query, output } => {
-                search(query, output.as_deref().unwrap_or(&"cli"), flags).await
+                search(query, output.as_deref().unwrap_or("cli"), flags).await
             },
             Uninstall { names } => uninstall(names, flags).await,
             Upgrade {

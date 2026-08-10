@@ -63,13 +63,12 @@ pub fn is_enabled(_module_name: &str) -> bool {
 
 pub async fn fetch_module(module_name: &str) -> Option<ModuleMetadata> {
     let modules = registry::fetch_modules().await.ok()?;
-    let module = modules.into_iter().find(|m| m.name == module_name);
-    module
+    modules.into_iter().find(|m| m.name == module_name)
 }
 
 pub async fn fetch_modules() -> Result<Vec<ModuleMetadata>, SysexitsError> {
     // Disable registry modules temporarily.
-    return Ok(Vec::new());
+    Ok(Vec::new())
 
     // // Spawn tasks to fetch module package metadata:
     // let rust_task = task::spawn(async {

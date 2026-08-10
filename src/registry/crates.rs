@@ -10,8 +10,7 @@ pub async fn fetch_current_modules() -> Result<String, Error> {
     let json_lines = http_client().get(url).send().await?.text().await?;
     let last_line = json_lines
         .lines()
-        .filter(|line| !line.trim().is_empty())
-        .last()
+        .rfind(|line| !line.trim().is_empty())
         .unwrap_or_default();
     Ok(last_line.to_string())
 }

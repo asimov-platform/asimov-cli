@@ -6,7 +6,7 @@ use color_print::cprintln;
 use core::error::Error;
 
 pub async fn upgrade(
-    module_names: &Vec<String>,
+    module_names: &[String],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -15,7 +15,7 @@ pub async fn upgrade(
     let installer = asimov_installer::Installer::default();
 
     let module_names = if !module_names.is_empty() {
-        module_names.clone()
+        module_names.to_vec()
     } else {
         registry
             .installed_modules()
@@ -35,6 +35,8 @@ pub async fn upgrade(
         .build();
 
     for module_name in module_names {
+        let module_name = module_name.parse()?;
+
         let current = registry.module_version(&module_name).await.map_err(|_| {
             tracing::error!("failed to read installed version of `{module_name}`");
             EX_UNAVAILABLE
@@ -74,7 +76,7 @@ pub async fn upgrade(
         }
 
         installer
-            .upgrade_module(module_name.clone(), &install_options)
+            .upgrade_module(&module_name, &install_options)
             .await
             .map_err(|e| {
                 tracing::error!("module upgrade failed for `{module_name}`: {e}");
