@@ -146,7 +146,9 @@ pub async fn install(
                 }
             }
 
-            ceprintln!("<s,dim>hint:</>   To configure: <s>asimov module config {module_name}</s>");
+            ceprintln!(
+                "<s,dim>hint:</>   To configure: <s>asimov module config setup {module_name}</s>"
+            );
             ceprintln!("<s,dim>hint:</>   To enable: <s>asimov module enable {module_name}</s>");
         }
     }
