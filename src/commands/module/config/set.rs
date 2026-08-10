@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
+use asimov_module::ModuleName;
 use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
 use core::error::Error;
@@ -8,7 +9,7 @@ use std::io::Read;
 
 /// Stores values for one or more configuration variables.
 pub async fn set(
-    module_name: &str,
+    module_name: &ModuleName,
     assignments: &[String],
     stdin: bool,
     from_json: bool,

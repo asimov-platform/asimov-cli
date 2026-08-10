@@ -8,10 +8,11 @@ use crate::{
     SysexitsError::{self, *},
     shared,
 };
+use asimov_module::ModuleName;
 
 pub async fn ask(
     input: String,
-    module_filter: Option<String>,
+    module_filter: Option<ModuleName>,
     model: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
@@ -19,7 +20,7 @@ pub async fn ask(
     let modules = shared::installed_modules(&registry, Some("prompter")).await?;
 
     let module = if let Some(filter) = module_filter {
-        let module = modules.iter().find(|m| m.name == filter).ok_or_else(|| {
+        let module = modules.iter().find(|m| m.name == filter.as_str()).ok_or_else(|| {
             ceprintln!(
                 "<s,r>error:</> failed to find a module named `{filter}` that provides a prompter"
             );
