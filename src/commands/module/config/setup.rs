@@ -41,6 +41,7 @@ pub async fn setup(module_name: &str, _flags: &StandardOptions) -> Result<(), Bo
 
     if !variables.is_empty() {
         module.create_conf_dir().await?;
+        module.set_permissions().await?;
 
         // prompts go to stderr so stdout stays clean for actual output
         let mut stderr = std::io::stderr().lock();

@@ -200,6 +200,31 @@ fn stored_values_are_private_to_the_user() -> Result {
 
 #[cfg(unix)]
 #[test]
+fn a_failed_write_still_repairs_existing_configuration_permissions() -> Result {
+    use std::os::unix::fs::PermissionsExt;
+
+    let sandbox = Sandbox::new()?;
+    let demo_dir = sandbox.root().join("configs/default/demo");
+    let old_value = demo_dir.join("api-key");
+    let invalid_value = demo_dir.join("host");
+    std::fs::create_dir_all(&invalid_value)?;
+    std::fs::write(&old_value, "old-secret")?;
+    std::fs::set_permissions(&demo_dir, std::fs::Permissions::from_mode(0o755))?;
+    std::fs::set_permissions(&old_value, std::fs::Permissions::from_mode(0o644))?;
+
+    let run = sandbox.config(&["set", "demo", "host=example.test"])?;
+    assert_ne!(run.code, EX_OK as i32);
+
+    let mode =
+        |path: &Path| -> Result<u32> { Ok(std::fs::metadata(path)?.permissions().mode() & 0o777) };
+    assert_eq!(mode(&demo_dir)?, 0o700);
+    assert_eq!(mode(&old_value)?, 0o600);
+
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
 fn setting_a_value_repairs_only_that_modules_configuration_permissions() -> Result {
     use std::os::unix::fs::PermissionsExt;
 

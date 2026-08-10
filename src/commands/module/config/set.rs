@@ -75,6 +75,7 @@ pub async fn set(
     }
 
     module.create_conf_dir().await?;
+    module.set_permissions().await?;
 
     for (key, value) in &pairs {
         tokio::fs::write(module.var_file(key), value).await?;
