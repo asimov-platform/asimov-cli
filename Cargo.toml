@@ -59,14 +59,14 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.3.3"
-asimov-env = "25.3.3"
-asimov-id = "25.3.3"
-asimov-installer = "25.3.3"
-asimov-module = "25.3.3"
-asimov-patterns = "25.3.3"
-asimov-registry = "25.3.3"
-asimov-runner = "25.3.3"
+asimov-directory = "25.3.4"
+asimov-env = "25.3.4"
+asimov-id = "25.3.4"
+asimov-installer = "25.3.4"
+asimov-module = "25.3.4"
+asimov-patterns = "25.3.4"
+asimov-registry = "25.3.4"
+asimov-runner = "25.3.4"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.3.8", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
@@ -93,10 +93,10 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
-asimov-module-kit = { version = "25.3.3", optional = true }
-asimov-protocol = { version = "25.3.3", optional = true }
-asimov-proxy = { version = "25.3.3", optional = true }
-asimov-snapshot = { version = "25.3.3", optional = true }
+asimov-module-kit = { version = "25.3.4", optional = true }
+asimov-protocol = { version = "25.3.4", optional = true }
+asimov-proxy = { version = "25.3.4", optional = true }
+asimov-snapshot = { version = "25.3.4", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }

@@ -259,18 +259,18 @@ dependencies = [
 
 [[package]]
 name = "asimov-config"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f07e86698b8d442d840d742a1fdc8c53f8f89f80d84a0c00f7fb14cbac2c732e"
+checksum = "f1da3a09a277cb25be66eea050e4b227293c7a8a0bf354c9d8c1bc6f70893af1"
 dependencies = [
  "asimov-core",
 ]
 
 [[package]]
 name = "asimov-core"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e9be81c29123505f70a78548222483caee0bbab6e76f6d91b9af75cffd6c75d"
+checksum = "d156006632dc4c71f6e57ab0132f5427a6cdf68f8800ef6b360295aaf1fddc42"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -281,9 +281,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-directory"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9898a46effdb1a952354603418214e2a7eb5b16406aeed50d060b348ad730d0"
+checksum = "6582cb228c3e6d5a3a24184d73d66c6c221a07671b4154e881525da658d491d6"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -298,9 +298,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c187455c25bbd268d318b682eeb96f16bb2b3ae6ae026e08ef42a21beb645fcf"
+checksum = "ce929ae644ba8f1923e98dc7323c14e03c3bf9b7996662ac29bf5a2db23c67de"
 dependencies = [
  "asimov-core",
  "cap-directories",
@@ -310,9 +310,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-huggingface"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bea1d200920d56477812b21093e0396e1dd495298da2d3472bc547c39105310e"
+checksum = "3af5bc4e946b273d9b79a54706d476a02a5f88a96fae3246c24523394f20585d"
 dependencies = [
  "asimov-core",
  "hf-hub",
@@ -322,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-id"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ccdfc43d91f3be1519d6f94620f123d22c9b210518b348243b3057215ec52b9"
+checksum = "bebc2ed2396b959f7586f8ada8c3dd3eeb0cf958e13080ddf2bf2905a9e1532e"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -339,9 +339,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-installer"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "978db2c4a35b3bb1e08968ccf74e8e0941a3f2096cae2aa5f9f01ff04260f1f5"
+checksum = "5419c2b8375be38a2e7263bd8186f5f6c2dedbaeca95ab444765aad5da5ac8d4"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -369,9 +369,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-kb"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f27c01eced0af746538e1ffa78bef3dec979ac4a5c955d51ccc507b5af9250ff"
+checksum = "da3c8ddd02e7453e81670f8badae2ac6bb171773f5898b9f5a93e91307a601da"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -382,9 +382,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce6df8a0e4422330749e05c88fe12d1e30992e5806f6831fe038780d37c80fa"
+checksum = "70dac005c2532f02e6e2b40afe1998634945cab58504be1989a558ff7e71f1bb"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -407,9 +407,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module-kit"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32e251c482ab8fcc88b58a6d50130a338d60d6d90fd53c1af74971bdcda49fae"
+checksum = "f70f1e71241dff591803f03833471b96460aa512e612068f7d0cdf39e53de7d6"
 dependencies = [
  "anyhow",
  "asimov-module",
@@ -428,9 +428,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c438b54a6b5c4772b6e04e130db2a5056bd75ed7ff88b3f19c318414d537ffe"
+checksum = "71db7d9bd6968d48b931eb80245634aa4db5eee388e5decc918f233aec4708b4"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -440,9 +440,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4035f7531a2023df85b712220efd2ae7af2ca24a32694ffd5370b1323a3e5ad2"
+checksum = "36ab81252de5106eba9da6a9fc306d7a7077311da804da0655727bcb3b2114f5"
 dependencies = [
  "asimov-core",
  "bon",
@@ -452,9 +452,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-protocol"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bae92f969aa41b39289d4f5a49675a9ac97a2553185b93ca21cc684099ebab1f"
+checksum = "0f90c3a23f5b50436331d92236a32086ec2f93196db400c969c239833a9912e6"
 dependencies = [
  "asimov-core",
  "asimov-id",
@@ -481,9 +481,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "489befc0e7a8cf2e6e499b36c691cab6831e53f4953119f3d1ca26bb23b94112"
+checksum = "9cc51831c78ea1d998a379b8e31ed876297c41f7dbd67ada2793ff0d1be29c47"
 dependencies = [
  "asimov-core",
  "gofer 0.2.0",
@@ -493,9 +493,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9bab0d49667270d3c83e405b7900d069794828df72a0a91c6d7ba6cd2490e00"
+checksum = "c2885995fbd2a0d19fc3e2edeac5c5c388c2d13abb3b4f1b84c8a1eef61ddcc7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -517,9 +517,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "874d6834c6e1b73d12fc271e96ea2ef9edd9535ea54434c85e86d36dcf6d52ae"
+checksum = "885671525789265b001ff3e77c5ec376e27bb693a634e1aa4dc89309f38052d5"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -535,9 +535,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.3.3"
+version = "25.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33994dba7912c5d479c22bea19063998a71e713670cefa5bf7735bf6b491f0d6"
+checksum = "cac75e757e5fa9fe873ef2e68d87d3ddcb80da313809d3d5d8f2b8d87789a6a5"
 dependencies = [
  "asimov-core",
  "asimov-env",

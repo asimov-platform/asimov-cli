@@ -30,6 +30,13 @@ pub enum ModuleCommand {
         names: Vec<String>,
     },
 
+    /// Print an installed module's documentation
+    #[clap(alias = "readme")]
+    Doc {
+        /// The name of the module whose documentation to print
+        name: String,
+    },
+
     /// Enable modules
     Enable {
         /// The names of the modules to enable
@@ -175,6 +182,7 @@ impl ModuleCommand {
                 },
             },
             Disable { names } => disable(names, flags).await,
+            Doc { name } => doc(name, flags).await,
             Enable { names } => enable(names, flags).await,
             #[cfg(feature = "unstable")]
             Find { name } => find(name, flags).await,
@@ -217,6 +225,9 @@ pub use config::*;
 
 mod disable;
 pub use disable::*;
+
+mod doc;
+pub use doc::*;
 
 mod enable;
 pub use enable::*;
