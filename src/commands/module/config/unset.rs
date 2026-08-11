@@ -1,13 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
+use asimov_module::ModuleName;
 use clientele::StandardOptions;
 use core::error::Error;
 
 /// Removes stored values. Environment- and default-provided values are not
 /// affected, since they are not stored here.
 pub async fn unset(
-    module_name: &str,
+    module_name: &ModuleName,
     keys: &[String],
     all: bool,
     _flags: &StandardOptions,

@@ -1,13 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError};
+use asimov_module::ModuleName;
 use core::error::Error;
 
 pub async fn find(
-    module_name: impl AsRef<str>,
+    module_name: &ModuleName,
     _flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
-    let module_name = module_name.as_ref();
     let command_name = format!("{module_name}-module");
 
     match clientele::SubcommandsProvider::find("asimov-", &command_name) {

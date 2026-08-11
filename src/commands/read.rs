@@ -5,14 +5,14 @@ use crate::{
     SysexitsError::{self, *},
     shared,
 };
-use asimov_module::{normalization::normalize_url, resolve::Resolver};
+use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{GraphOutput, Input, ReaderOptions};
 use color_print::ceprintln;
 use miette::Result;
 
 pub async fn read(
     input_urls: Vec<String>,
-    module: Option<String>,
+    module: Option<ModuleName>,
     flags: &StandardOptions,
 ) -> Result<(), SysexitsError> {
     let registry = asimov_registry::Registry::default();

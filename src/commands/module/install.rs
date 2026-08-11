@@ -2,12 +2,12 @@
 
 use crate::{StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
-use asimov_module::{ModuleManifest, ReadVarError};
+use asimov_module::{ModuleManifest, ModuleName, ReadVarError};
 use color_print::{ceprintln, cprintln};
 use core::error::Error;
 
 pub async fn install(
-    module_names: &[String],
+    module_names: &[ModuleName],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -20,18 +20,21 @@ pub async fn install(
         .maybe_model_size(model_size.clone())
         .build();
 
-    let module_names = if module_names.len() == 1 && module_names[0] == "all" {
-        fetch_all_module_names().await.map_err(|e| {
-            tracing::error!("unable to fetch list of all modules: {e}");
-            EX_UNAVAILABLE
-        })?
+    let module_names = if module_names.len() == 1 && module_names[0].as_str() == "all" {
+        fetch_all_module_names()
+            .await
+            .map_err(|e| {
+                tracing::error!("unable to fetch list of all modules: {e}");
+                EX_UNAVAILABLE
+            })?
+            .into_iter()
+            .map(ModuleName::try_from)
+            .collect::<Result<Vec<_>, _>>()?
     } else {
         module_names.to_vec()
     };
 
     for module_name in module_names {
-        let module_name = module_name.parse()?;
-
         if !registry
             .is_module_installed(&module_name)
             .await
