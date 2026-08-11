@@ -85,7 +85,7 @@ pub enum ModuleCommand {
         name: ModuleName,
     },
 
-    /// List all available and/or installed modules
+    /// List installed modules
     #[clap(alias = "ls")]
     List {
         /// Set the output format [default: cli] [possible values: cli, jsonl]
