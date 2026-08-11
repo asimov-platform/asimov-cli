@@ -21,6 +21,8 @@ jobs:
       update_homebrew_tap: true
       update_scoop_bucket: true
       update_crates_io: false
+      brew_build_depends_on: |
+        openssl@3
 
   tweet:
     uses: asimov-platform/.github/.github/workflows/tweet.yaml@master
