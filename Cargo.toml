@@ -42,7 +42,7 @@ module = ["dep:dialoguer"]
 module-new = ["module", "dep:asimov-module-kit"]
 package = ["dep:distrib", "dep:treelog"]
 protocol = ["dep:asimov-protocol"]
-proxy = []
+proxy = ["reqwest/stream", "dep:axum", "dep:http-body-util", "dep:jsonc-parser"]
 read = ["dep:infer", "dep:mime"]
 search = []
 snap = ["dep:asimov-snapshot"]
@@ -119,6 +119,11 @@ distrib = { version = "0.0.2", default-features = false, features = [
   "rust",
   "std",
 ], optional = true }
+
+# `asimov proxy` server
+axum = { version = "0.8", default-features = true, optional = true }
+http-body-util = { version = "0.1", default-features = false, optional = true }
+jsonc-parser = { version = "0.33", default-features = false, optional = true }
 
 [profile.release]
 opt-level = "z"
