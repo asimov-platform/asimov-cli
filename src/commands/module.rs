@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use asimov_module::ModuleName;
 use clientele::{StandardOptions, SysexitsError::*, crates::clap::Subcommand};
 use color_print::ceprintln;
 use core::error::Error;
@@ -11,7 +12,7 @@ pub enum ModuleCommand {
     #[clap(alias = "open")]
     Browse {
         /// The name of the module to browse
-        name: String,
+        name: ModuleName,
     },
 
     /// Show or change an installed module's configuration
@@ -21,26 +22,26 @@ pub enum ModuleCommand {
         command: Option<ConfigCommand>,
 
         /// The name of the module whose configuration to show
-        name: Option<String>,
+        name: Option<ModuleName>,
     },
 
     /// Disable modules
     Disable {
         /// The names of the modules to disable
-        names: Vec<String>,
+        names: Vec<ModuleName>,
     },
 
     /// Print an installed module's documentation
     #[clap(alias = "readme")]
     Doc {
         /// The name of the module whose documentation to print
-        name: String,
+        name: ModuleName,
     },
 
     /// Enable modules
     Enable {
         /// The names of the modules to enable
-        names: Vec<String>,
+        names: Vec<ModuleName>,
     },
 
     /// TBD
@@ -48,14 +49,14 @@ pub enum ModuleCommand {
     #[clap(alias = "which")]
     Find {
         /// The name of the module to find
-        name: String,
+        name: ModuleName,
     },
 
     /// Inspect a module's manifest, state, and configuration status
     #[clap(alias = "show")]
     Inspect {
         /// The name of the module to inspect
-        name: String,
+        name: ModuleName,
 
         /// Set the output format [default: cli] [possible values: cli, json]
         #[arg(value_name = "FORMAT", short = 'o', long)]
@@ -65,7 +66,7 @@ pub enum ModuleCommand {
     /// Install an available module locally
     Install {
         /// The names of the modules to install
-        names: Vec<String>,
+        names: Vec<ModuleName>,
 
         /// Optionally install a specific version instead of latest
         #[arg(long)]
@@ -81,10 +82,10 @@ pub enum ModuleCommand {
     #[clap(alias = "url")]
     Link {
         /// The name of the module to link to
-        name: String,
+        name: ModuleName,
     },
 
-    /// List all available and/or installed modules
+    /// List installed modules
     #[clap(alias = "ls")]
     List {
         /// Set the output format [default: cli] [possible values: cli, jsonl]
@@ -96,7 +97,7 @@ pub enum ModuleCommand {
     #[cfg(feature = "module-new")]
     New {
         /// The module's short name, e.g. `widget` for `asimov-widget-module`
-        name: String,
+        name: ModuleName,
 
         /// The target directory to create the module in.
         /// Defaults to `./asimov-<name>-module`.
@@ -135,7 +136,7 @@ pub enum ModuleCommand {
     /// Uninstall a currently installed module
     Uninstall {
         /// The names of the modules to uninstall
-        names: Vec<String>,
+        names: Vec<ModuleName>,
     },
 
     /// Upgrade currently installed modules
@@ -144,7 +145,7 @@ pub enum ModuleCommand {
     #[clap(alias = "update")]
     Upgrade {
         /// The names of the modules to upgrade
-        names: Vec<String>,
+        names: Vec<ModuleName>,
 
         /// Optionally upgrade to a specific version instead of latest
         #[arg(long)]

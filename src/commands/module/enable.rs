@@ -1,22 +1,21 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError::*};
+use asimov_module::ModuleName;
 use color_print::cprintln;
 use core::error::Error;
 
 pub async fn enable(
-    module_names: &Vec<String>,
+    module_names: &[ModuleName],
     flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
     for module_name in module_names {
-        let module_name = module_name.parse()?;
-
         if flags.verbose > 1 {
             cprintln!("<s,c>»</> Enabling module <s>{module_name}</>...");
         }
 
-        registry.enable_module(&module_name).await.map_err(|e| {
+        registry.enable_module(module_name).await.map_err(|e| {
             tracing::error!("failed to enable module `{module_name}`: {e}");
             EX_UNAVAILABLE
         })?;
