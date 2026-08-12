@@ -39,6 +39,9 @@ pub mod package;
 #[cfg(feature = "protocol")]
 pub mod protocol;
 
+#[cfg(feature = "proxy")]
+pub mod proxy;
+
 #[cfg(feature = "read")]
 pub mod read;
 

@@ -27,6 +27,9 @@ use crate::commands::package::PackageCommand;
 #[cfg(feature = "protocol")]
 use crate::commands::protocol::ProtocolCommand;
 
+#[cfg(feature = "proxy")]
+use crate::commands::proxy::ProxyCommand;
+
 #[cfg(feature = "snapshot")]
 use crate::commands::snapshot::SnapshotCommand;
 
@@ -141,6 +144,11 @@ enum Command {
     #[cfg(feature = "protocol")]
     #[clap(subcommand)]
     Protocol(ProtocolCommand),
+
+    /// Proxy server commands
+    #[cfg(feature = "proxy")]
+    #[clap(subcommand)]
+    Proxy(ProxyCommand),
 
     /// Read a resource specified by a URL, utilizing enabled modules
     #[cfg(feature = "read")]
@@ -407,6 +415,9 @@ pub async fn main() -> SysexitsError {
 
         #[cfg(feature = "protocol")]
         Protocol(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+
+        #[cfg(feature = "proxy")]
+        Proxy(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "read")]
         Read { module, urls } => commands::read::read(urls, module, flags)

@@ -26,6 +26,7 @@ unstable = [
   "module-new",
   "package",
   "protocol",
+  "proxy",
   "search",
 ]
 
@@ -41,6 +42,7 @@ module = ["dep:dialoguer"]
 module-new = ["module", "dep:asimov-module-kit"]
 package = ["dep:distrib", "dep:treelog"]
 protocol = ["dep:asimov-protocol"]
+proxy = []
 read = ["dep:infer", "dep:mime"]
 search = []
 snap = ["dep:asimov-snapshot"]
