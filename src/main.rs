@@ -3,6 +3,7 @@
 #![deny(unsafe_code)]
 
 use asimov_cli::commands::{self, ExternalSubcommand, Help, HelpCmd};
+use asimov_module::ModuleName;
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -50,7 +51,7 @@ enum Command {
     #[cfg(feature = "ask")]
     Ask {
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         #[clap(long, short = 'm')]
         model: Option<String>,
@@ -63,7 +64,7 @@ enum Command {
     #[clap(aliases = ["summarize", "tldr"])]
     Describe {
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         /// The output format.
         #[arg(value_name = "FORMAT", short = 'o', long)]
@@ -80,7 +81,7 @@ enum Command {
         /// The module's manifest must declare support for the URL for the
         /// module to be used.
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         /// The output format.
         #[arg(value_name = "FORMAT", short = 'o', long)]
@@ -98,7 +99,7 @@ enum Command {
     #[cfg(feature = "index")]
     Index {
         #[clap(long, short = 'm')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         urls: Vec<String>,
     },
@@ -108,7 +109,7 @@ enum Command {
     #[clap(aliases = ["dir", "ls"])]
     List {
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         /// The maximum number of resources to list.
         #[arg(value_name = "COUNT", short = 'n', long)]
@@ -145,7 +146,7 @@ enum Command {
     #[cfg(feature = "read")]
     Read {
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         urls: Vec<String>,
     },
@@ -154,7 +155,7 @@ enum Command {
     #[cfg(feature = "search")]
     Search {
         #[clap(long, short = 'M')]
-        module: Option<String>,
+        module: Option<ModuleName>,
 
         prompt: String,
     },

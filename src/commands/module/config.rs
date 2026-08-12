@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use asimov_env::paths::asimov_root;
-use asimov_module::{ConfigurationVariable, ModuleManifest};
+use asimov_module::{ConfigurationVariable, ModuleManifest, ModuleName};
 use clientele::{
     StandardOptions,
     SysexitsError::*,
@@ -17,7 +17,7 @@ pub enum ConfigCommand {
     #[clap(alias = "list")]
     Show {
         /// The name of the module
-        name: String,
+        name: ModuleName,
 
         /// Set the output format [default: cli] [possible values: cli, json]
         #[arg(value_name = "FORMAT", short = 'o', long)]
@@ -28,7 +28,7 @@ pub enum ConfigCommand {
     /// Print the value of a configuration variable
     Get {
         /// The name of the module
-        name: String,
+        name: ModuleName,
 
         /// The configuration variable to read
         key: String,
@@ -41,7 +41,7 @@ pub enum ConfigCommand {
     /// Set configuration variables
     Set {
         /// The name of the module
-        name: String,
+        name: ModuleName,
 
         /// The variables to set, as `key=value` pairs.
         /// With --stdin, a single bare key instead.
@@ -61,7 +61,7 @@ pub enum ConfigCommand {
     /// Unset configuration variables
     Unset {
         /// The name of the module
-        name: String,
+        name: ModuleName,
 
         /// The configuration variables to unset
         #[arg(required_unless_present = "all")]
@@ -75,7 +75,7 @@ pub enum ConfigCommand {
     /// Configure a module interactively
     Setup {
         /// The name of the module
-        name: String,
+        name: ModuleName,
     },
 }
 
@@ -111,7 +111,7 @@ pub(super) const MASK: &str = "******";
 
 /// An installed module together with the location of its configuration.
 pub(super) struct Module {
-    pub name: String,
+    pub name: ModuleName,
     pub manifest: ModuleManifest,
     pub profile: &'static str,
     pub conf_dir: PathBuf,
@@ -119,11 +119,9 @@ pub(super) struct Module {
 
 /// Reads the manifest of an installed module, rejecting manifests whose
 /// variable names cannot be used as file names.
-pub(super) async fn open(module_name: &str) -> Result<Module, Box<dyn Error>> {
-    let module_name = module_name.parse::<asimov_module::ModuleName>()?;
-
+pub(super) async fn open(module_name: &ModuleName) -> Result<Module, Box<dyn Error>> {
     let manifest = asimov_registry::Registry::default()
-        .read_manifest(&module_name)
+        .read_manifest(module_name)
         .await
         .map_err(|e| {
             tracing::error!("failed to read manifest for module `{module_name}`: {e}");
@@ -167,7 +165,7 @@ pub(super) async fn open(module_name: &str) -> Result<Module, Box<dyn Error>> {
         .join(module_name.as_str());
 
     Ok(Module {
-        name: module_name.into_string(),
+        name: module_name.clone(),
         manifest,
         profile,
         conf_dir,
