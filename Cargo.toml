@@ -101,7 +101,7 @@ dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
 hex = { version = "0.4", default-features = false, optional = true }
-infer = { version = "0.19", optional = true }
+infer = { version = "0.22", optional = true }
 jiff = { version = "0.2", default-features = false, features = [
   "alloc",
 ], optional = true }
