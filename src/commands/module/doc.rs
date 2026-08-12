@@ -1,17 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{StandardOptions, SysexitsError::*};
+use asimov_module::ModuleName;
 use color_print::ceprintln;
 use core::error::Error;
 
-pub async fn doc(
-    module_name: impl AsRef<str>,
-    _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
-    let module_name = module_name.as_ref().parse()?;
+pub async fn doc(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     let registry = asimov_registry::Registry::default();
 
-    let readme = match registry.read_readme(&module_name).await {
+    let readme = match registry.read_readme(module_name).await {
         Ok(Some(readme)) => readme,
         Ok(None) => {
             ceprintln!("<s,r>error:</> module `{module_name}` was installed without documentation");

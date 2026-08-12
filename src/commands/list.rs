@@ -5,14 +5,14 @@ use crate::{
     SysexitsError::{self, *},
     shared,
 };
-use asimov_module::{normalization::normalize_url, resolve::Resolver};
+use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{CatalogerOptions, GraphOutput};
 use color_print::ceprintln;
 use miette::Result;
 
 pub async fn list(
     input_urls: Vec<String>,
-    module: Option<String>,
+    module: Option<ModuleName>,
     limit: Option<usize>,
     output: Option<String>,
     flags: &StandardOptions,

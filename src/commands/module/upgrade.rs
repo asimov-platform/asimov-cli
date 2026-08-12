@@ -2,11 +2,12 @@
 
 use crate::{StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
+use asimov_module::ModuleName;
 use color_print::cprintln;
 use core::error::Error;
 
 pub async fn upgrade(
-    module_names: &[String],
+    module_names: &[ModuleName],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
@@ -25,8 +26,8 @@ pub async fn upgrade(
                 EX_UNAVAILABLE
             })?
             .into_iter()
-            .map(|manifest| manifest.manifest.name)
-            .collect()
+            .map(|manifest| ModuleName::try_from(manifest.manifest.name))
+            .collect::<Result<Vec<_>, _>>()?
     };
 
     let install_options = InstallOptions::builder()
@@ -35,8 +36,6 @@ pub async fn upgrade(
         .build();
 
     for module_name in module_names {
-        let module_name = module_name.parse()?;
-
         let current = registry.module_version(&module_name).await.map_err(|_| {
             tracing::error!("failed to read installed version of `{module_name}`");
             EX_UNAVAILABLE
