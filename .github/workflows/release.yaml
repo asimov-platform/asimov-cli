@@ -21,6 +21,7 @@ jobs:
       update_homebrew_tap: true
       update_scoop_bucket: true
       update_crates_io: false
+      rust_toolchain: "1.97.1"
       brew_build_depends_on: |
         openssl@3
 
