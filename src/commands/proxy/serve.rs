@@ -12,7 +12,7 @@ use axum::{
 use core::error::Error;
 use http_body_util::BodyExt;
 use reqwest::Client;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use tokio::net::TcpListener;
 
 pub async fn serve(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
@@ -20,10 +20,18 @@ pub async fn serve(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     let router = Router::new()
         .route("/{*path}", any(proxy_handler))
         .with_state(client);
-    let addr = SocketAddr::from(([127, 0, 0, 1], 1920)); // TODO: ASIMOV_PROXY_{HOST,PORT}
+    let host: IpAddr = std::env::var("ASIMOV_PROXY_HOST")
+        .ok()
+        .and_then(|input| input.parse::<IpAddr>().ok())
+        .unwrap_or(IpAddr::from([127, 0, 0, 1]));
+    let port = std::env::var("ASIMOV_PROXY_PORT")
+        .ok()
+        .and_then(|input| input.parse::<u16>().ok())
+        .unwrap_or(1920);
+    let addr = SocketAddr::from((host, port));
     let listener = TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, router).await.unwrap();
-    Ok(()) // TODO
+    Ok(())
 }
 
 async fn proxy_handler(State(client): State<Client>, req: Request) -> Result<Response, StatusCode> {
