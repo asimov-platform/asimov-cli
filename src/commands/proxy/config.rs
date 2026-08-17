@@ -43,6 +43,13 @@ pub async fn config(
             },
         },
 
+        // See: <https://opencode.ai/docs/providers/#custom-provider>
+        Opencode => match format.as_deref() {
+            Some("json") | _ => {
+                print!("{}", include_str!("config/opencode.json"));
+            },
+        },
+
         // See: <https://docs.openhands.dev/openhands/usage/llms/custom-llm-configs>
         // See: <https://docs.openhands.dev/openhands/usage/v0/advanced/V0_configuration-options#llm-configuration>
         Openhands => match format.as_deref() {

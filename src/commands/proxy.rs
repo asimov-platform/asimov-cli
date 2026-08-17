@@ -58,6 +58,9 @@ pub enum ProxyConfigTarget {
     /// LlamaIndex (https://llamaindex.ai).
     Llamaindex,
 
+    /// OpenCode (https://opencode.ai).
+    Opencode,
+
     /// OpenHands, fka OpenDevin (https://openhands.dev).
     Openhands,
 

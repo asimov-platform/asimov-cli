@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "asimov": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "ASIMOV",
+      "options": {
+        "baseURL": "http://127.0.0.1:1920/v1",
+        "apiKey": "opencode"
+      },
+      "models": {
+        "openrouter/free": {
+          "name": "openrouter/free"
+        }
+      }
+    }
+  }
+}
