@@ -5,7 +5,15 @@ use core::error::Error;
 
 #[derive(Debug, Subcommand)]
 pub enum ProxyCommand {
-    /// Run a local proxy server at http://127.0.0.1:1920
+    /// Run an OpenAI-compatible endpoint at <http://127.0.0.1:1920>.
+    ///
+    /// Requests are proxied to enabled providers (currently always OpenRouter).
+    ///
+    /// Reads OPENROUTER_API_KEY for the OpenRouter API key (required).
+    ///
+    /// Reads ASIMOV_PROXY_PORT for the port to bind to (default: 1920).
+    ///
+    /// Reads ASIMOV_PROXY_HOST for the host to bind to (default: 127.0.0.1).
     #[clap(aliases = ["run"])]
     Serve {},
 }

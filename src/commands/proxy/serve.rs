@@ -5,7 +5,7 @@ use axum::{
     Router,
     body::Body,
     extract::{Request, State},
-    http::{HeaderValue, StatusCode},
+    http::{HeaderMap, HeaderValue, StatusCode},
     response::Response,
     routing::any,
 };
@@ -15,11 +15,15 @@ use reqwest::Client;
 use std::net::{IpAddr, SocketAddr};
 use tokio::net::TcpListener;
 
-pub async fn serve(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    let _openrouter_api_key =
+        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
+
     let client = Client::new();
     let router = Router::new()
         .route("/{*path}", any(proxy_handler))
         .with_state(client);
+
     let host: IpAddr = std::env::var("ASIMOV_PROXY_HOST")
         .ok()
         .and_then(|input| input.parse::<IpAddr>().ok())
@@ -30,11 +34,20 @@ pub async fn serve(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
         .unwrap_or(1920);
     let addr = SocketAddr::from((host, port));
     let listener = TcpListener::bind(addr).await.unwrap();
+
+    if flags.verbose > 0 {
+        let addr = listener.local_addr()?;
+        println!("Listening on {}...", addr);
+    }
+
     axum::serve(listener, router).await.unwrap();
     Ok(())
 }
 
 async fn proxy_handler(State(client): State<Client>, req: Request) -> Result<Response, StatusCode> {
+    let openrouter_api_key =
+        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
+
     let request_path = req.uri().path();
     let request_query = req
         .uri()
@@ -61,17 +74,13 @@ async fn proxy_handler(State(client): State<Client>, req: Request) -> Result<Res
     head.headers.remove("host"); // don't send "Host: 127.0.0.1"
     //parts.headers.remove("content-length"); // TODO: the original Content-Length is now wrong
 
-    // # See: https://openrouter.ai/docs/app-attribution
     head.headers.insert(
-        "HTTP-Referer",
-        HeaderValue::from_static("https://asimov.sh"),
+        "Authorization",
+        HeaderValue::from_str(&format!("Bearer {}", openrouter_api_key)).unwrap(),
     );
-    head.headers
-        .insert("X-OpenRouter-Title", HeaderValue::from_static("ASIMOV"));
-    head.headers.insert(
-        "X-OpenRouter-Categories",
-        HeaderValue::from_static("cli-agent,personal-agent"),
-    );
+
+    // See: https://openrouter.ai/docs/app-attribution
+    insert_attribution_headers(&mut head.headers);
 
     let upstream_request = client
         .request(head.method, &target_url)
@@ -94,4 +103,17 @@ async fn proxy_handler(State(client): State<Client>, req: Request) -> Result<Res
 
     let response = response_builder.body(upstream_response_body).unwrap();
     Ok(response)
+}
+
+fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
+    // See: https://openrouter.ai/docs/app-attribution
+    headers.insert(
+        "HTTP-Referer",
+        HeaderValue::from_static("https://asimov.sh"),
+    );
+    headers.insert("X-OpenRouter-Title", HeaderValue::from_static("ASIMOV"));
+    headers.insert(
+        "X-OpenRouter-Categories",
+        HeaderValue::from_static("cli-agent,personal-agent"),
+    );
 }
