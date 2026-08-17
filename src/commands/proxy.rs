@@ -21,6 +21,11 @@ pub enum ProxyCommand {
     /// Configure local applications to use the proxy endpoint.
     Config {
         app: ProxyConfigTarget,
+
+        /// The output format
+        /// [default: auto]
+        /// [possible values: env, js, json, py, toml, sh, ts]
+        #[clap(short, long)]
         format: Option<String>,
     },
 

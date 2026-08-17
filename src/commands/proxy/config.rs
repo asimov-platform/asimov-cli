@@ -26,7 +26,11 @@ pub async fn config(
         },
 
         // See: <https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI>
+        // See: <https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI>
         Langchain => match format.as_deref() {
+            Some("js") | Some("ts") => {
+                print!("{}", include_str!("config/langchain.js"));
+            },
             Some("py") | _ => {
                 print!("{}", include_str!("config/langchain.py"));
             },
