@@ -10,6 +10,16 @@ pub async fn config(
 ) -> Result<(), Box<dyn Error>> {
     use ProxyConfigTarget::*;
     match app {
+        Bash | Zsh => {
+            println!("export OPENAI_API_BASE={}", "http://127.0.0.1:1920/v1");
+            println!("export OPENAI_API_KEY={}", "sh");
+        },
+
+        Dotenv => {
+            println!("OPENAI_API_BASE={}", "http://127.0.0.1:1920/v1");
+            println!("OPENAI_API_KEY={}", "dotenv");
+        },
+
         Langchain => {
             // See: https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI
             print!("{}", include_str!("config/langchain.py"));

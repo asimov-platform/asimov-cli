@@ -38,6 +38,12 @@ impl ProxyCommand {
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyConfigTarget {
+    /// Bash (https://gnu.org/software/bash/).
+    Bash,
+
+    /// .env (https://github.com/motdotla/dotenv).
+    Dotenv,
+
     /// LangChain (https://langchain.com).
     Langchain,
 
@@ -46,6 +52,9 @@ pub enum ProxyConfigTarget {
 
     /// Zed (https://zed.dev).
     Zed,
+
+    /// Zsh (https://zsh.sourceforge.io).
+    Zsh,
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
