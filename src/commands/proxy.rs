@@ -19,7 +19,10 @@ pub enum ProxyCommand {
     Serve {},
 
     /// Configure local applications to use the proxy endpoint.
-    Config { app: ProxyConfigTarget },
+    Config {
+        app: ProxyConfigTarget,
+        format: Option<String>,
+    },
 
     /// Configure local applications to use the proxy endpoint.
     Install { apps: Vec<ProxyInstallTarget> },
@@ -30,7 +33,7 @@ impl ProxyCommand {
         use ProxyCommand::*;
         match self {
             Serve {} => serve(flags).await,
-            Config { app } => config(app, flags).await,
+            Config { app, format } => config(app, format, flags).await,
             Install { apps } => install(apps, flags).await,
         }
     }

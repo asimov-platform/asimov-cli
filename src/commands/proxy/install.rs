@@ -1,9 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::ProxyInstallTarget;
+use super::{ProxyInstallTarget, zed_asimov_provider};
 use crate::StandardOptions;
 use core::error::Error;
-use jsonc_parser::{ParseOptions, cst::CstRootNode, json};
+use jsonc_parser::{ParseOptions, cst::CstRootNode};
 use std::path::PathBuf;
 
 pub async fn install(
@@ -72,14 +72,10 @@ pub async fn install_app(
                     .get("openai_compatible")
                     .and_then(|p| p.object_value())
             {
-                let asimov_provider = json!({
-                    "api_url": "http://127.0.0.1:1920/v1", // TODO: ASIMOV_PROXY_{HOST,PORT}
-                    "available_models": [], // TODO: https://github.com/asimov-datasets/openrouter.ai
-                });
                 if let Some(asimov) = openai.get("ASIMOV") {
-                    asimov.set_value(asimov_provider);
+                    asimov.set_value(zed_asimov_provider());
                 } else {
-                    openai.append("ASIMOV", asimov_provider);
+                    openai.append("ASIMOV", zed_asimov_provider());
                 }
             }
             let zed_output = cst.to_string();
