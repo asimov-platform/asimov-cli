@@ -37,7 +37,7 @@ pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
 
     if flags.verbose > 0 {
         let addr = listener.local_addr()?;
-        println!("Listening on {}...", addr);
+        eprintln!("Listening on {}...", addr);
     }
 
     axum::serve(listener, router).await.unwrap();
@@ -54,6 +54,11 @@ async fn proxy_handler(State(client): State<Client>, req: Request) -> Result<Res
         .query()
         .map(|q| format!("?{q}"))
         .unwrap_or_default();
+
+    if true {
+        // TODO: flags.verbose > 0
+        eprintln!("Proxying request: {} {}", request_path, request_query);
+    }
 
     // https://openrouter.ai/api/v1/chat/completions
     let target_url = format!("https://openrouter.ai/api{}{}", request_path, request_query);

@@ -231,6 +231,7 @@ dependencies = [
  "color-print",
  "derive_more",
  "dialoguer",
+ "dirs",
  "distrib",
  "futures-lite",
  "hex",

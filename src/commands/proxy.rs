@@ -16,6 +16,9 @@ pub enum ProxyCommand {
     /// Reads ASIMOV_PROXY_HOST for the host to bind to (default: 127.0.0.1).
     #[clap(aliases = ["run"])]
     Serve {},
+
+    /// Configure local applications to use the proxy endpoint.
+    Install { apps: Vec<ProxyInstallApp> },
 }
 
 impl ProxyCommand {
@@ -23,9 +26,13 @@ impl ProxyCommand {
         use ProxyCommand::*;
         match self {
             Serve {} => serve(flags).await,
+            Install { apps } => install(apps, flags).await,
         }
     }
 }
+
+mod install;
+pub use install::*;
 
 mod serve;
 pub use serve::*;
