@@ -30,6 +30,21 @@ pub async fn config(
             print!("{}", include_str!("config/llamaindex.py"));
         },
 
+        Openhands => {
+            // See: https://docs.openhands.dev/openhands/usage/llms/custom-llm-configs
+            // See: https://docs.openhands.dev/openhands/usage/v0/advanced/V0_configuration-options#llm-configuration
+            if true {
+                println!("[llm.asimov]");
+                println!("base_url = \"{}\"", "http://127.0.0.1:1920/v1");
+                println!("api_key = \"{}\"", "openhands");
+                println!("model = \"{}\"", "openrouter/free");
+            } else {
+                println!("LLM_BASE_URL={}", "http://127.0.0.1:1920/v1");
+                println!("LLM_API_KEY={}", "openhands");
+                println!("LLM_MODEL={}", "openrouter/free");
+            }
+        },
+
         Zed => {
             todo!() // TODO
         },
