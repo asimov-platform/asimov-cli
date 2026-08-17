@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use clap::ValueEnum;
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
 
@@ -18,7 +19,10 @@ pub enum ProxyCommand {
     Serve {},
 
     /// Configure local applications to use the proxy endpoint.
-    Install { apps: Vec<ProxyInstallApp> },
+    Config { app: ProxyConfigTarget },
+
+    /// Configure local applications to use the proxy endpoint.
+    Install { apps: Vec<ProxyInstallTarget> },
 }
 
 impl ProxyCommand {
@@ -26,10 +30,46 @@ impl ProxyCommand {
         use ProxyCommand::*;
         match self {
             Serve {} => serve(flags).await,
+            Config { app } => config(app, flags).await,
             Install { apps } => install(apps, flags).await,
         }
     }
 }
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum ProxyConfigTarget {
+    /// LangChain (https://langchain.com).
+    #[cfg(feature = "unstable")]
+    LangChain,
+
+    /// LlamaIndex (https://llamaindex.ai).
+    #[cfg(feature = "unstable")]
+    LlamaIndex,
+
+    /// Zed (https://zed.dev).
+    Zed,
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum ProxyInstallTarget {
+    /// Cursor (https://zed.dev).
+    #[cfg(feature = "unstable")]
+    Cursor,
+
+    /// Obsidian (https://obsidian.md).
+    #[cfg(feature = "unstable")]
+    Obsidian,
+
+    /// Visual Studio Code (https://code.visualstudio.com).
+    #[cfg(feature = "unstable")]
+    VSCode,
+
+    /// Zed (https://zed.dev).
+    Zed,
+}
+
+mod config;
+pub use config::*;
 
 mod install;
 pub use install::*;
