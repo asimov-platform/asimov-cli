@@ -10,17 +10,19 @@ pub async fn config(
 ) -> Result<(), Box<dyn Error>> {
     use ProxyConfigTarget::*;
     match app {
-        #[cfg(feature = "unstable")]
-        LangChain => {
-            todo!() // TODO
+        Langchain => {
+            // See: https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI
+            print!("{}", include_str!("config/langchain.py"));
         },
 
-        #[cfg(feature = "unstable")]
-        LlamaIndex => {
-            todo!() // TODO
+        Llamaindex => {
+            // See: https://developers.llamaindex.ai/python/framework-api-reference/llms/openai_like/
+            print!("{}", include_str!("config/llamaindex.py"));
         },
 
-        Zed => {},
+        Zed => {
+            todo!() // TODO
+        },
     };
     Ok(())
 }

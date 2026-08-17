@@ -39,12 +39,10 @@ impl ProxyCommand {
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyConfigTarget {
     /// LangChain (https://langchain.com).
-    #[cfg(feature = "unstable")]
-    LangChain,
+    Langchain,
 
     /// LlamaIndex (https://llamaindex.ai).
-    #[cfg(feature = "unstable")]
-    LlamaIndex,
+    Llamaindex,
 
     /// Zed (https://zed.dev).
     Zed,
