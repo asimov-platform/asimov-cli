@@ -41,7 +41,14 @@ module = ["dep:dialoguer"]
 module-new = ["module", "dep:asimov-module-kit"]
 package = ["dep:distrib", "dep:treelog"]
 protocol = ["dep:asimov-protocol"]
-proxy = ["reqwest/stream", "dep:axum", "dep:dirs", "dep:http-body-util", "dep:jsonc-parser"]
+proxy = [
+  "dep:axum",
+  "dep:dirs",
+  "dep:http-body-util",
+  "dep:hyper-rustls",
+  "dep:hyper-util",
+  "dep:jsonc-parser",
+]
 read = ["dep:infer", "dep:mime"]
 search = []
 snap = ["dep:asimov-snapshot"]
@@ -123,6 +130,18 @@ distrib = { version = "0.0.2", default-features = false, features = [
 axum = { version = "0.8", default-features = true, optional = true }
 dirs = { version = "6", default-features = false, optional = true }
 http-body-util = { version = "0.1", default-features = false, optional = true }
+hyper-rustls = { version = "0.27", default-features = false, features = [
+  "http1",
+  "logging",
+  "native-tokio",
+  "ring",
+  "tls12",
+], optional = true }
+hyper-util = { version = "0.1", default-features = false, features = [
+  "client-legacy",
+  "http1",
+  "tokio",
+], optional = true }
 jsonc-parser = { version = "0.33", default-features = false, features = ["cst"], optional = true }
 
 [profile.release]
