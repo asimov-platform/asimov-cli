@@ -1,10 +1,29 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{ProxyInstallTarget, zed_asimov_provider};
+use super::zed_asimov_provider;
 use crate::StandardOptions;
+use clap::ValueEnum;
 use core::error::Error;
 use jsonc_parser::{ParseOptions, cst::CstRootNode};
 use std::path::PathBuf;
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+pub enum ProxyInstallTarget {
+    /// Cursor (https://zed.dev).
+    #[cfg(feature = "unstable")]
+    Cursor,
+
+    /// Obsidian (https://obsidian.md).
+    #[cfg(feature = "unstable")]
+    Obsidian,
+
+    /// Visual Studio Code (https://code.visualstudio.com).
+    #[cfg(feature = "unstable")]
+    VSCode,
+
+    /// Zed (https://zed.dev).
+    Zed,
+}
 
 pub async fn install(
     apps: &[ProxyInstallTarget],

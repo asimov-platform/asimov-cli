@@ -1,0 +1,12 @@
+{
+  "providers": {
+    "asimov": {
+      "baseUrl": "http://127.0.0.1:1920/v1",
+      "api": "openai-completions",
+      "apiKey": "pi",
+      "models": [
+        { "id": "qwen2.5-coder:7b" }
+      ]
+    }
+  }
+}

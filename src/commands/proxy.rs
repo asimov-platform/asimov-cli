@@ -1,6 +1,5 @@
 // This is free and unencumbered software released into the public domain.
 
-use clap::ValueEnum;
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use core::error::Error;
 
@@ -42,51 +41,6 @@ impl ProxyCommand {
             Install { apps } => install(apps, flags).await,
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, ValueEnum)]
-pub enum ProxyConfigTarget {
-    /// Bash (https://gnu.org/software/bash/).
-    Bash,
-
-    /// .env (https://github.com/motdotla/dotenv).
-    Dotenv,
-
-    /// LangChain (https://langchain.com).
-    Langchain,
-
-    /// LlamaIndex (https://llamaindex.ai).
-    Llamaindex,
-
-    /// OpenCode (https://opencode.ai).
-    Opencode,
-
-    /// OpenHands, fka OpenDevin (https://openhands.dev).
-    Openhands,
-
-    /// Zed (https://zed.dev).
-    Zed,
-
-    /// Zsh (https://zsh.sourceforge.io).
-    Zsh,
-}
-
-#[derive(Clone, Copy, Debug, ValueEnum)]
-pub enum ProxyInstallTarget {
-    /// Cursor (https://zed.dev).
-    #[cfg(feature = "unstable")]
-    Cursor,
-
-    /// Obsidian (https://obsidian.md).
-    #[cfg(feature = "unstable")]
-    Obsidian,
-
-    /// Visual Studio Code (https://code.visualstudio.com).
-    #[cfg(feature = "unstable")]
-    VSCode,
-
-    /// Zed (https://zed.dev).
-    Zed,
 }
 
 mod config;
