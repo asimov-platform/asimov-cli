@@ -17,19 +17,36 @@ pub enum ProxyCommand {
     #[clap(aliases = ["run"])]
     Serve {},
 
-    /// Configure local applications to use the proxy endpoint.
+    /// Print the proxy URL.
+    #[clap(aliases = ["link"])]
+    Url {},
+
+    /// Print the proxy host.
+    Host {},
+
+    /// Print the proxy port.
+    Port {},
+
+    /// List available models.
+    Models {},
+
+    /// Show configuration for using the proxy endpoint.
     Config {
+        /// The target application to configure.
         app: ProxyConfigTarget,
 
-        /// The output format
+        /// The output format.
         /// [default: auto]
         /// [possible values: env, js, json, py, toml, sh, ts]
         #[clap(short, long)]
         format: Option<String>,
     },
 
-    /// Configure local applications to use the proxy endpoint.
-    Install { apps: Vec<ProxyInstallTarget> },
+    /// Configure applications to use the proxy endpoint.
+    Install {
+        /// The target applications to configure.
+        apps: Vec<ProxyInstallTarget>,
+    },
 }
 
 impl ProxyCommand {
@@ -37,6 +54,10 @@ impl ProxyCommand {
         use ProxyCommand::*;
         match self {
             Serve {} => serve(flags).await,
+            Url {} => url(flags).await,
+            Host {} => host(flags).await,
+            Port {} => port(flags).await,
+            Models {} => models(flags).await,
             Config { app, format } => config(app, format, flags).await,
             Install { apps } => install(apps, flags).await,
         }
@@ -46,8 +67,20 @@ impl ProxyCommand {
 mod config;
 pub use config::*;
 
+mod host;
+pub use host::*;
+
 mod install;
 pub use install::*;
 
+mod models;
+pub use models::*;
+
+mod port;
+pub use port::*;
+
 mod serve;
 pub use serve::*;
+
+mod url;
+pub use url::*;
