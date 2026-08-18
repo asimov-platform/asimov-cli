@@ -28,7 +28,13 @@ pub enum ProxyCommand {
     Port {},
 
     /// List available models.
-    Models {},
+    Models {
+        /// The output format.
+        /// [default: list]
+        /// [possible values: csv, json, list, md, tsv]
+        #[clap(short, long)]
+        format: Option<String>,
+    },
 
     /// Show configuration for using the proxy endpoint.
     Config {
@@ -57,7 +63,7 @@ impl ProxyCommand {
             Url {} => url(flags).await,
             Host {} => host(flags).await,
             Port {} => port(flags).await,
-            Models {} => models(flags).await,
+            Models { format } => models(format, flags).await,
             Config { app, format } => config(app, format, flags).await,
             Install { apps } => install(apps, flags).await,
         }

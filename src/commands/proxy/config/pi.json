@@ -5,7 +5,10 @@
       "api": "openai-completions",
       "apiKey": "pi",
       "models": [
-        { "id": "qwen2.5-coder:7b" }
+        {
+          "id": "openrouter/free",
+          "name": "Free"
+        }
       ]
     }
   }
