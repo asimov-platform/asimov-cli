@@ -1,5 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
+mod connector;
+mod logger;
+
+use self::{
+    connector::{ProxyConfig, ProxyConnector},
+    logger::BodyLogger,
+};
 use crate::StandardOptions;
 use axum::{
     Router,
@@ -11,36 +18,65 @@ use axum::{
 };
 use core::error::Error;
 use http_body_util::{BodyExt, Full};
-use hyper_rustls::HttpsConnector;
-use hyper_util::{
-    client::legacy::{Client, connect::HttpConnector},
-    rt::TokioExecutor,
+use hyper_rustls::{ConfigBuilderExt as _, HttpsConnector};
+use hyper_util::{client::legacy::Client, rt::TokioExecutor};
+use std::{
+    net::{IpAddr, SocketAddr},
+    sync::Arc,
 };
-use std::net::{IpAddr, SocketAddr};
 use tokio::net::TcpListener;
 
-/// The upstream HTTP client: a hyper client over a rustls-based TLS connector.
-///
-/// TODO: To support HTTPS proxies, SOCKS proxies, and eventually Tor (via the
-/// `arti-client` crate), swap the connector stack here for one that tunnels
-/// through the configured proxy (e.g. wrapping `HttpConnector` with a
-/// CONNECT/SOCKS connector, or replacing it with an Arti-based connector).
-type UpstreamClient = Client<HttpsConnector<HttpConnector>, Full<Bytes>>;
+const UPSTREAM_BASE_URL: &str = "https://openrouter.ai/api";
+const UPSTREAM_HOST: &str = "openrouter.ai";
+
+/// The upstream HTTP client: a hyper client speaking rustls-based TLS to the
+/// target, over a connection that is either direct or tunneled through a
+/// proxy (see the `connector` module).
+type UpstreamClient = Client<HttpsConnector<ProxyConnector>, Full<Bytes>>;
+
+#[derive(Clone)]
+struct ProxyState {
+    client: UpstreamClient,
+    logger: Option<BodyLogger>,
+}
 
 pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     let _openrouter_api_key =
         std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
 
+    // The TLS configuration, shared between connections to the target and to
+    // any `https://` proxy:
+    let tls_config = Arc::new(
+        rustls::ClientConfig::builder()
+            .with_native_roots()?
+            .with_no_client_auth(),
+    );
+
+    // The upstream proxy (if any), configured through the conventional
+    // `https_proxy`/`HTTPS_PROXY`/`all_proxy`/`ALL_PROXY`/`no_proxy`
+    // environment variables:
+    let proxy_config =
+        ProxyConfig::from_env(UPSTREAM_HOST).map_err(|err| -> Box<dyn Error> { err })?;
+    if flags.verbose > 0 && !matches!(proxy_config, ProxyConfig::Direct) {
+        eprintln!("Using upstream proxy: {:?}", proxy_config);
+    }
+
+    let proxy_connector = ProxyConnector::new(proxy_config, Arc::clone(&tls_config));
     let https_connector = hyper_rustls::HttpsConnectorBuilder::new()
-        .with_native_roots()?
+        .with_tls_config((*tls_config).clone())
         .https_only()
         .enable_http1()
-        .build();
+        .wrap_connector(proxy_connector);
     let client: UpstreamClient = Client::builder(TokioExecutor::new()).build(https_connector);
+
+    let state = ProxyState {
+        client,
+        logger: BodyLogger::from_env()?, // reads ASIMOV_PROXY_LOG_FILE
+    };
 
     let router = Router::new()
         .route("/{*path}", any(proxy_handler))
-        .with_state(client);
+        .with_state(state);
 
     let host: IpAddr = std::env::var("ASIMOV_PROXY_HOST")
         .ok()
@@ -63,7 +99,7 @@ pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
 }
 
 async fn proxy_handler(
-    State(client): State<UpstreamClient>,
+    State(state): State<ProxyState>,
     req: Request,
 ) -> Result<Response, StatusCode> {
     let openrouter_api_key =
@@ -82,7 +118,7 @@ async fn proxy_handler(
     }
 
     // https://openrouter.ai/api/v1/chat/completions
-    let target_url = format!("https://openrouter.ai/api{}{}", request_path, request_query);
+    let target_url = format!("{}{}{}", UPSTREAM_BASE_URL, request_path, request_query);
 
     let (mut head, body) = req.into_parts();
 
@@ -92,9 +128,12 @@ async fn proxy_handler(
         .map_err(|_| StatusCode::BAD_REQUEST)?
         .to_bytes();
 
-    let upstream_request_body = body_bytes.clone();
+    // Patch the request body before forwarding it upstream:
+    let upstream_request_body = patch_request_body(body_bytes)?;
 
-    // TODO: Modify the request body
+    if let Some(logger) = &state.logger {
+        logger.log_request_body(&upstream_request_body);
+    }
 
     // Retarget the request at the upstream server:
     head.uri = target_url
@@ -104,8 +143,7 @@ async fn proxy_handler(
 
     // Modify request headers:
     head.headers.remove("host"); // don't send "Host: 127.0.0.1"
-    //parts.headers.remove("content-length"); // TODO: the original Content-Length is now wrong
-
+    head.headers.remove("content-length"); // patching may change the length; hyper recomputes it
     head.headers.insert(
         "Authorization",
         HeaderValue::from_str(&format!("Bearer {}", openrouter_api_key)).unwrap(),
@@ -116,15 +154,46 @@ async fn proxy_handler(
 
     let upstream_request = http::Request::from_parts(head, Full::new(upstream_request_body));
 
-    let upstream_response = client
+    let upstream_response = state
+        .client
         .request(upstream_request)
         .await
-        .map_err(|_| StatusCode::BAD_GATEWAY)?;
+        .map_err(|err| {
+            eprintln!("Upstream request failed: {}", err);
+            StatusCode::BAD_GATEWAY
+        })?;
 
-    // Stream the upstream response body back to the client:
+    // Stream the upstream response body back to the client, teeing each data
+    // frame into the body log (if enabled):
     let (head, upstream_response_body) = upstream_response.into_parts();
+    let logger = state.logger.clone();
+    let upstream_response_body = upstream_response_body.map_frame(move |frame| {
+        if let (Some(logger), Some(data)) = (&logger, frame.data_ref()) {
+            logger.log_response_chunk(data);
+        }
+        frame
+    });
+
     let response = Response::from_parts(head, Body::new(upstream_response_body));
     Ok(response)
+}
+
+/// Patches the upstream request body before it is forwarded.
+///
+/// TODO: Rewrite the `model` property using `jsonc_parser`'s CST API, which
+/// preserves the original formatting and whitespace of the request body:
+///
+/// ```ignore
+/// let text = str::from_utf8(&body).map_err(|_| StatusCode::BAD_REQUEST)?;
+/// let root = jsonc_parser::cst::CstRootNode::parse(text, &Default::default())
+///     .map_err(|_| StatusCode::BAD_REQUEST)?;
+/// let object = root.object_value().ok_or(StatusCode::BAD_REQUEST)?;
+/// if let Some(model) = object.get("model") { /* rewrite the value */ }
+/// Ok(root.to_string().into())
+/// ```
+fn patch_request_body(body: Bytes) -> Result<Bytes, StatusCode> {
+    // For now, the body is forwarded unmodified.
+    Ok(body)
 }
 
 fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {

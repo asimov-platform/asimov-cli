@@ -14,6 +14,13 @@ pub enum ProxyCommand {
     /// Reads ASIMOV_PROXY_PORT for the port to bind to (default: 1920).
     ///
     /// Reads ASIMOV_PROXY_HOST for the host to bind to (default: 127.0.0.1).
+    ///
+    /// Reads ASIMOV_PROXY_LOG_FILE for a file to append request and
+    /// response bodies to (optional).
+    ///
+    /// Honors the conventional https_proxy/HTTPS_PROXY, all_proxy/ALL_PROXY,
+    /// and no_proxy/NO_PROXY environment variables for reaching upstream
+    /// through an HTTP(S) or SOCKS5 proxy.
     #[clap(aliases = ["run"])]
     Serve {},
 
