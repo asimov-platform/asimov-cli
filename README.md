@@ -5,7 +5,8 @@
 [![Package on Crates.io](https://img.shields.io/crates/v/asimov-cli)](https://crates.io/crates/asimov-cli)
 [![Documentation](https://img.shields.io/docsrs/asimov-cli?label=docs.rs)](https://docs.rs/asimov-cli)
 
-🚧 _We are building in public. This is presently under heavy construction._
+> [!TIP]
+> 🚧 _We are building in public. This is presently under heavy construction._
 
 ## ✨ Features
 
@@ -74,9 +75,9 @@ scoop install asimov-platform/asimov-cli
 </details>
 
 <details>
-<summary>Nix flakes</summary>
+<summary>Nix Flakes</summary>
 
-#### [Nix flakes](https://nixos.wiki/wiki/Flakes)
+#### [Nix Flakes](https://nixos.wiki/wiki/Flakes)
 
 Nix flakes is an experimental feature that has to be enabled before going any further:
 
@@ -135,9 +136,13 @@ Show help, including all available commands:
 asimov help
 ```
 
-When running commands you can add one or more `-v` flags to increase verbosity level.
+> [!TIP]
+> Add one or more `-v` flags to increase the verbosity level.
 
-## Fetch data
+<details>
+<summary>Fetch Data</summary>
+
+## Fetch Data
 
 ```bash
 # Fetch data from a URL, automatically choosing from installed modules
@@ -149,8 +154,12 @@ asimov fetch -M http https://example.com/
 # Fetch multiple URLs
 asimov fetch https://asimov.sh/ https://asimov.blog/
 ```
+</details>
 
-### Import data as RDF from a URL
+<details>
+<summary>Import Data From a URL</summary>
+
+### Import Data From a URL
 
 If you have the [ASIMOV Bright Data module](https://github.com/asimov-modules/asimov-brightdata-module) installed and configured, you should be able to fetch various social platform resources:
 
@@ -161,6 +170,10 @@ asimov import https://x.com/asimov_platform
 # Import using the specific module
 asimov import -M brightdata https://x.com/asimov_platform
 ```
+</details>
+
+<details>
+<summary>External Commands</summary>
 
 ### External Commands
 
@@ -176,6 +189,7 @@ asimov module install http
 # Get help for external commands
 asimov help module
 ```
+</details>
 
 ## 📚 Reference
 
