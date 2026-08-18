@@ -6,6 +6,9 @@ use core::error::Error;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyConfigTarget {
+    /// Aider (https://aider.chat).
+    Aider,
+
     /// Bash (https://gnu.org/software/bash/).
     Bash,
 
@@ -34,6 +37,9 @@ pub enum ProxyConfigTarget {
     /// Pi (https://pi.dev).
     Pi,
 
+    /// PowerShell (https://microsoft.com/powershell).
+    Powershell,
+
     /// Zed (https://zed.dev).
     Zed,
 
@@ -47,11 +53,23 @@ pub async fn config(
     _flags: &StandardOptions,
 ) -> Result<(), Box<dyn Error>> {
     use ProxyConfigTarget::*;
+    let base_url = "http://127.0.0.1:1920/v1"; // TODO
+    let default_model = "openrouter/free";
     match app {
+        // See: <https://aider.chat/docs/llms/openai-compat.html>
+        Aider => match format.as_deref() {
+            None => {
+                let export = if cfg!(windows) { "setx" } else { "export" };
+                println!("{export} {}={}", "OPENAI_API_BASE", base_url);
+                println!("{export} {}={}", "OPENAI_API_KEY", "aider");
+            },
+            Some(_) => {},
+        },
+
         Bash | Zsh => match format.as_deref() {
-            Some("sh") | None => {
-                println!("export OPENAI_API_BASE={}", "http://127.0.0.1:1920/v1");
-                println!("export OPENAI_API_KEY={}", "sh");
+            Some("export") | None => {
+                println!("export {}={}", "OPENAI_API_BASE", base_url);
+                println!("export {}={}", "OPENAI_API_KEY", "sh");
             },
             Some(_) => {},
         },
@@ -61,8 +79,8 @@ pub async fn config(
 
         Dotenv => match format.as_deref() {
             Some("env") | None => {
-                println!("OPENAI_API_BASE={}", "http://127.0.0.1:1920/v1");
-                println!("OPENAI_API_KEY={}", "dotenv");
+                println!("{}={}", "OPENAI_API_BASE", base_url);
+                println!("{}={}", "OPENAI_API_KEY", "dotenv");
             },
             Some(_) => {},
         },
@@ -119,15 +137,33 @@ pub async fn config(
         // See: <https://docs.openhands.dev/openhands/usage/v0/advanced/V0_configuration-options#llm-configuration>
         Openhands => match format.as_deref() {
             Some("env") => {
-                println!("LLM_BASE_URL={}", "http://127.0.0.1:1920/v1");
-                println!("LLM_API_KEY={}", "openhands");
-                println!("LLM_MODEL={}", "openrouter/free");
+                println!("{}={}", "LLM_BASE_URL", base_url);
+                println!("{}={}", "LLM_API_KEY", "openhands");
+                println!("{}={}", "LLM_MODEL", default_model);
             },
             Some("toml") | None => {
                 println!("[llm.asimov]");
-                println!("base_url = \"{}\"", "http://127.0.0.1:1920/v1");
+                println!("base_url = \"{}\"", base_url);
                 println!("api_key = \"{}\"", "openhands");
-                println!("model = \"{}\"", "openrouter/free");
+                println!("model = \"{}\"", default_model);
+            },
+            Some(_) => {},
+        },
+
+        Powershell => match format.as_deref() {
+            Some("dotnet") | None => {
+                println!(
+                    r#"[Environment]::SetEnvironmentVariable("{}", "{}", "User")"#,
+                    "OPENAI_API_BASE", base_url
+                );
+                println!(
+                    r#"[Environment]::SetEnvironmentVariable("{}", "{}", "User")"#,
+                    "OPENAI_API_KEY", "powershell"
+                );
+            },
+            Some("set") | Some("setx") => {
+                println!("setx {}={}", "OPENAI_API_BASE", base_url);
+                println!("setx {}={}", "OPENAI_API_KEY", "powershell");
             },
             Some(_) => {},
         },
