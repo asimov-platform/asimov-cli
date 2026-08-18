@@ -1,12 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
-mod connector;
-mod logger;
+mod body_logger;
+mod proxy_config;
+mod proxy_connector;
+mod proxy_stream;
 
-use self::{
-    connector::{ProxyConfig, ProxyConnector},
-    logger::BodyLogger,
-};
+use self::{body_logger::BodyLogger, proxy_config::ProxyConfig, proxy_connector::ProxyConnector};
 use crate::StandardOptions;
 use axum::{
     Router,
