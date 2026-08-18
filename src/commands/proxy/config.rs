@@ -9,11 +9,18 @@ pub enum ProxyConfigTarget {
     /// Bash (https://gnu.org/software/bash/).
     Bash,
 
+    /// Claude Code (https://claude.com/product/claude-code).
+    #[cfg(feature = "unstable")]
+    ClaudeCode,
+
     /// .env (https://github.com/motdotla/dotenv).
     Dotenv,
 
     /// LangChain (https://langchain.com).
     Langchain,
+
+    /// LiteLLM (https://litellm.ai).
+    Litellm,
 
     /// LlamaIndex (https://llamaindex.ai).
     Llamaindex,
@@ -49,6 +56,9 @@ pub async fn config(
             Some(_) => {},
         },
 
+        #[cfg(feature = "unstable")]
+        ClaudeCode => todo!(), // TODO
+
         Dotenv => match format.as_deref() {
             Some("env") | None => {
                 println!("OPENAI_API_BASE={}", "http://127.0.0.1:1920/v1");
@@ -65,6 +75,20 @@ pub async fn config(
             },
             Some("js") | Some("ts") => {
                 print!("{}", include_str!("config/langchain.js"));
+            },
+            Some(_) => {},
+        },
+
+        // See: <https://docs.litellm.ai/docs/contributing/adding_openai_compatible_providers>
+        Litellm => match format.as_deref() {
+            Some("json") => {
+                print!("{}", include_str!("config/litellm.json"));
+            },
+            Some("jsonc") | None => {
+                print!(
+                    "// litellm/llms/openai_like/providers.json\n{}",
+                    include_str!("config/litellm.json")
+                );
             },
             Some(_) => {},
         },

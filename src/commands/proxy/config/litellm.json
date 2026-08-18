@@ -1,0 +1,8 @@
+{
+  "asimov": {
+    "base_url": "http://127.0.0.1:1920/v1",
+    "api_key_env": "litellm",
+    "base_class": "openai_like",
+    "supported_endpoints": ["/v1/chat/completions", "/v1/responses"]
+  }
+}
