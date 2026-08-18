@@ -1,0 +1,11 @@
+{
+  "name": "asimov",
+  "engine": "openai_compatible",
+  "display_name": "ASIMOV",
+  "description": "ASIMOV provider",
+  "api_key_env": "goose",
+  "base_url": "http://127.0.0.1:1920/v1",
+  "supports_streaming": true,
+  "requires_auth": false,
+  "dynamic_models": true
+}

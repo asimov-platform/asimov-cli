@@ -16,8 +16,15 @@ pub enum ProxyConfigTarget {
     #[cfg(feature = "unstable")]
     ClaudeCode,
 
+    /// Cline (https://cline.bot).
+    #[cfg(feature = "unstable")]
+    Cline,
+
     /// .env (https://github.com/motdotla/dotenv).
     Dotenv,
+
+    /// Goose (https://goose-docs.ai).
+    Goose,
 
     /// LangChain (https://langchain.com).
     Langchain,
@@ -77,10 +84,31 @@ pub async fn config(
         #[cfg(feature = "unstable")]
         ClaudeCode => todo!(), // TODO
 
+        // See: <https://docs.cline.bot/running-models-locally/overview>
+        #[cfg(feature = "unstable")]
+        Cline => todo!(), // TODO: no support for arbitrary endpoints?
+
         Dotenv => match format.as_deref() {
             Some("env") | None => {
                 println!("{}={}", "OPENAI_API_BASE", base_url);
                 println!("{}={}", "OPENAI_API_KEY", "dotenv");
+            },
+            Some(_) => {},
+        },
+
+        // See: <https://goose-docs.ai/docs/getting-started/providers/#configure-custom-provider>
+        // See: <https://github.com/aaif-goose/goose/blob/main/crates/goose-providers/src/declarative.rs#L112>
+        // See: <https://github.com/aaif-goose/goose/blob/main/crates/goose-providers/src/openai_compatible.rs>
+        Goose => match format.as_deref() {
+            Some("json") => {
+                print!("{}", include_str!("config/goose.json"));
+            },
+            Some("jsonc") | None => {
+                print!(
+                    "// {}\n{}",
+                    "~/.config/goose/custom_providers/asimov.json",
+                    include_str!("config/goose.json")
+                );
             },
             Some(_) => {},
         },
@@ -104,7 +132,8 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// litellm/llms/openai_like/providers.json\n{}",
+                    "// {}\n{}",
+                    "litellm/llms/openai_like/providers.json",
                     include_str!("config/litellm.json")
                 );
             },
@@ -126,7 +155,8 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// ~/.config/opencode/opencode.json\n{}",
+                    "// {}\n{}",
+                    "~/.config/opencode/opencode.json",
                     include_str!("config/opencode.json")
                 );
             },
@@ -176,7 +206,8 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// ~/.pi/agent/models.json\n{}",
+                    "// {}\n{}",
+                    "~/.pi/agent/models.json",
                     include_str!("config/pi.json")
                 );
             },
@@ -189,7 +220,11 @@ pub async fn config(
                 println!("{}", zed_asimov_config()?);
             },
             Some("jsonc") | None => {
-                println!("// ~/.config/zed/settings.json\n{}", zed_asimov_config()?);
+                println!(
+                    "// {}\n{}",
+                    "~/.config/zed/settings.json",
+                    zed_asimov_config()?
+                );
             },
             Some(_) => {},
         },
