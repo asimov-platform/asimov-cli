@@ -1,7 +1,7 @@
 # ASIMOV Command-Line Interface (CLI)
 
 [![License](https://img.shields.io/badge/license-Public%20Domain-blue.svg)](https://unlicense.org)
-[![Compatibility](https://img.shields.io/badge/rust-1.97%2B-blue)](https://endoflife.date/rust)
+[![Compatibility](https://img.shields.io/badge/rust-1.97.1%2B-blue)](https://endoflife.date/rust)
 [![Package on Crates.io](https://img.shields.io/crates/v/asimov-cli)](https://crates.io/crates/asimov-cli)
 [![Documentation](https://img.shields.io/docsrs/asimov-cli?label=docs.rs)](https://docs.rs/asimov-cli)
 
@@ -13,7 +13,7 @@
 
 ## 🛠️ Prerequisites
 
-- [Rust] 1.97+ (2024 edition)
+- [Rust] 1.97.1+ (2024 edition)
 
 ## ⬇️ Installation
 
@@ -214,6 +214,68 @@ $ asimov list --help
 ```shellsession
 $ asimov module --help
 ```
+
+#### `asimov proxy`
+
+```shellsession
+$ asimov proxy --help
+```
+
+<details>
+<summary><code>asimov proxy serve</code></summary>
+
+```shellsession
+$ asimov proxy serve --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy url</code></summary>
+
+```shellsession
+$ asimov proxy url --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy host</code></summary>
+
+```shellsession
+$ asimov proxy host --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy port</code></summary>
+
+```shellsession
+$ asimov proxy port --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy models</code></summary>
+
+```shellsession
+$ asimov proxy models --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy config</code></summary>
+
+```shellsession
+$ asimov proxy config --help
+```
+</details>
+
+<details>
+<summary><code>asimov proxy install</code></summary>
+
+```shellsession
+$ asimov proxy install --help
+```
+</details>
 
 #### `asimov read`
 

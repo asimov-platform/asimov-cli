@@ -18,7 +18,7 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "handle", "list", "module", "read", "snap", "snapshot"]
+all = ["ask", "fetch", "handle", "list", "module", "proxy", "read", "snap", "snapshot"]
 unstable = [
   "describe",
   "index",
@@ -26,7 +26,6 @@ unstable = [
   "module-new",
   "package",
   "protocol",
-  "proxy",
   "search",
 ]
 
