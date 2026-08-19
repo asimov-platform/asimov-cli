@@ -18,9 +18,11 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "handle", "list", "module", "proxy", "read", "snap"]
+all = ["ask", "fetch", "list", "module", "proxy", "read", "snap"]
 unstable = [
   "describe",
+  "explain",
+  "handle",
   "index",
   "message",
   "module-new",
@@ -32,6 +34,7 @@ unstable = [
 # Optional features:
 ask = []
 describe = []
+explain = []
 fetch = ["dep:asimov-proxy"]
 handle = ["asimov-id/encodings"]
 index = []
