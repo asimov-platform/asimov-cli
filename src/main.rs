@@ -2,7 +2,10 @@
 
 #![deny(unsafe_code)]
 
-use asimov_cli::commands::{self, ExternalSubcommand, Help, HelpCmd};
+use asimov_cli::{
+    BoxError,
+    commands::{self, ExternalSubcommand, Help, HelpCmd},
+};
 use asimov_module::ModuleName;
 use clientele::{
     StandardOptions, SubcommandsProvider,
@@ -514,7 +517,7 @@ pub fn after_help() -> String {
 
 // `From<Box<dyn Error>> for SysexitsError` discards the original code,
 // mapping everything to EX_SOFTWARE; recover it by downcasting instead.
-fn sysexits(err: Box<dyn std::error::Error>) -> SysexitsError {
+fn sysexits(err: BoxError) -> SysexitsError {
     err.downcast_ref::<SysexitsError>()
         .copied()
         .unwrap_or(EX_SOFTWARE)

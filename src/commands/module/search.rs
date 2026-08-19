@@ -1,14 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use color_print::{ceprintln, cprintln};
-use core::error::Error;
 
 pub async fn search(
     query: &[String],
     output: &str,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let index = asimov_module::Index::fetch().await.map_err(|e| {
         tracing::error!("failed to fetch the module index: {e}");
         EX_UNAVAILABLE

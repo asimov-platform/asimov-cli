@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 use clientele::{StandardOptions, crates::clap::Subcommand};
-use core::error::Error;
 
 #[derive(Debug, Subcommand)]
 pub enum ProxyCommand {
@@ -63,7 +63,7 @@ pub enum ProxyCommand {
 }
 
 impl ProxyCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ProxyCommand::*;
         match self {
             Serve {} => serve(flags).await,

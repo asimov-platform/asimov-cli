@@ -1,15 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
 use color_print::{ceprintln, cprintln};
-use core::error::Error;
 
 pub async fn inspect(
     module_name: &ModuleName,
     output: &str,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
     let installed = registry.read_manifest(module_name).await.map_err(|e| {

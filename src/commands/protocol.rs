@@ -1,9 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 use asimov_id::Id;
 use asimov_protocol::Topic;
 use clientele::{StandardOptions, crates::clap::Subcommand};
-use core::error::Error;
 
 #[derive(Debug, Subcommand)]
 pub enum ProtocolCommand {
@@ -66,7 +66,7 @@ pub enum ProtocolCommand {
 }
 
 impl ProtocolCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ProtocolCommand::*;
         match self {
             Accept {} => accept(flags).await,

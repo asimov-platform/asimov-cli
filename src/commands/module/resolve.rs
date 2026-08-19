@@ -1,11 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::{normalization::normalize_url, resolve::Resolver};
 use color_print::cprintln;
-use core::error::Error;
 
-pub async fn resolve(url: impl AsRef<str>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn resolve(url: impl AsRef<str>, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
     let manifests = registry

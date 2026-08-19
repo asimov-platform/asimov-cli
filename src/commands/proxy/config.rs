@@ -1,8 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
+use crate::{BoxError, StandardOptions};
 use clap::ValueEnum;
-use core::error::Error;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyConfigTarget {
@@ -58,7 +57,7 @@ pub async fn config(
     app: &ProxyConfigTarget,
     format: &Option<String>,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     use ProxyConfigTarget::*;
     let base_url = "http://127.0.0.1:1920/v1"; // TODO
     let default_model = "openrouter/free";

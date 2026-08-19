@@ -1,8 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 use asimov_protocol::Topic;
 use clientele::{StandardOptions, crates::clap::Subcommand};
-use core::error::Error;
 use std::string::String;
 
 #[derive(Debug, Subcommand)]
@@ -22,7 +22,7 @@ pub enum MessageCommand {
 }
 
 impl MessageCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
         use MessageCommand::*;
         match self {
             Send {

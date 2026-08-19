@@ -1,10 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use color_print::cprintln;
-use core::error::Error;
 
-pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
     let modules = registry.installed_modules().await.map_err(|e| {
         tracing::error!("failed to read installed modules: {e}");

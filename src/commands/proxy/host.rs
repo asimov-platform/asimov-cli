@@ -1,10 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
-use core::error::Error;
+use crate::{BoxError, StandardOptions};
 use std::net::IpAddr;
 
-pub async fn host(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn host(_flags: &StandardOptions) -> Result<(), BoxError> {
     let host: IpAddr = std::env::var("ASIMOV_PROXY_HOST")
         .ok()
         .and_then(|input| input.parse::<IpAddr>().ok())

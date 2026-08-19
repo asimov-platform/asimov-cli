@@ -10,6 +10,8 @@ pub(crate) mod timestamps;
 
 use clientele::{StandardOptions, SysexitsError};
 
+pub type BoxError = Box<dyn core::error::Error + Send + Sync>;
+
 pub type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E>;
 
 /// Sorts links from a module's manifest in the order that we'd like to display

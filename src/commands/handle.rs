@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 #[cfg(feature = "unstable")]
 use asimov_id::{Handle, PublicKey};
 use asimov_id::{Id, PublicKeyEncoding};
 use clientele::{StandardOptions, crates::clap::Subcommand};
-use core::error::Error;
 #[cfg(feature = "unstable")]
 use std::path::PathBuf;
 
@@ -55,7 +55,7 @@ pub enum HandleCommand {
 }
 
 impl HandleCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
         match self {
             #[cfg(feature = "unstable")]
             HandleCommand::Add { handle, endpoints } => add(handle, endpoints, flags).await,

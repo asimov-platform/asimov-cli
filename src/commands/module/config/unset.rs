@@ -1,9 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
+use crate::BoxError;
 use asimov_module::ModuleName;
 use clientele::StandardOptions;
-use core::error::Error;
 
 /// Removes stored values. Environment- and default-provided values are not
 /// affected, since they are not stored here.
@@ -12,7 +12,7 @@ pub async fn unset(
     keys: &[String],
     all: bool,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let module = open(module_name).await?;
     let variables = module.require_variables()?;
 

@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{MASK, open, prompt_for_value};
+use crate::BoxError;
 use asimov_env::paths::asimov_root;
 use asimov_module::ModuleName;
 use clientele::{
@@ -8,15 +9,11 @@ use clientele::{
     SysexitsError::{self, *},
 };
 use color_print::ceprintln;
-use core::error::Error;
 use std::io::{IsTerminal, Write};
 
 /// Configures a module interactively: prompts for each declared variable, then
 /// hands over to the module's own configurator, if it provides one.
-pub async fn setup(
-    module_name: &ModuleName,
-    _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+pub async fn setup(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
     let module = open(module_name).await?;
     let variables = module.variables();
 

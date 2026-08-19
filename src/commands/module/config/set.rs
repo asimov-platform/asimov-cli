@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
+use crate::BoxError;
 use asimov_module::ModuleName;
 use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
-use core::error::Error;
 use std::io::Read;
 
 /// Stores values for one or more configuration variables.
@@ -14,7 +14,7 @@ pub async fn set(
     stdin: bool,
     from_json: bool,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let module = open(module_name).await?;
     module.require_variables()?;
 
@@ -35,7 +35,7 @@ pub async fn set(
                     Err(EX_DATAERR.into())
                 },
             })
-            .collect::<Result<_, Box<dyn Error>>>()?
+            .collect::<Result<_, BoxError>>()?
     } else if stdin {
         let [key] = assignments else {
             ceprintln!(
@@ -68,7 +68,7 @@ pub async fn set(
                 };
                 Ok((key.to_string(), value.to_string()))
             })
-            .collect::<Result<_, Box<dyn Error>>>()?
+            .collect::<Result<_, BoxError>>()?
     };
 
     for (key, _) in &pairs {

@@ -7,7 +7,6 @@ use asimov_module_kit::module::{
     new_module,
 };
 use color_print::{ceprintln, cprintln};
-use core::error::Error;
 use std::path::PathBuf;
 
 pub async fn new(
@@ -16,7 +15,7 @@ pub async fn new(
     programs: &[String],
     summary: Option<&str>,
     flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let target_dir: PathBuf = match dir {
         Some(dir) => PathBuf::from(dir),
         None => PathBuf::from(format!("asimov-{name}-module")),

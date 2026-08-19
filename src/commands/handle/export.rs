@@ -1,12 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
+use crate::{BoxError, StandardOptions};
 use asimov_directory::fs::HandleResolver;
 use color_print::cprintln;
-use core::error::Error;
 use futures_lite::{pin, stream::StreamExt};
 
-pub async fn export(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn export(_flags: &StandardOptions) -> Result<(), BoxError> {
     let mut resolver = HandleResolver::default().await?;
     let records = resolver.records();
     pin!(records);

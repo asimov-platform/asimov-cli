@@ -1,11 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
-use core::error::Error;
+use crate::{BoxError, StandardOptions};
 use std::fs::exists;
 use tracing::{info, warn};
 
-pub async fn init(name: &Option<String>, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn init(name: &Option<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
     // mkdir -p .asimov/
     if !exists(".asimov")? {
         info!("Creating the directory `{}`...", ".asimov");

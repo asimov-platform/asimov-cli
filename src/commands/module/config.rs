@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 use asimov_env::paths::asimov_root;
 use asimov_module::{ConfigurationVariable, ModuleManifest, ModuleName};
 use clientele::{
@@ -8,7 +9,6 @@ use clientele::{
     crates::clap::{Subcommand, builder::PossibleValuesParser},
 };
 use color_print::ceprintln;
-use core::error::Error;
 use std::{path::PathBuf, string::String, vec::Vec};
 
 #[derive(Debug, Subcommand)]
@@ -80,7 +80,7 @@ pub enum ConfigCommand {
 }
 
 impl ConfigCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ConfigCommand::*;
         match self {
             Show { name, output } => {
@@ -119,7 +119,7 @@ pub(super) struct Module {
 
 /// Reads the manifest of an installed module, rejecting manifests whose
 /// variable names cannot be used as file names.
-pub(super) async fn open(module_name: &ModuleName) -> Result<Module, Box<dyn Error>> {
+pub(super) async fn open(module_name: &ModuleName) -> Result<Module, BoxError> {
     let manifest = asimov_registry::Registry::default()
         .read_manifest(module_name)
         .await
@@ -182,7 +182,7 @@ impl Module {
     }
 
     /// Looks up a declared variable, reporting unknown keys as a usage error.
-    pub fn variable(&self, key: &str) -> Result<&ConfigurationVariable, Box<dyn Error>> {
+    pub fn variable(&self, key: &str) -> Result<&ConfigurationVariable, BoxError> {
         self.variables()
             .iter()
             .find(|var| var.name == key)
@@ -197,7 +197,7 @@ impl Module {
 
     /// Reports modules that declare no configuration variables as a usage
     /// error, so that operating on their variables is never silently a no-op.
-    pub fn require_variables(&self) -> Result<&[ConfigurationVariable], Box<dyn Error>> {
+    pub fn require_variables(&self) -> Result<&[ConfigurationVariable], BoxError> {
         let variables = self.variables();
         if variables.is_empty() {
             ceprintln!(
@@ -315,7 +315,7 @@ impl Source {
 /// Prompts for one value on the terminal, hiding what is typed when the value
 /// is secret. Reads via the terminal rather than stdin, so that a buffered read
 /// cannot consume bytes a later prompt needs.
-pub(super) fn prompt_for_value(prompt: String, secret: bool) -> Result<String, Box<dyn Error>> {
+pub(super) fn prompt_for_value(prompt: String, secret: bool) -> Result<String, BoxError> {
     let input = if secret {
         dialoguer::Password::new()
             .with_prompt(prompt)

@@ -1,11 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
 use color_print::ceprintln;
-use core::error::Error;
 
-pub async fn doc(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn doc(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
     let readme = match registry.read_readme(module_name).await {

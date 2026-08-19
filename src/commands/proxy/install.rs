@@ -1,9 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::zed_asimov_provider;
-use crate::StandardOptions;
+use crate::{BoxError, StandardOptions};
 use clap::ValueEnum;
-use core::error::Error;
 use jsonc_parser::{ParseOptions, cst::CstRootNode};
 use std::path::PathBuf;
 
@@ -25,10 +24,7 @@ pub enum ProxyInstallTarget {
     Zed,
 }
 
-pub async fn install(
-    apps: &[ProxyInstallTarget],
-    flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+pub async fn install(apps: &[ProxyInstallTarget], flags: &StandardOptions) -> Result<(), BoxError> {
     use ProxyInstallTarget::*;
     let home_path = dirs::home_dir().expect("HOME should be set");
     let apps = if apps.is_empty() {
@@ -54,7 +50,7 @@ pub async fn install_app(
     app: ProxyInstallTarget,
     home_path: &PathBuf,
     flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     use ProxyInstallTarget::*;
     match app {
         #[cfg(feature = "unstable")]

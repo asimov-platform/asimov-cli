@@ -14,10 +14,8 @@
 //! - `socks5://` — SOCKS5 proxy (target DNS resolved locally)
 //! - `socks5h://` — SOCKS5 proxy (target DNS resolved by the proxy)
 
-use super::{
-    proxy_config::{BoxError, ProxyConfig},
-    proxy_stream::ProxyStream,
-};
+use super::{proxy_config::ProxyConfig, proxy_stream::ProxyStream};
+use crate::BoxError;
 use core::{
     future::Future,
     pin::Pin,

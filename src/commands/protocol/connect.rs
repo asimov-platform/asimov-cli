@@ -1,17 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError};
+use crate::{BoxError, StandardOptions, SysexitsError};
 use asimov_directory::fs::{HandleResolver, ResolveHandle};
 use asimov_id::Id;
 use asimov_protocol::Node;
 use color_print::ceprintln;
-use core::error::Error;
 
 pub async fn connect(
     id: &Id,
     _ticket: &Option<String>,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     // Parse the peer ticket provided by the user:
     // let peer_ticket = EndpointTicket::decode_string(ticket.as_ref()).unwrap();
 

@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
+use crate::BoxError;
 use asimov_module::ModuleName;
 use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
-use core::error::Error;
 
 /// Prints the effective value of a configuration variable, resolved the same
 /// way modules resolve it: environment, then stored value, then default.
@@ -13,7 +13,7 @@ pub async fn get(
     key: &str,
     stored: bool,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let module = open(module_name).await?;
     module.require_variables()?;
     module.variable(key)?;

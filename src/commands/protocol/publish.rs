@@ -1,16 +1,15 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
+use crate::{BoxError, StandardOptions};
 use asimov_protocol::{EndpointTicket, Node, Ticket, Topic};
 use color_print::ceprintln;
-use core::error::Error;
 
 pub async fn publish(
     topic: &Topic,
     message: &String,
     ticket: &Option<String>,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     // Start a node and accept connections from peers:
     let mut node = Node::default().bind().await?.start().await?;
     node.online().await;

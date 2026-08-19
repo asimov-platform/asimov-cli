@@ -14,10 +14,8 @@
 //! - `socks5://` — SOCKS5 proxy (target DNS resolved locally)
 //! - `socks5h://` — SOCKS5 proxy (target DNS resolved by the proxy)
 
+use crate::BoxError;
 use base64::Engine as _;
-use core::error::Error;
-
-pub type BoxError = Box<dyn Error + Send + Sync>;
 
 /// How to reach the upstream server.
 #[derive(Clone, Debug)]

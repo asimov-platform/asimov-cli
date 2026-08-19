@@ -1,17 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
 use asimov_module::{ModuleManifest, ModuleName, ReadVarError};
 use color_print::{ceprintln, cprintln};
-use core::error::Error;
 
 pub async fn install(
     module_names: &[ModuleName],
     version: &Option<String>,
     model_size: &Option<String>,
     flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
     let installer = asimov_installer::Installer::default();
 

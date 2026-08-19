@@ -1,10 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
-use core::error::Error;
+use crate::{BoxError, StandardOptions};
 use treelog::{Tree, renderer::write_tree};
 
-pub async fn tree(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn tree(_flags: &StandardOptions) -> Result<(), BoxError> {
     let tree = Tree::from_dir(".")?;
     let tree = prune(&tree, &|input| match input {
         Tree::Leaf(lines) => lines.iter().any(|line| line.ends_with("~")),

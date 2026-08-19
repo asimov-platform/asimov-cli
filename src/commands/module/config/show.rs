@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{MASK, Source, open};
+use crate::BoxError;
 use asimov_module::ModuleName;
 use clientele::StandardOptions;
 use color_print::{cformat, cprintln};
-use core::error::Error;
 
 /// Shows every declared configuration variable, where its effective value
 /// comes from, and the value itself unless it is secret.
@@ -12,7 +12,7 @@ pub async fn show(
     module_name: &ModuleName,
     output: &str,
     _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     let module = open(module_name).await?;
     let variables = module.variables();
 

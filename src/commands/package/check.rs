@@ -1,11 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
-use core::error::Error;
+use crate::{BoxError, StandardOptions};
 use std::fs::exists;
 use tracing::{error, warn};
 
-pub async fn check(_flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn check(_flags: &StandardOptions) -> Result<(), BoxError> {
     if !exists(".asimov")? {
         error!("Missing ASIMOV configuration directory `{}/`.", ".asimov");
     }

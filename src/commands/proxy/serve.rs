@@ -6,7 +6,7 @@ mod proxy_connector;
 mod proxy_stream;
 
 use self::{body_logger::BodyLogger, proxy_config::ProxyConfig, proxy_connector::ProxyConnector};
-use crate::StandardOptions;
+use crate::{BoxError, StandardOptions};
 use axum::{
     Router,
     body::{Body, Bytes},
@@ -15,7 +15,6 @@ use axum::{
     response::Response,
     routing::any,
 };
-use core::error::Error;
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::{ConfigBuilderExt as _, HttpsConnector};
 use hyper_util::{client::legacy::Client, rt::TokioExecutor};
@@ -39,7 +38,7 @@ struct ProxyState {
     logger: Option<BodyLogger>,
 }
 
-pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
+pub async fn serve(flags: &StandardOptions) -> Result<(), BoxError> {
     let _openrouter_api_key =
         std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
 
@@ -54,8 +53,7 @@ pub async fn serve(flags: &StandardOptions) -> Result<(), Box<dyn Error>> {
     // The upstream proxy (if any), configured through the conventional
     // `https_proxy`/`HTTPS_PROXY`/`all_proxy`/`ALL_PROXY`/`no_proxy`
     // environment variables:
-    let proxy_config =
-        ProxyConfig::from_env(UPSTREAM_HOST).map_err(|err| -> Box<dyn Error> { err })?;
+    let proxy_config = ProxyConfig::from_env(UPSTREAM_HOST).map_err(|err| -> BoxError { err })?;
     if flags.verbose > 0 && !matches!(proxy_config, ProxyConfig::Direct) {
         eprintln!("Using upstream proxy: {:?}", proxy_config);
     }

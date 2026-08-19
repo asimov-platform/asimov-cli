@@ -1,12 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::StandardOptions;
-use core::error::Error;
+use crate::{BoxError, StandardOptions};
 
-pub async fn models(
-    format: &Option<String>,
-    _flags: &StandardOptions,
-) -> Result<(), Box<dyn Error>> {
+pub async fn models(format: &Option<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
     match format.as_deref() {
         Some("csv") => println!("id,label\nopenrouter/free,Free"),
         Some("json") => println!("{}", r#"{ "@id": "openrouter/free", "label": "Free" }"#),
