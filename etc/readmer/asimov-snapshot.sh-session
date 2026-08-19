@@ -1,1 +1,0 @@
-$ asimov snapshot --help

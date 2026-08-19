@@ -18,7 +18,7 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "handle", "list", "module", "proxy", "read", "snap", "snapshot"]
+all = ["ask", "fetch", "handle", "list", "module", "proxy", "read", "snap"]
 unstable = [
   "describe",
   "index",
@@ -59,8 +59,7 @@ proxy = [
 ]
 read = ["dep:infer", "dep:mime"]
 search = []
-snap = ["dep:asimov-snapshot"]
-snapshot = ["snap", "dep:jiff", "dep:hex", "dep:sha2"]
+snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 
 [build-dependencies]
 cfg_aliases = "0.2"

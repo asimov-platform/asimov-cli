@@ -303,12 +303,6 @@ $ asimov read --help
 $ asimov snap --help
 ```
 
-#### `asimov snapshot`
-
-```shellsession
-$ asimov snapshot --help
-```
-
 ## 👨‍💻 Development
 
 ```bash

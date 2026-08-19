@@ -33,8 +33,8 @@ use crate::commands::protocol::ProtocolCommand;
 #[cfg(feature = "proxy")]
 use crate::commands::proxy::ProxyCommand;
 
-#[cfg(feature = "snapshot")]
-use crate::commands::snapshot::SnapshotCommand;
+#[cfg(feature = "snap")]
+use crate::commands::snap::SnapCommand;
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -176,14 +176,15 @@ enum Command {
         prompt: String,
     },
 
-    /// Save a snapshot for a URL, utilizing enabled modules
-    #[cfg(feature = "snap")]
-    Snap { urls: Vec<String> },
-
     /// Manage snapshots stored on disk
-    #[cfg(feature = "snapshot")]
-    #[clap(subcommand)]
-    Snapshot(SnapshotCommand),
+    #[cfg(feature = "snap")]
+    Snap {
+        #[clap(subcommand)]
+        command: Option<SnapCommand>,
+
+        #[clap(flatten)]
+        args: commands::snap::SnapSaveArgs,
+    },
 
     #[clap(external_subcommand)]
     External(Vec<String>),
@@ -443,10 +444,12 @@ pub async fn main() -> SysexitsError {
             .map(|_| EX_OK),
 
         #[cfg(feature = "snap")]
-        Snap { urls } => commands::snap::snap(urls, flags).await.map(|_| EX_OK),
-
-        #[cfg(feature = "snapshot")]
-        Snapshot(command) => command.run(flags).await.map(|_| EX_OK),
+        Snap { command, args } => command
+            .unwrap_or(SnapCommand::Save { args })
+            .run(flags)
+            .await
+            .map_err(sysexits)
+            .map(|_| EX_OK),
 
         External(args) => {
             let cmd = ExternalSubcommand {
