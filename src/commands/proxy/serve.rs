@@ -15,6 +15,7 @@ use axum::{
     response::Response,
     routing::any,
 };
+use clientele::crates::clap::Args;
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::{ConfigBuilderExt as _, HttpsConnector};
 use hyper_util::{client::legacy::Client, rt::TokioExecutor};
@@ -32,13 +33,24 @@ const UPSTREAM_HOST: &str = "openrouter.ai";
 /// proxy (see the `connector` module).
 type UpstreamClient = Client<HttpsConnector<ProxyConnector>, Full<Bytes>>;
 
+#[derive(Args, Clone, Debug, Default)]
+pub struct ProxyServeOptions {
+    /// The address to bind to [default: $ASIMOV_PROXY_BIND or 127.0.0.1]
+    #[clap(long)]
+    pub bind: Option<IpAddr>,
+
+    /// The port to bind to [default: $ASIMOV_PROXY_PORT or 1920]
+    #[clap(long)]
+    pub port: Option<u16>,
+}
+
 #[derive(Clone)]
 struct ProxyState {
     client: UpstreamClient,
     logger: Option<BodyLogger>,
 }
 
-pub async fn serve(flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn serve(options: &ProxyServeOptions, flags: &StandardOptions) -> Result<(), BoxError> {
     let _openrouter_api_key =
         std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
 
@@ -75,15 +87,19 @@ pub async fn serve(flags: &StandardOptions) -> Result<(), BoxError> {
         .route("/{*path}", any(proxy_handler))
         .with_state(state);
 
-    let host: IpAddr = std::env::var("ASIMOV_PROXY_HOST")
-        .ok()
-        .and_then(|input| input.parse::<IpAddr>().ok())
-        .unwrap_or(IpAddr::from([127, 0, 0, 1]));
-    let port = std::env::var("ASIMOV_PROXY_PORT")
-        .ok()
-        .and_then(|input| input.parse::<u16>().ok())
-        .unwrap_or(1920);
-    let addr = SocketAddr::from((host, port));
+    let bind: IpAddr = options.bind.unwrap_or_else(|| {
+        std::env::var("ASIMOV_PROXY_BIND")
+            .ok()
+            .and_then(|input| input.parse::<IpAddr>().ok())
+            .unwrap_or(IpAddr::from([127, 0, 0, 1]))
+    });
+    let port = options.port.unwrap_or_else(|| {
+        std::env::var("ASIMOV_PROXY_PORT")
+            .ok()
+            .and_then(|input| input.parse::<u16>().ok())
+            .unwrap_or(1920)
+    });
+    let addr = SocketAddr::from((bind, port));
     let listener = TcpListener::bind(addr).await.unwrap();
 
     if flags.verbose > 0 {

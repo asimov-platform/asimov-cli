@@ -153,6 +153,9 @@ enum Command {
     Proxy {
         #[clap(subcommand)]
         command: Option<ProxyCommand>,
+
+        #[clap(flatten)]
+        options: commands::proxy::ProxyServeOptions,
     },
 
     /// Read a resource specified by a URL, utilizing enabled modules
@@ -422,8 +425,8 @@ pub async fn main() -> SysexitsError {
         Protocol(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "proxy")]
-        Proxy { command } => command
-            .unwrap_or(ProxyCommand::Serve {})
+        Proxy { command, options } => command
+            .unwrap_or(ProxyCommand::Serve { options })
             .run(flags)
             .await
             .map_err(sysexits)

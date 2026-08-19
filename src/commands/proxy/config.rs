@@ -244,7 +244,7 @@ pub(crate) fn zed_asimov_config() -> Result<String, jsonc_parser::errors::ParseE
 pub(crate) fn zed_asimov_provider() -> jsonc_parser::cst::CstInputValue {
     use jsonc_parser::json;
     json!({
-        "api_url": "http://127.0.0.1:1920/v1", // TODO: ASIMOV_PROXY_{HOST,PORT}
+        "api_url": "http://127.0.0.1:1920/v1", // TODO: ASIMOV_PROXY_{BIND,PORT}
         "available_models": [], // TODO: https://github.com/asimov-datasets/openrouter.ai
     })
 }
