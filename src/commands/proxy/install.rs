@@ -1,10 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::zed_asimov_provider;
 use crate::{BoxError, StandardOptions};
 use clap::ValueEnum;
-use jsonc_parser::{ParseOptions, cst::CstRootNode};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyInstallTarget {
@@ -74,32 +72,63 @@ pub async fn install_app(
             if flags.verbose > 0 {
                 eprintln!("Configuring Zed...");
             }
-            let zed_path = home_path.join(".config/zed/settings.json");
-            if !zed_path.exists() {
-                eprintln!("error: {} not found.", zed_path.display());
+            let path = home_path.join(".config/zed/settings.json");
+            if !path.exists() {
+                eprintln!("error: {} not found.", path.display());
                 return Ok(());
             }
-            let zed_input = std::fs::read_to_string(&zed_path).unwrap_or_else(|_| "{}".to_string());
-            let cst = CstRootNode::parse(&zed_input, &ParseOptions::default())?;
-            let root = cst.object_value_or_set();
-            if let Some(models) = root.get("language_models").and_then(|p| p.object_value())
-                && let Some(openai) = models
-                    .get("openai_compatible")
-                    .and_then(|p| p.object_value())
-            {
-                if let Some(asimov) = openai.get("ASIMOV") {
-                    asimov.set_value(zed_asimov_provider());
-                } else {
-                    openai.append("ASIMOV", zed_asimov_provider());
-                }
-            }
-            let zed_output = cst.to_string();
-            //eprintln!("{}", &zed_output); // DEBUG
-            std::fs::write(&zed_path, zed_output)?;
+            patch_jsonc_file_with_edikt(
+                &path,
+                &["language_models", "openai_compatible", "ASIMOV"],
+                include_str!("config/zed-provider.jsonc"),
+            )?;
             if flags.verbose > 0 {
-                eprintln!("Configured Zed: {}", zed_path.display());
+                eprintln!("Configured Zed: {}", path.display());
             }
         },
     };
+    Ok(())
+}
+
+fn patch_jsonc_file_with_edikt(
+    file_path: impl AsRef<Path>,
+    json_path: &[&str],
+    patch: &str,
+) -> Result<(), BoxError> {
+    use edikt_core::{Document, Step};
+    let file_path = file_path.as_ref();
+    let input = std::fs::read_to_string(&file_path).unwrap_or_else(|_| "{}".to_string());
+    let mut cst = edikt_jsonc::parse(&input)?;
+    cst.set(
+        json_path
+            .into_iter()
+            .map(ToString::to_string)
+            .map(Step::Field)
+            .collect::<Vec<Step>>()
+            .as_slice(),
+        &edikt_jsonc::parse(patch)?.to_value(),
+    )?;
+    let output = cst.to_source();
+    std::fs::write(&file_path, output)?;
+    Ok(())
+}
+
+#[cfg(false)]
+fn patch_jsonc_file_with_jsonc_parser(
+    file_path: impl AsRef<Path>,
+    json_path: &[&str],
+    _patch: &str,
+) -> Result<(), BoxError> {
+    use jsonc_parser::cst::CstRootNode;
+    let file_path = file_path.as_ref();
+    let input = std::fs::read_to_string(&file_path).unwrap_or_else(|_| "{}".to_string());
+    let cst = CstRootNode::parse(&input, &Default::default())?;
+    let mut cursor = cst.object_value_or_set();
+    for key in json_path {
+        cursor = cursor.object_value_or_set(key);
+    }
+    //cursor.replace_with(/* ...?... */); // TODO: how to parse patch into a CstInputValue?
+    let output = cst.to_string();
+    std::fs::write(&file_path, output)?;
     Ok(())
 }

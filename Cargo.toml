@@ -45,6 +45,8 @@ proxy = [
   "dep:axum",
   "dep:base64",
   "dep:dirs",
+  "dep:edikt-core",
+  "dep:edikt-jsonc",
   "dep:http-body-util",
   "dep:hyper",
   "dep:hyper-rustls",
@@ -138,6 +140,8 @@ base64 = { version = "0.22", default-features = false, features = [
   "std",
 ], optional = true }
 dirs = { version = "6", default-features = false, optional = true }
+edikt-core = { version = "0.3.1", optional = true }
+edikt-jsonc = { version = "0.2.3", optional = true }
 http-body-util = { version = "0.1", default-features = false, optional = true }
 hyper = { version = "1", default-features = false, optional = true }
 hyper-rustls = { version = "0.27", default-features = false, features = [
