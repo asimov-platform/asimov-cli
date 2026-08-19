@@ -1,10 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{
-    StandardOptions,
-    SysexitsError::{self, *},
-    shared,
-};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{GraphOutput, Input, ReaderOptions};
 use color_print::ceprintln;
@@ -14,7 +10,7 @@ pub async fn read(
     input_urls: Vec<String>,
     module: Option<ModuleName>,
     flags: &StandardOptions,
-) -> Result<(), SysexitsError> {
+) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
     let installed_modules = shared::installed_modules(&registry, Some("reader")).await?;

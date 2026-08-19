@@ -4,10 +4,10 @@ use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
 use color_print::ceprintln;
 
-pub async fn doc(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn doc(module_name: ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
-    let readme = match registry.read_readme(module_name).await {
+    let readme = match registry.read_readme(&module_name).await {
         Ok(Some(readme)) => readme,
         Ok(None) => {
             ceprintln!("<s,r>error:</> module `{module_name}` was installed without documentation");

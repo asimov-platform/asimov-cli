@@ -1951,29 +1951,62 @@ dependencies = [
 
 [[package]]
 name = "distrib"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19de5dd9fb82400e58e01454a0cad16ef2ae275a17e6d8691100cec7abb7a9da"
+checksum = "91ee3dd50c771ebbaa76807ac46c1bfbaa4366942bccfdd30ffee5af0f37afe4"
 dependencies = [
  "derive_more",
+ "distrib-beam",
+ "distrib-common",
  "distrib-dart",
+ "distrib-gleam",
  "distrib-js",
+ "distrib-jsr",
  "distrib-macros",
+ "distrib-node",
+ "distrib-npm",
  "distrib-python",
  "distrib-ruby",
  "distrib-rust",
  "distrib-wasm",
+ "dogma 0.2.1",
+ "glob",
+ "itertools 0.15.0",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-beam"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e408e42a1ba819da345d5b89a758bef6ae807d4d41f035624fd414419c09a91f"
+dependencies = [
+ "derive_more",
+ "distrib-common",
+ "dogma 0.2.1",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-common"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44a6c22b593570240d50942395670957fba945ad36ea95755cf3b88b7c040ff1"
+dependencies = [
+ "camino",
+ "derive_more",
  "dogma 0.2.1",
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "distrib-dart"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b054b2a0d0075bced1c9a012910b2386cf1a29589f71a6d98ed5c538ae002bbc"
+checksum = "388ea7561f259e90a12f0fddcbffb64ea42622dcc95f8f57ec1ac1d7fef6fb52"
 dependencies = [
  "derive_more",
+ "distrib-common",
  "dogma 0.2.1",
  "indexmap 2.14.0",
  "serde_norway",
@@ -1981,22 +2014,53 @@ dependencies = [
 ]
 
 [[package]]
-name = "distrib-js"
-version = "0.0.2"
+name = "distrib-gleam"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4614c2c73bf973d607a58a93145f1a9f3526b7a88f41e72745d1e8557dbbec4"
+checksum = "a55fb6f5c601356327979fba01596565b6a62c708e41eb78437f58c9caed6416"
 dependencies = [
  "derive_more",
+ "distrib-beam",
+ "distrib-common",
  "dogma 0.2.1",
- "package_json_schema",
+ "indexmap 2.14.0",
+ "serde",
+ "serde_with",
+ "thiserror 2.0.18",
+ "toml 1.1.3+spec-1.1.0",
+]
+
+[[package]]
+name = "distrib-js"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d98da64702c18df1539d2a00cef62641e98c275d9444b3eb007f504f8a84edc3"
+dependencies = [
+ "derive_more",
+ "distrib-common",
+ "distrib-node",
+ "distrib-npm",
+ "dogma 0.2.1",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-jsr"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb7d6aa9a27ee835cc866d3ac1c1a4cd6dd0c9d24ae8d8df94a81f229f0ea73b"
+dependencies = [
+ "derive_more",
+ "distrib-common",
+ "dogma 0.2.1",
  "thiserror 2.0.18",
 ]
 
 [[package]]
 name = "distrib-macros"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "193d64ca2bb7ae562056f842b4150a9d15f2ca7d2ea0b075856bb92964cb4962"
+checksum = "b6d60bd7b4721ca800b1190a3cc6825d26c034054055a97d65dc1342a4fe67c4"
 dependencies = [
  "darling 0.23.0",
  "quote",
@@ -2004,13 +2068,40 @@ dependencies = [
 ]
 
 [[package]]
-name = "distrib-python"
-version = "0.0.2"
+name = "distrib-node"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43ec247591fe33bcaece2b9df021f3c0e164932e02838671e0e3108a26b60842"
+checksum = "310bff92fd604c6610f6c0b911e3a7258b4eb0588269b6181da82573b4ab9ea9"
 dependencies = [
  "derive_more",
+ "distrib-common",
  "dogma 0.2.1",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-npm"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "344517c4ba07c22bec65fdffe1d35e373f847b60c2238c21ef2fc5891c939477"
+dependencies = [
+ "derive_more",
+ "distrib-common",
+ "dogma 0.2.1",
+ "package_json_schema",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "distrib-python"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f3e7ca10f7e1d9f3e473be778374d4ab53d04adf9f13661cc97f33151c122c1"
+dependencies = [
+ "derive_more",
+ "distrib-common",
+ "dogma 0.2.1",
+ "pep440_rs",
  "pyproject-toml",
  "thiserror 2.0.18",
  "toml 0.9.12+spec-1.1.0",
@@ -2018,11 +2109,12 @@ dependencies = [
 
 [[package]]
 name = "distrib-ruby"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2775cbc3034b9d4c02fd983cc2af8e8d5a0cdec3d8952dc5aaea808e42d523d2"
+checksum = "26af1565cbf954b2b22a8d5d29032a77717d8e6b574c93c56385a43f833babb6"
 dependencies = [
  "derive_more",
+ "distrib-common",
  "dogma 0.2.1",
  "indexmap 2.14.0",
  "serde_norway",
@@ -2031,12 +2123,13 @@ dependencies = [
 
 [[package]]
 name = "distrib-rust"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc96b19809f7c61ee182557c47f8a1033e7031e6152e949c6bb0913d4b9e4dde"
+checksum = "fe3a645bb681d398a9b29552b6dd60d5cc4540e0540e59b5b95163bbca73ba40"
 dependencies = [
  "cargo_toml",
  "derive_more",
+ "distrib-common",
  "dogma 0.2.1",
  "thiserror 2.0.18",
  "toml 1.1.3+spec-1.1.0",
@@ -2044,11 +2137,12 @@ dependencies = [
 
 [[package]]
 name = "distrib-wasm"
-version = "0.0.2"
+version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcbc56152f8d6b53a4de426967214e926cf907ba65829f98d0a6219e0488c494"
+checksum = "411e7268b9cdcbd77e6d24ff6d92a6496e8a7418c6959b7f288e1f2d1386baba"
 dependencies = [
  "derive_more",
+ "distrib-common",
  "dogma 0.2.1",
  "thiserror 2.0.18",
 ]
@@ -3907,6 +4001,15 @@ name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
 dependencies = [
  "either",
 ]

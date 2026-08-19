@@ -4,8 +4,8 @@ use crate::{BoxError, StandardOptions, SysexitsError::*};
 use color_print::{ceprintln, cprintln};
 
 pub async fn search(
-    query: &[String],
-    output: &str,
+    query: Vec<String>,
+    output: String,
     _flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let index = asimov_module::Index::fetch().await.map_err(|e| {
@@ -30,7 +30,7 @@ pub async fn search(
         .unwrap_or_default();
 
     for module in modules {
-        match output {
+        match output.as_str() {
             "jsonl" => {
                 let json = serde_json::to_string(module).map_err(|e| {
                     tracing::error!("failed to serialize module manifest: {e}");

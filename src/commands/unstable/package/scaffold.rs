@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module_kit::module::{
     NewModuleError, NewModuleOptions,
     lint::{LintOptions, Severity, lint_module},

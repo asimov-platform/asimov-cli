@@ -6,9 +6,9 @@ use asimov_module::ModuleName;
 use color_print::cprintln;
 
 pub async fn upgrade(
-    module_names: &[ModuleName],
-    version: &Option<String>,
-    model_size: &Option<String>,
+    module_names: Vec<ModuleName>,
+    version: Option<String>,
+    model_size: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
@@ -40,7 +40,7 @@ pub async fn upgrade(
             EX_UNAVAILABLE
         })?;
 
-        let target_version = if let Some(want) = version {
+        let target_version = if let Some(ref want) = version {
             want.clone()
         } else {
             installer

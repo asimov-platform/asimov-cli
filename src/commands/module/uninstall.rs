@@ -5,7 +5,7 @@ use asimov_module::ModuleName;
 use color_print::cprintln;
 
 pub async fn uninstall(
-    module_names: &[ModuleName],
+    module_names: Vec<ModuleName>,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let installer = asimov_installer::Installer::default();
@@ -14,10 +14,13 @@ pub async fn uninstall(
             cprintln!("<s,c>»</> Uninstalling the module <s>{module_name}</>...");
         }
 
-        installer.uninstall_module(module_name).await.map_err(|e| {
-            tracing::error!("failed to uninstall module `{module_name}`: {e}");
-            EX_UNAVAILABLE
-        })?;
+        installer
+            .uninstall_module(&module_name)
+            .await
+            .map_err(|e| {
+                tracing::error!("failed to uninstall module `{module_name}`: {e}");
+                EX_UNAVAILABLE
+            })?;
 
         if flags.verbose > 0 {
             cprintln!("<s,g>✓</> Uninstalled the module <s>{module_name}</>.");

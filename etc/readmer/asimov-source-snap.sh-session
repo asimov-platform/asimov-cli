@@ -1,0 +1,1 @@
+$ asimov source snap --help

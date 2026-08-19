@@ -93,29 +93,6 @@ pub enum ModuleCommand {
         output: Option<String>,
     },
 
-    /// Scaffold a new module
-    #[cfg(feature = "module-new")]
-    New {
-        /// The module's short name, e.g. `widget` for `asimov-widget-module`
-        name: ModuleName,
-
-        /// The target directory to create the module in.
-        /// Defaults to `./asimov-<name>-module`.
-        #[arg(long)]
-        dir: Option<String>,
-
-        /// Scaffold a program of this kind, e.g. `fetcher` for
-        /// `asimov-widget-fetcher`. May be repeated to scaffold several
-        /// programs at once.
-        #[arg(long, default_value = "emitter")]
-        program: Vec<String>,
-
-        /// A short summary of what this module does.
-        /// Defaults to a summary derived from the module's name.
-        #[arg(long)]
-        summary: Option<String>,
-    },
-
     /// Resolve a given URL to modules which can handle it
     Resolve {
         /// The URL to resolve
@@ -159,10 +136,11 @@ pub enum ModuleCommand {
 }
 
 impl ModuleCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
+    pub async fn run(self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ModuleCommand::*;
         match self {
             Browse { name } => browse(name, flags).await,
+
             Config { command, name } => match (command, name) {
                 (Some(command), _) => command.run(flags).await,
                 // a bare module name lists its configuration
@@ -182,33 +160,38 @@ impl ModuleCommand {
                     Err(EX_USAGE.into())
                 },
             },
+
             Disable { names } => disable(names, flags).await,
+
             Doc { name } => doc(name, flags).await,
+
             Enable { names } => enable(names, flags).await,
+
             #[cfg(feature = "unstable")]
             Find { name } => find(name, flags).await,
+
             Inspect { name, output } => {
-                inspect(name, output.as_deref().unwrap_or("cli"), flags).await
+                inspect(name, output.as_deref().unwrap_or("cli").into(), flags).await
             },
+
             Install {
                 names,
                 version,
                 model_size,
             } => install(names, version, model_size, flags).await,
+
             Link { name } => link(name, flags).await,
-            List { output } => list(output.as_deref().unwrap_or("cli"), flags).await,
-            #[cfg(feature = "module-new")]
-            New {
-                name,
-                dir,
-                program,
-                summary,
-            } => new(name, dir.as_deref(), program, summary.as_deref(), flags).await,
+
+            List { output } => list(output.as_deref().unwrap_or("cli").into(), flags).await,
+
             Resolve { url } => resolve(url, flags).await,
+
             Search { query, output } => {
-                search(query, output.as_deref().unwrap_or("cli"), flags).await
+                search(query, output.as_deref().unwrap_or("cli").into(), flags).await
             },
+
             Uninstall { names } => uninstall(names, flags).await,
+
             Upgrade {
                 names,
                 version,
@@ -247,11 +230,6 @@ pub use link::*;
 
 mod list;
 pub use list::*;
-
-#[cfg(feature = "module-new")]
-mod new;
-#[cfg(feature = "module-new")]
-pub use new::*;
 
 mod resolve;
 pub use resolve::*;

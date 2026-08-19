@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions};
 
-pub async fn models(format: &Option<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn models(format: Option<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
     match format.as_deref() {
         Some("csv") => println!("id,label\nopenrouter/free,Free"),
         Some("json") => println!("{}", r#"{ "@id": "openrouter/free", "label": "Free" }"#),

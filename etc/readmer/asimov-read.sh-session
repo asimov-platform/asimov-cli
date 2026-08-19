@@ -1,1 +1,0 @@
-$ asimov read --help

@@ -3,11 +3,11 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
 
-pub async fn link(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn link(module_name: ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
 
     let manifest = registry
-        .read_manifest(module_name)
+        .read_manifest(&module_name)
         .await
         .map_err(|e| {
             tracing::error!("failed to read module manifest: {e}");

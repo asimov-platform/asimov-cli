@@ -1,1 +1,0 @@
-$ asimov handle --help

@@ -54,8 +54,8 @@ pub enum ProxyConfigTarget {
 }
 
 pub async fn config(
-    app: &ProxyConfigTarget,
-    format: &Option<String>,
+    app: ProxyConfigTarget,
+    format: Option<String>,
     _flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     use ProxyConfigTarget::*;

@@ -12,38 +12,30 @@ readme = true
 homepage = "https://cli.asimov.sh"
 repository = "https://github.com/asimov-platform/asimov-cli"
 license = "Unlicense"
-keywords = ["asimov", "ai", "cli"]
+keywords = ["asimov", "cli"]
 categories = ["command-line-utilities", "text-processing"]
 publish = true
 
 [features]
 default = ["all"]
-all = ["ask", "fetch", "list", "module", "proxy", "read", "snap"]
+all = ["module", "proxy", "source"]
 unstable = [
-  "describe",
-  "explain",
+  "agent",
+  "cache",
+  "construct",
+  "dataset",
+  "flow",
+  "graph",
   "handle",
-  "index",
+  #"index",
   "message",
-  "module-new",
   "package",
   "protocol",
-  "search",
+  "vault",
 ]
 
-# Optional features:
-ask = []
-describe = []
-explain = []
-fetch = ["dep:asimov-proxy"]
-handle = ["asimov-id/encodings"]
-index = []
-list = []
-message = []
+# Stable commands:
 module = ["dep:dialoguer"]
-module-new = ["module", "dep:asimov-module-kit"]
-package = ["dep:distrib", "dep:treelog"]
-protocol = ["dep:asimov-protocol"]
 proxy = [
   "dep:axum",
   "dep:base64",
@@ -60,9 +52,22 @@ proxy = [
   "dep:tokio-socks",
   "dep:tower-service",
 ]
-read = ["dep:infer", "dep:mime"]
-search = []
-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
+source = ["source-snap", "dep:infer"]
+source-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
+
+# Unstable/experimental commands:
+agent = []
+cache = []
+construct = []
+dataset = []
+flow = []
+graph = []
+handle = ["asimov-id/encodings"]
+message = []
+package = ["package-scaffold", "dep:distrib", "dep:treelog"]
+package-scaffold = ["dep:asimov-module-kit"] # fka module-new
+protocol = ["dep:asimov-protocol"]
+vault = []
 
 [build-dependencies]
 cfg_aliases = "0.2"
@@ -131,7 +136,7 @@ treelog = { version = "0.0.6", default-features = false, features = [
 ], optional = true }
 
 futures-lite = "2.6.1"
-distrib = { version = "0.0.2", default-features = false, features = [
+distrib = { version = "0.0.4", default-features = false, features = [
   "rust",
   "std",
 ], optional = true }
@@ -210,6 +215,6 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
-#asimov-directory = { path = "../asimov.rs/lib/asimov-directory" }
-#asimov-id = { path = "../asimov.rs/lib/asimov-id" }
-#asimov-protocol = { path = "../asimov.rs/lib/asimov-protocol" }
+#asimov-directory = { path = "../asimov-sdk/rust/lib/asimov-directory" }
+#asimov-id = { path = "../asimov-sdk/rust/lib/asimov-id" }
+#asimov-protocol = { path = "../asimov-sdk/rust/lib/asimov-protocol" }

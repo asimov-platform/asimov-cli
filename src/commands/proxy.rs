@@ -24,7 +24,7 @@ pub enum ProxyCommand {
     #[clap(aliases = ["run"])]
     Serve {
         #[clap(flatten)]
-        options: ProxyServeOptions,
+        args: ProxyServeArgs,
     },
 
     /// Print the proxy URL.
@@ -66,10 +66,10 @@ pub enum ProxyCommand {
 }
 
 impl ProxyCommand {
-    pub async fn run(&self, flags: &StandardOptions) -> Result<(), BoxError> {
+    pub async fn run(self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ProxyCommand::*;
         match self {
-            Serve { options } => serve(options, flags).await,
+            Serve { args } => serve(args, flags).await,
             Url {} => url(flags).await,
             Host {} => host(flags).await,
             Port {} => port(flags).await,

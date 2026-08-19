@@ -34,7 +34,7 @@ const UPSTREAM_HOST: &str = "openrouter.ai";
 type UpstreamClient = Client<HttpsConnector<ProxyConnector>, Full<Bytes>>;
 
 #[derive(Args, Clone, Debug, Default)]
-pub struct ProxyServeOptions {
+pub struct ProxyServeArgs {
     /// The address to bind to [default: $ASIMOV_PROXY_BIND or 127.0.0.1]
     #[clap(long)]
     pub bind: Option<IpAddr>,
@@ -50,7 +50,7 @@ struct ProxyState {
     logger: Option<BodyLogger>,
 }
 
-pub async fn serve(options: &ProxyServeOptions, flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     let _openrouter_api_key =
         std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
 
@@ -87,13 +87,13 @@ pub async fn serve(options: &ProxyServeOptions, flags: &StandardOptions) -> Resu
         .route("/{*path}", any(proxy_handler))
         .with_state(state);
 
-    let bind: IpAddr = options.bind.unwrap_or_else(|| {
+    let bind: IpAddr = args.bind.unwrap_or_else(|| {
         std::env::var("ASIMOV_PROXY_BIND")
             .ok()
             .and_then(|input| input.parse::<IpAddr>().ok())
             .unwrap_or(IpAddr::from([127, 0, 0, 1]))
     });
-    let port = options.port.unwrap_or_else(|| {
+    let port = args.port.unwrap_or_else(|| {
         std::env::var("ASIMOV_PROXY_PORT")
             .ok()
             .and_then(|input| input.parse::<u16>().ok())

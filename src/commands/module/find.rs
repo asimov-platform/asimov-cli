@@ -3,7 +3,7 @@
 use crate::{BoxError, StandardOptions, SysexitsError};
 use asimov_module::ModuleName;
 
-pub async fn find(module_name: &ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn find(module_name: ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
     let command_name = format!("{module_name}-module");
 
     match clientele::SubcommandsProvider::find("asimov-", &command_name) {

@@ -6,7 +6,6 @@ use asimov_cli::{
     BoxError,
     commands::{self, ExternalSubcommand, Help, HelpCmd},
 };
-use asimov_module::ModuleName;
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -15,26 +14,26 @@ use clientele::{
 use color_print::ceprintln;
 use std::ffi::OsString;
 
-#[cfg(feature = "handle")]
-use crate::commands::handle::HandleCommand;
-
-#[cfg(feature = "message")]
-use crate::commands::message::MessageCommand;
-
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
-
-#[cfg(feature = "package")]
-use crate::commands::package::PackageCommand;
-
-#[cfg(feature = "protocol")]
-use crate::commands::protocol::ProtocolCommand;
 
 #[cfg(feature = "proxy")]
 use crate::commands::proxy::ProxyCommand;
 
-#[cfg(feature = "snap")]
-use crate::commands::snap::SnapCommand;
+#[cfg(feature = "source")]
+use crate::commands::source::SourceCommand;
+
+// #[cfg(feature = "handle")]
+// use crate::commands::unstable::handle::HandleCommand;
+
+// #[cfg(feature = "message")]
+// use crate::commands::unstable::message::MessageCommand;
+
+// #[cfg(feature = "package")]
+// use crate::commands::unstable::package::PackageCommand;
+
+// #[cfg(feature = "protocol")]
+// use crate::commands::unstable::protocol::ProtocolCommand;
 
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
@@ -53,100 +52,10 @@ struct Options {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Prompt an LLM with text input
-    #[cfg(feature = "ask")]
-    Ask {
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        #[clap(long, short = 'm')]
-        model: Option<String>,
-
-        input: Option<String>,
-    },
-
-    /// TBD
-    #[cfg(feature = "describe")]
-    #[clap(aliases = ["summarize", "tldr"])]
-    Describe {
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        /// The output format.
-        #[arg(value_name = "FORMAT", short = 'o', long)]
-        output: Option<String>,
-
-        urls: Vec<String>,
-    },
-
-    /// Fetch knowledge from a URL, utilizing enabled modules
-    #[cfg(feature = "fetch")]
-    #[clap(aliases = ["extract", "get", "import", "parse"])]
-    Fetch {
-        /// Optionally choose the module instead of using module resolution.
-        /// The module's manifest must declare support for the URL for the
-        /// module to be used.
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        /// The output format.
-        #[arg(value_name = "FORMAT", short = 'o', long)]
-        output: Option<String>,
-
-        urls: Vec<String>,
-    },
-
-    /// Add, remove, and resolve handles and their associated endpoints
-    #[cfg(feature = "handle")]
-    #[clap(subcommand)]
-    Handle(HandleCommand),
-
-    /// TBD
-    #[cfg(feature = "index")]
-    Index {
-        #[clap(long, short = 'm')]
-        module: Option<ModuleName>,
-
-        urls: Vec<String>,
-    },
-
-    /// Catalog knowledge from a URL, utilizing enabled modules
-    #[cfg(feature = "list")]
-    #[clap(aliases = ["dir", "ls"])]
-    List {
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        /// The maximum number of resources to list.
-        #[arg(value_name = "COUNT", short = 'n', long)]
-        limit: Option<usize>,
-
-        /// The output format.
-        #[arg(value_name = "FORMAT", short = 'o', long)]
-        output: Option<String>,
-
-        urls: Vec<String>,
-    },
-
-    /// Message other peers
-    #[cfg(feature = "message")]
-    #[clap(subcommand)]
-    Message(MessageCommand),
-
     /// Manage modules, such as installing/enabling/disabling them
     #[cfg(feature = "module")]
     #[clap(subcommand)]
     Module(ModuleCommand),
-
-    /// Package development commands
-    #[cfg(feature = "package")]
-    #[clap(subcommand)]
-    Package(PackageCommand),
-
-    /// Low-level protocol commands
-    #[cfg(feature = "protocol")]
-    #[clap(subcommand)]
-    Protocol(ProtocolCommand),
 
     /// Proxy server commands
     #[cfg(feature = "proxy")]
@@ -155,36 +64,22 @@ enum Command {
         command: Option<ProxyCommand>,
 
         #[clap(flatten)]
-        options: commands::proxy::ProxyServeOptions,
+        args: commands::proxy::ProxyServeArgs,
     },
 
-    /// Read a resource specified by a URL, utilizing enabled modules
-    #[cfg(feature = "read")]
-    Read {
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        urls: Vec<String>,
-    },
-
-    /// TBD
-    #[cfg(feature = "search")]
-    Search {
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        prompt: String,
-    },
-
-    /// Manage snapshots stored on disk
-    #[cfg(feature = "snap")]
-    Snap {
+    /// Source TBD
+    #[cfg(feature = "source")]
+    Source {
         #[clap(subcommand)]
-        command: Option<SnapCommand>,
+        command: Option<SourceCommand>,
 
         #[clap(flatten)]
-        args: commands::snap::SnapSaveArgs,
+        args: commands::source::SourceFetchArgs,
     },
+
+    #[cfg(feature = "unstable")]
+    #[clap(flatten)]
+    Unstable(commands::unstable::UnstableCommand),
 
     #[clap(external_subcommand)]
     External(Vec<String>),
@@ -356,96 +251,20 @@ pub async fn main() -> SysexitsError {
     // Execute the given command:
     use Command::*;
     let result = match options.command.unwrap() {
-        #[cfg(feature = "ask")]
-        Ask {
-            module,
-            model,
-            input,
-        } => {
-            let input = if let Some(input) = input {
-                input.clone()
-            } else {
-                use std::io::Read;
-                let mut buf = String::new();
-                if std::io::stdin().read_to_string(&mut buf).is_err() {
-                    return EX_IOERR;
-                };
-                buf
-            };
-            commands::ask::ask(input, module, model, flags)
-                .await
-                .map(|_| EX_OK)
-        },
-
-        #[cfg(feature = "describe")]
-        Describe {
-            module,
-            output,
-            urls,
-        } => commands::describe::describe(urls, module, output, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "fetch")]
-        Fetch {
-            module,
-            output,
-            urls,
-        } => commands::fetch::fetch(urls, module, output, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "handle")]
-        Handle(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
-
-        #[cfg(feature = "index")]
-        Index { module, urls } => commands::index::index(urls, module, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "list")]
-        List {
-            module,
-            limit,
-            output,
-            urls,
-        } => commands::list::list(urls, module, limit, output, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "message")]
-        Message(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
-
         #[cfg(feature = "module")]
         Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
-        #[cfg(feature = "package")]
-        Package(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
-
-        #[cfg(feature = "protocol")]
-        Protocol(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
-
         #[cfg(feature = "proxy")]
-        Proxy { command, options } => command
-            .unwrap_or(ProxyCommand::Serve { options })
+        Proxy { command, args } => command
+            .unwrap_or(ProxyCommand::Serve { args })
             .run(flags)
             .await
             .map_err(sysexits)
             .map(|_| EX_OK),
 
-        #[cfg(feature = "read")]
-        Read { module, urls } => commands::read::read(urls, module, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "search")]
-        Search { module, prompt } => commands::search::search(prompt, module, flags)
-            .await
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "snap")]
-        Snap { command, args } => command
-            .unwrap_or(SnapCommand::Save { args })
+        #[cfg(feature = "source")]
+        Source { command, args } => command
+            .unwrap_or(SourceCommand::Fetch { args })
             .run(flags)
             .await
             .map_err(sysexits)
@@ -510,10 +329,14 @@ fn after_long_help() -> String {
 }
 
 pub fn after_help() -> String {
+    let commands = SubcommandsProvider::collect("asimov-", 1);
+    if commands.iter().count() == 0 {
+        return String::new();
+    }
+
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
-    let commands = SubcommandsProvider::collect("asimov-", 1);
     for (i, cmd) in commands.iter().enumerate() {
         if i > 0 {
             help.push('\n');

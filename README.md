@@ -199,35 +199,19 @@ asimov help module
 $ asimov
 ```
 
-#### `asimov ask`
-
-```shellsession
-$ asimov ask --help
-```
-
-#### `asimov fetch`
-
-```shellsession
-$ asimov fetch --help
-```
-
-#### `asimov handle`
-
-```shellsession
-$ asimov handle --help
-```
-
-#### `asimov list`
-
-```shellsession
-$ asimov list --help
-```
-
 #### `asimov module`
 
 ```shellsession
 $ asimov module --help
 ```
+
+<details>
+<summary><code>asimov module install</code></summary>
+
+```shellsession
+$ asimov module install --help
+```
+</details>
 
 #### `asimov proxy`
 
@@ -291,17 +275,43 @@ $ asimov proxy install --help
 ```
 </details>
 
-#### `asimov read`
+#### `asimov source`
 
 ```shellsession
-$ asimov read --help
+$ asimov source --help
 ```
 
-#### `asimov snap`
+<details>
+<summary><code>asimov source fetch</code></summary>
 
 ```shellsession
-$ asimov snap --help
+$ asimov source fetch --help
 ```
+</details>
+
+<details>
+<summary><code>asimov source list</code></summary>
+
+```shellsession
+$ asimov source list --help
+```
+</details>
+
+<details>
+<summary><code>asimov source read</code></summary>
+
+```shellsession
+$ asimov source read --help
+```
+</details>
+
+<details>
+<summary><code>asimov source snap</code></summary>
+
+```shellsession
+$ asimov source snap --help
+```
+</details>
 
 ## 👨‍💻 Development
 

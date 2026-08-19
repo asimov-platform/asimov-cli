@@ -3,7 +3,7 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use color_print::cprintln;
 
-pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn list(output: String, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
     let modules = registry.installed_modules().await.map_err(|e| {
         tracing::error!("failed to read installed modules: {e}");
@@ -17,7 +17,7 @@ pub async fn list(output: &str, _flags: &StandardOptions) -> Result<(), BoxError
             EX_UNAVAILABLE
         })?;
 
-        match output {
+        match output.as_str() {
             "jsonl" => {
                 let version = module.version.unwrap_or_default();
                 let label = module.manifest.label;

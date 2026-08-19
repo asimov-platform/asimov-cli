@@ -6,9 +6,9 @@ use asimov_module::{ModuleManifest, ModuleName, ReadVarError};
 use color_print::{ceprintln, cprintln};
 
 pub async fn install(
-    module_names: &[ModuleName],
-    version: &Option<String>,
-    model_size: &Option<String>,
+    module_names: Vec<ModuleName>,
+    version: Option<String>,
+    model_size: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
@@ -39,7 +39,7 @@ pub async fn install(
             .await
             .unwrap_or(false)
         {
-            let target_version = if let Some(want) = version {
+            let target_version = if let Some(ref want) = version {
                 want.clone()
             } else {
                 installer

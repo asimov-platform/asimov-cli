@@ -22,11 +22,14 @@ pub enum ProxyInstallTarget {
     Zed,
 }
 
-pub async fn install(apps: &[ProxyInstallTarget], flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn install(
+    mut apps: Vec<ProxyInstallTarget>,
+    flags: &StandardOptions,
+) -> Result<(), BoxError> {
     use ProxyInstallTarget::*;
     let home_path = dirs::home_dir().expect("HOME should be set");
-    let apps = if apps.is_empty() {
-        &[
+    if apps.is_empty() {
+        apps.extend_from_slice(&[
             #[cfg(feature = "unstable")]
             Cursor,
             #[cfg(feature = "unstable")]
@@ -34,12 +37,10 @@ pub async fn install(apps: &[ProxyInstallTarget], flags: &StandardOptions) -> Re
             #[cfg(feature = "unstable")]
             VSCode,
             Zed,
-        ]
-    } else {
-        apps
-    };
+        ]);
+    }
     for app in apps {
-        install_app(*app, &home_path, flags).await?;
+        install_app(app, &home_path, flags).await?;
     }
     Ok(())
 }
