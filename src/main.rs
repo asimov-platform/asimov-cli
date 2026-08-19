@@ -150,8 +150,10 @@ enum Command {
 
     /// Proxy server commands
     #[cfg(feature = "proxy")]
-    #[clap(subcommand)]
-    Proxy(ProxyCommand),
+    Proxy {
+        #[clap(subcommand)]
+        command: Option<ProxyCommand>,
+    },
 
     /// Read a resource specified by a URL, utilizing enabled modules
     #[cfg(feature = "read")]
@@ -420,7 +422,12 @@ pub async fn main() -> SysexitsError {
         Protocol(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
         #[cfg(feature = "proxy")]
-        Proxy(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+        Proxy { command } => command
+            .unwrap_or(ProxyCommand::Serve {})
+            .run(flags)
+            .await
+            .map_err(sysexits)
+            .map(|_| EX_OK),
 
         #[cfg(feature = "read")]
         Read { module, urls } => commands::read::read(urls, module, flags)
