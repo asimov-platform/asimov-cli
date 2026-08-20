@@ -119,6 +119,7 @@ pub async fn main() -> SysexitsError {
     // Parse command-line options:
     let options = Options::command()
         .color(color)
+        .help_template(help_template(use_color))
         .after_help(after_help(use_color))
         .after_long_help(after_long_help(use_color))
         .try_get_matches_from(&args)
@@ -264,6 +265,7 @@ pub async fn main() -> SysexitsError {
     let Some(command) = options.command else {
         Options::command()
             .color(color)
+            .help_template(help_template(use_color))
             .after_help(after_help(use_color))
             .print_help()
             .ok();
@@ -365,12 +367,55 @@ fn strip_ansi(input: &str) -> String {
     output
 }
 
+/// Builds the help template, inserting an "Aliases" section between the
+/// default "Commands" and "Options" sections.
+fn help_template(color: bool) -> String {
+    let aliases = if color {
+        aliases_help()
+    } else {
+        strip_ansi(&aliases_help())
+    };
+    let commands_heading = color_print::cstr!("<y>Commands:</y>");
+    let options_heading = color_print::cstr!("<y>Options:</y>");
+    let (commands_heading, options_heading) = if color {
+        (commands_heading.into(), options_heading.into())
+    } else {
+        (strip_ansi(commands_heading), strip_ansi(options_heading))
+    };
+    format!(
+        "{{before-help}}{{about-with-newline}}\n{{usage-heading}} {{usage}}\n\n{commands_heading}\n{{subcommands}}\n\n{aliases}\n{options_heading}\n{{options}}{{after-help}}"
+    )
+}
+
+/// Renders the "Aliases" help section listing the hardcoded command aliases.
+fn aliases_help() -> String {
+    let mut help = String::new();
+    help.push_str(color_print::cstr!("<y>Aliases:</y>\n"));
+
+    let width = asimov_cli::aliases::ALIASES
+        .iter()
+        .map(|(name, _)| name.len())
+        .max()
+        .unwrap_or(0);
+
+    for (name, expansion) in asimov_cli::aliases::ALIASES {
+        help.push_str(&color_print::cformat!(
+            "  <s>{:width$}</s>  asimov {}\n",
+            name,
+            expansion.join(" "),
+        ));
+    }
+
+    help
+}
+
 fn after_long_help(color: bool) -> String {
     let mut help = String::new();
-    help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
-
     let cmds = Help.execute();
     for (i, cmd) in cmds.iter().enumerate() {
+        if i == 0 {
+            help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
+        }
         if i > 0 {
             help.push_str("\n\n")
         }
@@ -408,15 +453,12 @@ fn after_long_help(color: bool) -> String {
 }
 
 pub fn after_help(color: bool) -> String {
-    let commands = SubcommandsProvider::collect("asimov-", 1);
-    if commands.iter().count() == 0 {
-        return String::new();
-    }
-
     let mut help = String::new();
-    help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
-
+    let commands = SubcommandsProvider::collect("asimov-", 1);
     for (i, cmd) in commands.iter().enumerate() {
+        if i == 0 {
+            help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
+        }
         if i > 0 {
             help.push('\n');
         }
