@@ -31,6 +31,9 @@ const OPTIONS_WITH_VALUES: &[&str] = &["--color"];
 /// Locates the first subcommand token (the first argument after the program
 /// name that isn't an option or an option's value) and, if it names an alias,
 /// splices in the expansion. Any arguments following the alias are preserved.
+///
+/// The `help` subcommand is treated as transparent, so `asimov help fetch`
+/// expands to `asimov help source fetch`.
 pub fn resolve(args: &mut Vec<OsString>) {
     let mut i = 1; // skip the program name
     while i < args.len() {
@@ -50,6 +53,12 @@ pub fn resolve(args: &mut Vec<OsString>) {
             } else {
                 1
             };
+            continue;
+        }
+
+        // `help` is transparent: expand the alias it's asking about instead
+        if arg == "help" {
+            i += 1;
             continue;
         }
 
@@ -115,6 +124,27 @@ mod tests {
         assert_eq!(
             resolved(&["asimov", "module", "install", "fetch"]),
             ["asimov", "module", "install", "fetch"]
+        );
+    }
+
+    #[test]
+    fn expands_alias_after_help() {
+        assert_eq!(
+            resolved(&["asimov", "help", "fetch"]),
+            ["asimov", "help", "source", "fetch"]
+        );
+        assert_eq!(
+            resolved(&["asimov", "help", "install"]),
+            ["asimov", "help", "module", "install"]
+        );
+    }
+
+    #[test]
+    fn leaves_help_for_non_aliases_untouched() {
+        assert_eq!(resolved(&["asimov", "help"]), ["asimov", "help"]);
+        assert_eq!(
+            resolved(&["asimov", "help", "module"]),
+            ["asimov", "help", "module"]
         );
     }
 
