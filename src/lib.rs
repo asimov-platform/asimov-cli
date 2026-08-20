@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+pub mod aliases;
 pub mod commands;
 pub mod options {}
 pub mod registry;

@@ -91,9 +91,12 @@ pub async fn main() -> SysexitsError {
     clientele::dotenv().ok();
 
     // Expand wildcards and @argfiles:
-    let Ok(args) = clientele::args_os() else {
+    let Ok(mut args) = clientele::args_os() else {
         return EX_USAGE;
     };
+
+    // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
+    asimov_cli::aliases::resolve(&mut args);
 
     // Parse command-line options:
     let options = match Options::try_parse_from(&args) {
