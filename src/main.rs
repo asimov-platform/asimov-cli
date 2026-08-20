@@ -9,10 +9,10 @@ use asimov_cli::{
 use clientele::{
     StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
-    crates::clap::{Parser, Subcommand},
+    crates::clap::{CommandFactory, FromArgMatches, Parser, Subcommand},
 };
 use color_print::ceprintln;
-use std::ffi::OsString;
+use std::{ffi::OsString, io::IsTerminal};
 
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
@@ -35,13 +35,19 @@ use crate::commands::source::SourceCommand;
 // #[cfg(feature = "protocol")]
 // use crate::commands::unstable::protocol::ProtocolCommand;
 
+/// Help output styling matching the color palette used by clap v3.
+const HELP_STYLES: clap::builder::Styles = clap::builder::Styles::styled()
+    .header(clap::builder::styling::AnsiColor::Yellow.on_default())
+    .usage(clap::builder::styling::AnsiColor::Yellow.on_default())
+    .literal(clap::builder::styling::AnsiColor::Green.on_default())
+    .placeholder(clap::builder::styling::AnsiColor::Green.on_default());
+
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
 #[command(name = "asimov", long_about)]
 #[command(allow_external_subcommands = true)]
 #[command(arg_required_else_help = true)]
-#[command(after_help = after_help())]
-#[command(after_long_help = after_long_help())]
+#[command(styles = HELP_STYLES)]
 struct Options {
     #[clap(flatten)]
     flags: StandardOptions,
@@ -98,8 +104,29 @@ pub async fn main() -> SysexitsError {
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
 
+    // Determine the color output mode ahead of parsing, so that clap's own
+    // help/usage/error rendering honors `--color` (the default is "auto"):
+    let color = color_choice(&args);
+    let use_color = match color {
+        clap::ColorChoice::Always => true,
+        clap::ColorChoice::Never => false,
+        clap::ColorChoice::Auto => {
+            std::io::stdout().is_terminal()
+                && !std::env::var_os("NO_COLOR").is_some_and(|value| !value.is_empty())
+        },
+    };
+
     // Parse command-line options:
-    let options = match Options::try_parse_from(&args) {
+    let options = Options::command()
+        .color(color)
+        .after_help(after_help(use_color))
+        .after_long_help(after_long_help(use_color))
+        .try_get_matches_from(&args)
+        .and_then(|mut matches| {
+            Options::from_arg_matches_mut(&mut matches)
+                .map_err(|err| err.format(&mut Options::command().color(color)))
+        });
+    let options = match options {
         Ok(options) => options,
 
         // VARIANT 1
@@ -232,6 +259,17 @@ pub async fn main() -> SysexitsError {
         //std::env::set_var("RUST_BACKTRACE", "1");
     }
 
+    // Print help if no command was given (e.g. `asimov --color=never`),
+    // mirroring the behavior of a bare `asimov` invocation:
+    let Some(command) = options.command else {
+        Options::command()
+            .color(color)
+            .after_help(after_help(use_color))
+            .print_help()
+            .ok();
+        return EX_USAGE;
+    };
+
     // From asimov-module-cli:
     asimov_registry::Registry::default()
         .create_file_tree()
@@ -253,7 +291,7 @@ pub async fn main() -> SysexitsError {
 
     // Execute the given command:
     use Command::*;
-    let result = match options.command.unwrap() {
+    let result = match command {
         #[cfg(feature = "module")]
         Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
@@ -289,7 +327,45 @@ pub async fn main() -> SysexitsError {
     result.unwrap_or_else(|e| e)
 }
 
-fn after_long_help() -> String {
+/// Scans for `--color <when>` / `--color=<when>` ahead of parsing, so that
+/// the choice can be fed back into clap for its own help/usage output.
+fn color_choice(args: &[OsString]) -> clap::ColorChoice {
+    let mut choice = clap::ColorChoice::Auto;
+    let mut args = args.iter().filter_map(|arg| arg.to_str());
+    while let Some(arg) = args.next() {
+        let value = if arg == "--color" {
+            args.next()
+        } else {
+            arg.strip_prefix("--color=")
+        };
+        if let Some(value) = value {
+            choice = value.parse().unwrap_or(choice);
+        }
+    }
+    choice
+}
+
+/// Strips the ANSI CSI escape sequences emitted by `color_print`.
+fn strip_ansi(input: &str) -> String {
+    let mut output = String::with_capacity(input.len());
+    let mut chars = input.chars();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' {
+            if chars.next() == Some('[') {
+                for c in chars.by_ref() {
+                    if ('@'..='~').contains(&c) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            output.push(c);
+        }
+    }
+    output
+}
+
+fn after_long_help(color: bool) -> String {
     let mut help = String::new();
     help.push_str(color_print::cstr!("<s><u>Commands:</u></s>\n"));
 
@@ -328,10 +404,10 @@ fn after_long_help() -> String {
         }
     }
 
-    help
+    if color { help } else { strip_ansi(&help) }
 }
 
-pub fn after_help() -> String {
+pub fn after_help(color: bool) -> String {
     let commands = SubcommandsProvider::collect("asimov-", 1);
     if commands.iter().count() == 0 {
         return String::new();
@@ -351,7 +427,7 @@ pub fn after_help() -> String {
         ));
     }
 
-    help
+    if color { help } else { strip_ansi(&help) }
 }
 
 // `From<Box<dyn Error>> for SysexitsError` discards the original code,
