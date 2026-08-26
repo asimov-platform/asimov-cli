@@ -7,12 +7,13 @@ use asimov_cli::{
     commands::{self, ExternalSubcommand, Help, HelpCmd},
 };
 use clientele::{
-    StandardOptions, SubcommandsProvider,
+    ColorChoiceExt, StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
     crates::clap::{CommandFactory, FromArgMatches, Parser, Subcommand},
+    strip_ansi,
 };
 use color_print::ceprintln;
-use std::{ffi::OsString, io::IsTerminal};
+use std::ffi::OsString;
 
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
@@ -35,19 +36,12 @@ use crate::commands::source::SourceCommand;
 // #[cfg(feature = "protocol")]
 // use crate::commands::unstable::protocol::ProtocolCommand;
 
-/// Help output styling matching the color palette used by clap v3.
-const HELP_STYLES: clap::builder::Styles = clap::builder::Styles::styled()
-    .header(clap::builder::styling::AnsiColor::Yellow.on_default())
-    .usage(clap::builder::styling::AnsiColor::Yellow.on_default())
-    .literal(clap::builder::styling::AnsiColor::Green.on_default())
-    .placeholder(clap::builder::styling::AnsiColor::Green.on_default());
-
 /// ASIMOV Command-Line Interface (CLI)
 #[derive(Debug, Parser)]
 #[command(name = "asimov", long_about)]
 #[command(allow_external_subcommands = true)]
 #[command(arg_required_else_help = true)]
-#[command(styles = HELP_STYLES)]
+#[command(styles = clientele::HELP_STYLES)]
 struct Options {
     #[clap(flatten)]
     flags: StandardOptions,
@@ -106,15 +100,8 @@ pub async fn main() -> SysexitsError {
 
     // Determine the color output mode ahead of parsing, so that clap's own
     // help/usage/error rendering honors `--color` (the default is "auto"):
-    let color = color_choice(&args);
-    let use_color = match color {
-        clap::ColorChoice::Always => true,
-        clap::ColorChoice::Never => false,
-        clap::ColorChoice::Auto => {
-            std::io::stdout().is_terminal()
-                && !std::env::var_os("NO_COLOR").is_some_and(|value| !value.is_empty())
-        },
-    };
+    let color = clientele::color_choice(&args);
+    let use_color = color.to_bool();
 
     // Parse command-line options:
     let options = Options::command()
@@ -327,44 +314,6 @@ pub async fn main() -> SysexitsError {
     // in that case we would get an annoying `Error: ...` message,
     // which is not what we want. So we just return an error like this.
     result.unwrap_or_else(|e| e)
-}
-
-/// Scans for `--color <when>` / `--color=<when>` ahead of parsing, so that
-/// the choice can be fed back into clap for its own help/usage output.
-fn color_choice(args: &[OsString]) -> clap::ColorChoice {
-    let mut choice = clap::ColorChoice::Auto;
-    let mut args = args.iter().filter_map(|arg| arg.to_str());
-    while let Some(arg) = args.next() {
-        let value = if arg == "--color" {
-            args.next()
-        } else {
-            arg.strip_prefix("--color=")
-        };
-        if let Some(value) = value {
-            choice = value.parse().unwrap_or(choice);
-        }
-    }
-    choice
-}
-
-/// Strips the ANSI CSI escape sequences emitted by `color_print`.
-fn strip_ansi(input: &str) -> String {
-    let mut output = String::with_capacity(input.len());
-    let mut chars = input.chars();
-    while let Some(c) = chars.next() {
-        if c == '\x1b' {
-            if chars.next() == Some('[') {
-                for c in chars.by_ref() {
-                    if ('@'..='~').contains(&c) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            output.push(c);
-        }
-    }
-    output
 }
 
 /// Builds the help template, inserting an "Aliases" section between the

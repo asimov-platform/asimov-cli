@@ -1220,9 +1220,9 @@ checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "clientele"
-version = "0.3.8"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07ab70eb434a01fc8bc1787981828ccf36f1e80a1242b915e085e913b4290e66"
+checksum = "065e37a0101444af423dfc17d97b4fac8d268729fa9471d1d542c46206e4a2e0"
 dependencies = [
  "argfile",
  "camino",
