@@ -12,7 +12,7 @@ readme = true
 homepage = "https://cli.asimov.sh"
 repository = "https://github.com/asimov-platform/asimov-cli"
 license = "Unlicense"
-keywords = ["asimov", "cli"]
+keywords = ["asimov", "cli", "ai", "osint"]
 categories = ["command-line-utilities", "text-processing"]
 publish = true
 
