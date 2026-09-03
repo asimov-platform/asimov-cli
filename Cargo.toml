@@ -91,7 +91,7 @@ asimov-patterns = "25.3.4"
 asimov-registry = "25.3.4"
 asimov-runner = "25.3.4"
 clap = { version = "4.5", default-features = false }
-clientele = { version = "0.3.9", features = ["gofer", "serde-json", "tokio"] }
+clientele = { version = "0.3.10", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
 derive_more = { version = "2", features = ["display"] }
 known-types-pypi = { version = "0.0.1", features = ["serde"] }
@@ -218,3 +218,4 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-directory = { path = "../asimov-sdk/rust/lib/asimov-directory" }
 #asimov-id = { path = "../asimov-sdk/rust/lib/asimov-id" }
 #asimov-protocol = { path = "../asimov-sdk/rust/lib/asimov-protocol" }
+asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }

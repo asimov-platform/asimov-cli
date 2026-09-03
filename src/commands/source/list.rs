@@ -3,12 +3,15 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{CatalogerOptions, GraphOutput};
+use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
 
 pub async fn list(
     input_urls: Vec<String>,
     module: Option<ModuleName>,
+    sort: Option<SortKeys>,
+    offset: Option<usize>,
     limit: Option<usize>,
     output: Option<String>,
     flags: &StandardOptions,
@@ -49,6 +52,8 @@ pub async fn list(
             &input_url,
             GraphOutput::Inherited,
             CatalogerOptions::builder()
+                .maybe_sort(sort.clone())
+                .maybe_offset(offset)
                 .maybe_limit(limit)
                 .maybe_output(output.as_deref())
                 .maybe_other(flags.debug.then_some("--debug"))
