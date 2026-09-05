@@ -2,7 +2,7 @@
 
 [package]
 name = "asimov-cli"
-version = "25.3.0"
+version = "25.4.0"
 authors = ["ASIMOV Community"]
 edition = "2024"
 rust-version = "1.97.1"
@@ -82,16 +82,16 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.3.4"
-asimov-env = "25.3.4"
-asimov-id = "25.3.4"
-asimov-installer = "25.3.4"
-asimov-module = "25.3.4"
-asimov-patterns = "25.3.4"
-asimov-registry = "25.3.4"
-asimov-runner = "25.3.4"
+asimov-directory = "25.3.5"
+asimov-env = "25.3.5"
+asimov-id = "25.3.5"
+asimov-installer = "25.3.5"
+asimov-module = "25.3.5"
+asimov-patterns = "25.3.5"
+asimov-registry = "25.3.5"
+asimov-runner = "25.3.5"
 clap = { version = "4.5", default-features = false }
-clientele = { version = "0.3.11", features = ["gofer", "serde-json", "tokio"] }
+clientele = { version = "0.3.14", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
 derive_more = { version = "2", features = ["display"] }
 known-types-pypi = { version = "0.0.1", features = ["serde"] }
@@ -116,10 +116,10 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
-asimov-module-kit = { version = "25.3.4", optional = true }
-asimov-protocol = { version = "25.3.4", optional = true }
-asimov-proxy = { version = "25.3.4", optional = true }
-asimov-snapshot = { version = "25.3.4", optional = true }
+asimov-module-kit = { version = "25.3.5", optional = true }
+asimov-protocol = { version = "25.3.5", optional = true }
+asimov-proxy = { version = "25.3.5", optional = true }
+asimov-snapshot = { version = "25.3.5", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
@@ -217,6 +217,6 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 [patch.crates-io]
 #asimov-directory = { path = "../asimov-sdk/rust/lib/asimov-directory" }
 #asimov-id = { path = "../asimov-sdk/rust/lib/asimov-id" }
+#asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }
 #asimov-protocol = { path = "../asimov-sdk/rust/lib/asimov-protocol" }
-asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }
-asimov-runner = { path = "../asimov-sdk/rust/lib/asimov-runner" }
+#asimov-runner = { path = "../asimov-sdk/rust/lib/asimov-runner" }
