@@ -52,12 +52,12 @@ struct Options {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Manage modules, such as installing/enabling/disabling them
+    /// Manage modules, installing/enabling/disabling them
     #[cfg(feature = "module")]
     #[clap(subcommand)]
     Module(ModuleCommand),
 
-    /// Proxy server commands
+    /// Run a local OpenAI-compatible proxy endpoint
     #[cfg(feature = "proxy")]
     Proxy {
         #[clap(subcommand)]
@@ -67,7 +67,7 @@ enum Command {
         args: commands::proxy::ProxyServeArgs,
     },
 
-    /// Source TBD
+    /// Manage data sources, fetching/listing/snapshotting them
     #[cfg(feature = "source")]
     Source {
         #[clap(subcommand)]

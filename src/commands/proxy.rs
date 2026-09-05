@@ -38,6 +38,7 @@ pub enum ProxyCommand {
     Port {},
 
     /// List available models.
+    #[cfg(feature = "unstable")]
     Models {
         /// The output format.
         /// [default: list]
@@ -73,6 +74,7 @@ impl ProxyCommand {
             Url {} => url(flags).await,
             Host {} => host(flags).await,
             Port {} => port(flags).await,
+            #[cfg(feature = "unstable")]
             Models { format } => models(format, flags).await,
             Config { app, format } => config(app, format, flags).await,
             Install { apps } => install(apps, flags).await,
@@ -89,7 +91,9 @@ pub use host::*;
 mod install;
 pub use install::*;
 
+#[cfg(feature = "unstable")]
 mod models;
+#[cfg(feature = "unstable")]
 pub use models::*;
 
 mod port;
