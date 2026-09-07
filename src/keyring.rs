@@ -1,8 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use iroh_base::{PublicKey, SecretKey};
+use asimov_id::PublicKey;
+use iroh_base::SecretKey;
 use keyring_core::Error;
-use secrecy::zeroize::Zeroize;
+use secrecy::zeroize::Zeroizing;
 
 const KEYRING_SERVICE: &str = "sh.asimov";
 
@@ -52,10 +53,11 @@ impl Keyring {
     pub fn get_secret_key(&self, user: &str) -> Result<Option<SecretKey>, Error> {
         match keyring_core::Entry::new(KEYRING_SERVICE, &user)?.get_secret() {
             Ok(secret) => {
-                let mut secret_bytes: [u8; 32] = [0; 32];
-                secret_bytes.copy_from_slice(&secret);
-                let secret_key = SecretKey::from_bytes(&secret_bytes);
-                secret_bytes.zeroize();
+                let secret_key = {
+                    let mut secret_bytes = Zeroizing::new([0u8; 32]);
+                    secret_bytes.copy_from_slice(&secret);
+                    SecretKey::from_bytes(&secret_bytes)
+                };
                 return Ok(Some(secret_key));
             },
             Err(keyring_core::Error::NoEntry) => {
@@ -68,10 +70,13 @@ impl Keyring {
 
     pub fn rekey(&self, user: &str) -> Result<(PublicKey, SecretKey), Error> {
         let secret_key = SecretKey::generate();
-        let mut secret_bytes = secret_key.to_bytes();
-        keyring_core::Entry::new(KEYRING_SERVICE, &user)?.set_secret(&secret_bytes)?;
+        {
+            let secret_bytes = Zeroizing::new(secret_key.to_bytes());
+            keyring_core::Entry::new(KEYRING_SERVICE, &user)?
+                .set_secret(secret_bytes.as_slice())?;
+        }
+        let public_key = secret_key.public().into();
         // TODO: store the public key as well
-        secret_bytes.zeroize();
-        Ok((secret_key.public(), secret_key))
+        Ok((public_key, secret_key))
     }
 }

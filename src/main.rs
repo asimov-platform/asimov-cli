@@ -96,9 +96,9 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    // Ensure that we have a public key for this host/user:
+    // Ensure (since 25.4.1) that we have a public key for this host/user:
     let _public_key = Keyring::my_public_key().unwrap(); // FIXME
-    //eprintln!("{:?}", public_key); // DEBUG
+    //eprintln!("{:?}", _public_key.to_string()); // DEBUG
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
