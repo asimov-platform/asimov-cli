@@ -95,6 +95,24 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
+    // See: <https://docs.rs/apple-native-keyring-store/latest/apple_native_keyring_store/>
+    #[cfg(target_vendor = "apple")]
+    keyring_core::set_default_store(apple_native_keyring_store::keychain::Store::new().unwrap());
+
+    // See: <https://docs.rs/windows-native-keyring-store/latest/windows_native_keyring_store/>
+    #[cfg(target_os = "windows")]
+    keyring_core::set_default_store(windows_native_keyring_store::Store::new().unwrap());
+
+    // See: <https://docs.rs/linux-keyutils-keyring-store/latest/linux_keyutils_keyring_store/>
+    #[cfg(target_os = "linux")]
+    keyring_core::set_default_store(linux_keyutils_keyring_store::Store::new().unwrap());
+
+    // See: <https://docs.rs/keyring-core/latest/keyring_core/mock/index.html>
+    #[cfg(not(any(target_vendor = "apple", target_os = "windows", target_os = "linux")))]
+    keyring_core::set_default_store(keyring_core::mock::Store::new().unwrap());
+
+    keyring_core::unset_default_store();
+
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
 
