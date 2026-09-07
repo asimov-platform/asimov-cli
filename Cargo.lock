@@ -214,7 +214,7 @@ dependencies = [
 
 [[package]]
 name = "asimov-cli"
-version = "25.4.0"
+version = "25.4.1"
 dependencies = [
  "apple-native-keyring-store",
  "asimov-directory",
