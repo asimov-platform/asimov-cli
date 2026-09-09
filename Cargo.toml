@@ -144,7 +144,7 @@ distrib = { version = "0.0.4", default-features = false, features = [
 
 # `asimov proxy` server
 axum = { version = "0.8", default-features = true, optional = true }
-base64 = { version = "0.22", default-features = false, features = [
+base64 = { version = "0.23", default-features = false, features = [
   "std",
 ], optional = true }
 dirs = { version = "6", default-features = false, optional = true }
