@@ -15,6 +15,7 @@ pub async fn list(
     limit: Option<usize>,
     output: Option<String>,
     jq: Option<String>,
+    cache: super::cache::CacheArgs,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let jq = shared::compile_jq(jq.as_deref())?;
@@ -26,6 +27,7 @@ pub async fn list(
         EX_UNAVAILABLE
     })?;
 
+    let mut catalogers = Vec::with_capacity(input_urls.len());
     for input_url in input_urls {
         if flags.verbose > 1 {
             ceprintln!("<s,c>»</> Cataloging <s>{}</>...", input_url);
@@ -49,7 +51,7 @@ pub async fn list(
             shared::pick_module(&registry, &input_url, modules.as_slice(), module.as_deref())
                 .await?;
 
-        let mut cataloger = asimov_runner::Cataloger::new(
+        let cataloger = asimov_runner::Cataloger::new(
             format!("asimov-{}-cataloger", module.name),
             &input_url,
             if jq.is_some() {
@@ -62,16 +64,39 @@ pub async fn list(
                 .maybe_offset(offset)
                 .maybe_limit(limit)
                 .maybe_output(output.as_deref())
+                .maybe_other(cache.max_age_option())
+                .maybe_other(cache.deadline_option())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
 
-        let output = cataloger.execute().await.map_err(|e| {
-            ceprintln!("<s,r>error:</> cataloger execution failed: {e}");
-            EX_UNAVAILABLE
-        })?;
+        catalogers.push((input_url, cataloger));
+    }
 
-        if let Some(filter) = jq.as_ref() {
+    let verbose = flags.verbose;
+
+    let mut js = tokio::task::JoinSet::new();
+    for (url, mut cataloger) in catalogers {
+        js.spawn(async move {
+            cataloger
+                .execute()
+                .await
+                .inspect(|_| {
+                    if verbose > 0 {
+                        ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", url)
+                    }
+                })
+                .inspect_err(|err| {
+                    ceprintln!("<s,r>error:</> cataloger execution failed for <s>{url}</>: {err}")
+                })
+        });
+    }
+
+    let outputs = js.join_all().await;
+    let failed = outputs.iter().any(Result::is_err);
+
+    if let Some(filter) = jq.as_ref() {
+        for output in outputs.into_iter().flatten() {
             for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
                 ceprintln!("<s,r>error:</> jq filtering failed: {e}");
                 EX_DATAERR
@@ -79,11 +104,11 @@ pub async fn list(
                 println!("{value}");
             }
         }
-
-        if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", input_url);
-        }
     }
 
-    Ok(())
+    if failed {
+        Err(EX_UNAVAILABLE.into())
+    } else {
+        Ok(())
+    }
 }

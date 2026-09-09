@@ -23,6 +23,8 @@ pub struct SourceFetchArgs {
     #[arg(long, value_name = "EXPR")]
     jq: Option<String>,
 
+    #[clap(flatten)]
+    cache: super::cache::CacheArgs,
     urls: Vec<String>,
 }
 
@@ -37,6 +39,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         EX_UNAVAILABLE
     })?;
 
+    let mut fetchers = Vec::with_capacity(args.urls.len());
     for input_url in args.urls {
         if flags.verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", input_url);
@@ -64,7 +67,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         )
         .await?;
 
-        let mut fetcher = asimov_runner::Fetcher::new(
+        let fetcher = asimov_runner::Fetcher::new(
             format!("asimov-{}-fetcher", module.name),
             &input_url,
             if jq.is_some() {
@@ -74,16 +77,39 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
             },
             FetcherOptions::builder()
                 .maybe_output(args.output.as_deref())
+                .maybe_other(args.cache.max_age_option())
+                .maybe_other(args.cache.deadline_option())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
 
-        let output = fetcher.execute().await.map_err(|e| {
-            ceprintln!("<s,r>error:</> fetcher execution failed: {e}");
-            EX_UNAVAILABLE
-        })?;
+        fetchers.push((input_url, fetcher));
+    }
 
-        if let Some(filter) = jq.as_ref() {
+    let verbose = flags.verbose;
+
+    let mut js = tokio::task::JoinSet::new();
+    for (url, mut fetcher) in fetchers {
+        js.spawn(async move {
+            fetcher
+                .execute()
+                .await
+                .inspect(|_| {
+                    if verbose > 0 {
+                        ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url)
+                    }
+                })
+                .inspect_err(|err| {
+                    ceprintln!("<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}")
+                })
+        });
+    }
+
+    let outputs = js.join_all().await;
+    let failed = outputs.iter().any(Result::is_err);
+
+    if let Some(filter) = jq.as_ref() {
+        for output in outputs.into_iter().flatten() {
             for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
                 ceprintln!("<s,r>error:</> jq filtering failed: {e}");
                 EX_DATAERR
@@ -91,11 +117,11 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                 println!("{value}");
             }
         }
-
-        if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Fetched <s>{}</>.", input_url);
-        }
     }
 
-    Ok(())
+    if failed {
+        Err(EX_UNAVAILABLE.into())
+    } else {
+        Ok(())
+    }
 }
