@@ -165,11 +165,21 @@ pub fn filter_json(
 ) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
     serde_json::Deserializer::from_slice(input.as_ref())
         .into_iter::<serde_json::Value>()
-        .map(|value| {
-            let value = value?;
-            filter.filter_json(value).map_err(|e| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()).into()
-            })
+        .filter_map(|value| {
+            let value = match value {
+                Ok(value) => value,
+                Err(e) => return Some(Err(e.into())),
+            };
+
+            match filter.filter_json(value) {
+                Ok(value) => Some(Ok(value)),
+                Err(jq::JsonFilterError::NoOutput) => None,
+                Err(e) => Some(Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    e.to_string(),
+                )
+                .into())),
+            }
         })
         .collect()
 }
@@ -192,5 +202,18 @@ mod tests {
             values,
             [serde_json::json!("first"), serde_json::json!("second")]
         );
+    }
+
+    #[test]
+    fn suppresses_values_without_jq_output() {
+        let filter = "select(.keep)".parse::<jq::JsonFilter>().unwrap();
+        let values = filter_json(
+            &filter,
+            br#"{"name":"first","keep":true}
+{"name":"second","keep":false}"#,
+        )
+        .unwrap();
+
+        assert_eq!(values, [serde_json::json!({"name": "first", "keep": true})]);
     }
 }
