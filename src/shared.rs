@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::Result;
+use crate::{BoxError, Result};
 use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
@@ -145,5 +145,52 @@ pub async fn pick_module(
                 return Ok(module.clone());
             }
         }
+    }
+}
+
+pub fn compile_jq(expression: Option<&str>) -> Result<Option<jq::JsonFilter>> {
+    expression
+        .map(|expression| {
+            expression.parse::<jq::JsonFilter>().map_err(|e| {
+                ceprintln!("<s,r>error:</> invalid jq expression: {e}");
+                EX_DATAERR
+            })
+        })
+        .transpose()
+}
+
+pub fn filter_json(
+    filter: &jq::JsonFilter,
+    input: impl AsRef<[u8]>,
+) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
+    serde_json::Deserializer::from_slice(input.as_ref())
+        .into_iter::<serde_json::Value>()
+        .map(|value| {
+            let value = value?;
+            filter.filter_json(value).map_err(|e| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()).into()
+            })
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn filters_json_values() {
+        let filter = ".name".parse::<jq::JsonFilter>().unwrap();
+        let values = filter_json(
+            &filter,
+            br#"{"name":"first"}
+{"name":"second"}"#,
+        )
+        .unwrap();
+
+        assert_eq!(
+            values,
+            [serde_json::json!("first"), serde_json::json!("second")]
+        );
     }
 }

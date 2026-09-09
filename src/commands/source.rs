@@ -38,6 +38,10 @@ pub enum SourceCommand {
         /// The output format.
         #[arg(value_name = "FORMAT", short = 'o', long)]
         output: Option<String>, // TODO: OutputFormat, default_value = "jsonl"
+
+        /// Filter JSON output using a jq expression.
+        #[arg(long, value_name = "EXPR")]
+        jq: Option<String>,
     },
 
     /// Read a resource specified by a URL, utilizing enabled modules
@@ -80,7 +84,8 @@ impl SourceCommand {
                 offset,
                 limit,
                 output,
-            } => list(urls, module, sort, offset, limit, output, flags).await,
+                jq,
+            } => list(urls, module, sort, offset, limit, output, jq, flags).await,
 
             Read { module, urls } => read(urls, module, flags).await,
 

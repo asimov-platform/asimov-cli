@@ -19,10 +19,15 @@ pub struct SourceFetchArgs {
     #[arg(value_name = "FORMAT", short = 'o', long)]
     output: Option<String>,
 
+    /// Filter JSON output using a jq expression.
+    #[arg(long, value_name = "EXPR")]
+    jq: Option<String>,
+
     urls: Vec<String>,
 }
 
 pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+    let jq = shared::compile_jq(args.jq.as_deref())?;
     let registry = asimov_registry::Registry::default();
 
     let installed_modules = shared::installed_modules(&registry, Some("fetcher")).await?;
@@ -62,17 +67,30 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         let mut fetcher = asimov_runner::Fetcher::new(
             format!("asimov-{}-fetcher", module.name),
             &input_url,
-            GraphOutput::Inherited,
+            if jq.is_some() {
+                GraphOutput::Captured
+            } else {
+                GraphOutput::Inherited
+            },
             FetcherOptions::builder()
                 .maybe_output(args.output.as_deref())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
 
-        let _ = fetcher.execute().await.map_err(|e| {
+        let output = fetcher.execute().await.map_err(|e| {
             ceprintln!("<s,r>error:</> fetcher execution failed: {e}");
             EX_UNAVAILABLE
         })?;
+
+        if let Some(filter) = jq.as_ref() {
+            for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
+                ceprintln!("<s,r>error:</> jq filtering failed: {e}");
+                EX_DATAERR
+            })? {
+                println!("{value}");
+            }
+        }
 
         if flags.verbose > 0 {
             ceprintln!("<s,g>✓</> Fetched <s>{}</>.", input_url);

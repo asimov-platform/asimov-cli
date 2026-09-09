@@ -14,8 +14,10 @@ pub async fn list(
     offset: Option<usize>,
     limit: Option<usize>,
     output: Option<String>,
+    jq: Option<String>,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
+    let jq = shared::compile_jq(jq.as_deref())?;
     let registry = asimov_registry::Registry::default();
     let installed_modules = shared::installed_modules(&registry, Some("cataloger")).await?;
 
@@ -50,7 +52,11 @@ pub async fn list(
         let mut cataloger = asimov_runner::Cataloger::new(
             format!("asimov-{}-cataloger", module.name),
             &input_url,
-            GraphOutput::Inherited,
+            if jq.is_some() {
+                GraphOutput::Captured
+            } else {
+                GraphOutput::Inherited
+            },
             CatalogerOptions::builder()
                 .maybe_sort(sort.clone())
                 .maybe_offset(offset)
@@ -60,10 +66,19 @@ pub async fn list(
                 .build(),
         );
 
-        let _ = cataloger.execute().await.map_err(|e| {
+        let output = cataloger.execute().await.map_err(|e| {
             ceprintln!("<s,r>error:</> cataloger execution failed: {e}");
             EX_UNAVAILABLE
         })?;
+
+        if let Some(filter) = jq.as_ref() {
+            for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
+                ceprintln!("<s,r>error:</> jq filtering failed: {e}");
+                EX_DATAERR
+            })? {
+                println!("{value}");
+            }
+        }
 
         if flags.verbose > 0 {
             ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", input_url);
