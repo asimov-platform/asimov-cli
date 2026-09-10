@@ -6,6 +6,7 @@ use asimov_runner::{CatalogerOptions, GraphOutput};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
+use std::io::Write;
 
 pub async fn list(
     input_urls: Vec<String>,
@@ -29,14 +30,10 @@ pub async fn list(
 
     let mut catalogers = Vec::with_capacity(input_urls.len());
     for input_url in input_urls {
-        if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", input_url);
-        }
-
         let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
-                    "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
+                    "<s,y>warning:</> using unmodified URL <s>{input_url}</>; normalization failed: {e}"
                 );
             }
             input_url.clone()
@@ -54,11 +51,7 @@ pub async fn list(
         let cataloger = asimov_runner::Cataloger::new(
             format!("asimov-{}-cataloger", module.name),
             &input_url,
-            if jq.is_some() {
-                GraphOutput::Captured
-            } else {
-                GraphOutput::Inherited
-            },
+            GraphOutput::Captured,
             CatalogerOptions::builder()
                 .maybe_sort(sort.clone())
                 .maybe_offset(offset)
@@ -75,34 +68,38 @@ pub async fn list(
 
     let verbose = flags.verbose;
 
-    let mut js = tokio::task::JoinSet::new();
-    for (url, mut cataloger) in catalogers {
-        js.spawn(async move {
-            cataloger
-                .execute()
-                .await
-                .inspect(|_| {
-                    if verbose > 0 {
-                        ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", url)
+    let tasks: Vec<_> = catalogers
+        .into_iter()
+        .map(|(url, mut cataloger)| (url, tokio::spawn(async move { cataloger.execute().await })))
+        .collect();
+
+    let mut failed = false;
+    for (url, task) in tasks {
+        if verbose > 1 {
+            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", url);
+        }
+        match task.await? {
+            Ok(output) => {
+                let mut stdout = std::io::stdout().lock();
+                if let Some(filter) = jq.as_ref() {
+                    for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
+                        ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");
+                        EX_DATAERR
+                    })? {
+                        writeln!(stdout, "{value}")?;
                     }
-                })
-                .inspect_err(|err| {
-                    ceprintln!("<s,r>error:</> cataloger execution failed for <s>{url}</>: {err}")
-                })
-        });
-    }
-
-    let outputs = js.join_all().await;
-    let failed = outputs.iter().any(Result::is_err);
-
-    if let Some(filter) = jq.as_ref() {
-        for output in outputs.into_iter().flatten() {
-            for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
-                ceprintln!("<s,r>error:</> jq filtering failed: {e}");
-                EX_DATAERR
-            })? {
-                println!("{value}");
-            }
+                } else {
+                    stdout.write_all(&output.into_inner())?;
+                }
+                stdout.flush()?;
+                if verbose > 0 {
+                    ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", url);
+                }
+            },
+            Err(err) => {
+                failed = true;
+                ceprintln!("<s,r>error:</> cataloger execution failed for <s>{url}</>: {err}");
+            },
         }
     }
 

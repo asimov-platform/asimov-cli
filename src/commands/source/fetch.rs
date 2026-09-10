@@ -6,6 +6,7 @@ use asimov_runner::{FetcherOptions, GraphOutput};
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
 use miette::Result;
+use std::io::Write;
 
 #[derive(Args, Clone, Debug, Default)]
 pub struct SourceFetchArgs {
@@ -41,14 +42,10 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
 
     let mut fetchers = Vec::with_capacity(args.urls.len());
     for input_url in args.urls {
-        if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Fetching <s>{}</>...", input_url);
-        }
-
         let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
-                    "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
+                    "<s,y>warning:</> using unmodified URL <s>{input_url}</>; normalization failed: {e}"
                 );
             }
             input_url.clone()
@@ -70,11 +67,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         let fetcher = asimov_runner::Fetcher::new(
             format!("asimov-{}-fetcher", module.name),
             &input_url,
-            if jq.is_some() {
-                GraphOutput::Captured
-            } else {
-                GraphOutput::Inherited
-            },
+            GraphOutput::Captured,
             FetcherOptions::builder()
                 .maybe_output(args.output.as_deref())
                 .maybe_other(args.cache.max_age_option())
@@ -88,34 +81,38 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
 
     let verbose = flags.verbose;
 
-    let mut js = tokio::task::JoinSet::new();
-    for (url, mut fetcher) in fetchers {
-        js.spawn(async move {
-            fetcher
-                .execute()
-                .await
-                .inspect(|_| {
-                    if verbose > 0 {
-                        ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url)
+    let tasks: Vec<_> = fetchers
+        .into_iter()
+        .map(|(url, mut fetcher)| (url, tokio::spawn(async move { fetcher.execute().await })))
+        .collect();
+
+    let mut failed = false;
+    for (url, task) in tasks {
+        if verbose > 1 {
+            ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
+        }
+        match task.await? {
+            Ok(output) => {
+                let mut stdout = std::io::stdout().lock();
+                if let Some(filter) = jq.as_ref() {
+                    for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
+                        ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");
+                        EX_DATAERR
+                    })? {
+                        writeln!(stdout, "{value}")?;
                     }
-                })
-                .inspect_err(|err| {
-                    ceprintln!("<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}")
-                })
-        });
-    }
-
-    let outputs = js.join_all().await;
-    let failed = outputs.iter().any(Result::is_err);
-
-    if let Some(filter) = jq.as_ref() {
-        for output in outputs.into_iter().flatten() {
-            for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
-                ceprintln!("<s,r>error:</> jq filtering failed: {e}");
-                EX_DATAERR
-            })? {
-                println!("{value}");
-            }
+                } else {
+                    stdout.write_all(&output.into_inner())?;
+                }
+                stdout.flush()?;
+                if verbose > 0 {
+                    ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
+                }
+            },
+            Err(err) => {
+                failed = true;
+                ceprintln!("<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}");
+            },
         }
     }
 
