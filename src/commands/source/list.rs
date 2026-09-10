@@ -6,6 +6,7 @@ use asimov_runner::{CatalogerOptions, GraphOutput};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
+use std::io::Write;
 
 pub async fn list(
     input_urls: Vec<String>,
@@ -15,6 +16,7 @@ pub async fn list(
     limit: Option<usize>,
     output: Option<String>,
     jq: Option<String>,
+    cache: super::cache::CacheArgs,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     let jq = shared::compile_jq(jq.as_deref())?;
@@ -26,15 +28,12 @@ pub async fn list(
         EX_UNAVAILABLE
     })?;
 
+    let mut catalogers = Vec::with_capacity(input_urls.len());
     for input_url in input_urls {
-        if flags.verbose > 1 {
-            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", input_url);
-        }
-
         let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
                 ceprintln!(
-                    "<s,y>warning:</> using given unmodified URL, normalization failed: {e}"
+                    "<s,y>warning:</> using unmodified URL <s>{input_url}</>; normalization failed: {e}"
                 );
             }
             input_url.clone()
@@ -49,41 +48,64 @@ pub async fn list(
             shared::pick_module(&registry, &input_url, modules.as_slice(), module.as_deref())
                 .await?;
 
-        let mut cataloger = asimov_runner::Cataloger::new(
+        let cataloger = asimov_runner::Cataloger::new(
             format!("asimov-{}-cataloger", module.name),
             &input_url,
-            if jq.is_some() {
-                GraphOutput::Captured
-            } else {
-                GraphOutput::Inherited
-            },
+            GraphOutput::Captured,
             CatalogerOptions::builder()
                 .maybe_sort(sort.clone())
                 .maybe_offset(offset)
                 .maybe_limit(limit)
                 .maybe_output(output.as_deref())
+                .maybe_other(cache.max_age_option())
+                .maybe_other(cache.deadline_option())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
 
-        let output = cataloger.execute().await.map_err(|e| {
-            ceprintln!("<s,r>error:</> cataloger execution failed: {e}");
-            EX_UNAVAILABLE
-        })?;
+        catalogers.push((input_url, cataloger));
+    }
 
-        if let Some(filter) = jq.as_ref() {
-            for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
-                ceprintln!("<s,r>error:</> jq filtering failed: {e}");
-                EX_DATAERR
-            })? {
-                println!("{value}");
-            }
+    let verbose = flags.verbose;
+
+    let tasks: Vec<_> = catalogers
+        .into_iter()
+        .map(|(url, mut cataloger)| (url, tokio::spawn(async move { cataloger.execute().await })))
+        .collect();
+
+    let mut failed = false;
+    for (url, task) in tasks {
+        if verbose > 1 {
+            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", url);
         }
-
-        if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", input_url);
+        match task.await? {
+            Ok(output) => {
+                let mut stdout = std::io::stdout().lock();
+                if let Some(filter) = jq.as_ref() {
+                    for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
+                        ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");
+                        EX_DATAERR
+                    })? {
+                        writeln!(stdout, "{value}")?;
+                    }
+                } else {
+                    stdout.write_all(&output.into_inner())?;
+                }
+                stdout.flush()?;
+                if verbose > 0 {
+                    ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", url);
+                }
+            },
+            Err(err) => {
+                failed = true;
+                ceprintln!("<s,r>error:</> cataloger execution failed for <s>{url}</>: {err}");
+            },
         }
     }
 
-    Ok(())
+    if failed {
+        Err(EX_UNAVAILABLE.into())
+    } else {
+        Ok(())
+    }
 }

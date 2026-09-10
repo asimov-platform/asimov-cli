@@ -19,6 +19,9 @@ pub enum SourceCommand {
         /// The collection URL(s) to examine.
         urls: Vec<String>,
 
+        #[clap(flatten)]
+        cache: cache::CacheArgs,
+
         /// The specific module to use.
         #[clap(long, short = 'M')]
         module: Option<ModuleName>,
@@ -85,7 +88,8 @@ impl SourceCommand {
                 limit,
                 output,
                 jq,
-            } => list(urls, module, sort, offset, limit, output, jq, flags).await,
+                cache,
+            } => list(urls, module, sort, offset, limit, output, jq, cache, flags).await,
 
             Read { module, urls } => read(urls, module, flags).await,
 
@@ -102,6 +106,8 @@ impl SourceCommand {
 
 #[cfg(false)]
 pub mod describe;
+
+mod cache;
 
 mod fetch;
 pub use fetch::*;
