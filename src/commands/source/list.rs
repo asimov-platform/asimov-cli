@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_runner::{CatalogerOptions, GraphOutput};
+use asimov_runner::{Cataloger as Lister, CatalogerOptions as ListerOptions, GraphOutput};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
@@ -21,14 +21,14 @@ pub async fn list(
 ) -> Result<(), BoxError> {
     let jq = shared::compile_jq(jq.as_deref())?;
     let registry = asimov_registry::Registry::default();
-    let installed_modules = shared::installed_modules(&registry, Some("cataloger")).await?;
+    let installed_modules = shared::installed_modules(&registry, Some("lister")).await?;
 
     let resolver = Resolver::try_from_iter(installed_modules.iter()).map_err(|e| {
         ceprintln!("<s,r>error:</> failed to build resolver: {e}");
         EX_UNAVAILABLE
     })?;
 
-    let mut catalogers = Vec::with_capacity(input_urls.len());
+    let mut listers = Vec::with_capacity(input_urls.len());
     for input_url in input_urls {
         let input_url = normalize_url(&input_url).unwrap_or_else(|e| {
             if flags.verbose > 1 {
@@ -48,11 +48,11 @@ pub async fn list(
             shared::pick_module(&registry, &input_url, modules.as_slice(), module.as_deref())
                 .await?;
 
-        let cataloger = asimov_runner::Cataloger::new(
-            format!("asimov-{}-cataloger", module.name),
+        let lister = Lister::new(
+            format!("asimov-{}-lister", module.name),
             &input_url,
             GraphOutput::Captured,
-            CatalogerOptions::builder()
+            ListerOptions::builder()
                 .maybe_sort(sort.clone())
                 .maybe_offset(offset)
                 .maybe_limit(limit)
@@ -63,20 +63,20 @@ pub async fn list(
                 .build(),
         );
 
-        catalogers.push((input_url, cataloger));
+        listers.push((input_url, lister));
     }
 
     let verbose = flags.verbose;
 
-    let tasks: Vec<_> = catalogers
+    let tasks: Vec<_> = listers
         .into_iter()
-        .map(|(url, mut cataloger)| (url, tokio::spawn(async move { cataloger.execute().await })))
+        .map(|(url, mut lister)| (url, tokio::spawn(async move { lister.execute().await })))
         .collect();
 
     let mut failed = false;
     for (url, task) in tasks {
         if verbose > 1 {
-            ceprintln!("<s,c>»</> Cataloging <s>{}</>...", url);
+            ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
         match task.await? {
             Ok(output) => {
@@ -93,12 +93,12 @@ pub async fn list(
                 }
                 stdout.flush()?;
                 if verbose > 0 {
-                    ceprintln!("<s,g>✓</> Cataloged <s>{}</>.", url);
+                    ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
                 }
             },
             Err(err) => {
                 failed = true;
-                ceprintln!("<s,r>error:</> cataloger execution failed for <s>{url}</>: {err}");
+                ceprintln!("<s,r>error:</> lister execution failed for <s>{url}</>: {err}");
             },
         }
     }
