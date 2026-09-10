@@ -230,7 +230,7 @@ dependencies = [
  "asimov-runner",
  "asimov-snapshot",
  "axum",
- "base64 0.22.1",
+ "base64 0.23.1",
  "cc",
  "cfg_aliases",
  "clap",
