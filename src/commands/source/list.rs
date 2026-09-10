@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_runner::{Cataloger as Lister, CatalogerOptions as ListerOptions, GraphOutput};
+use asimov_runner::{GraphOutput, Lister, ListerOptions};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
