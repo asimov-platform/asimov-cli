@@ -149,7 +149,7 @@ axum = { version = "0.8", default-features = true, optional = true }
 base64 = { version = "0.23", default-features = false, features = [
   "std",
 ], optional = true }
-dirs = { version = "6", default-features = false, optional = true }
+dirs = { version = "7", default-features = false, optional = true }
 edikt-core = { version = "0.3.1", optional = true }
 edikt-jsonc = { version = "0.2.3", optional = true }
 http-body-util = { version = "0.1", default-features = false, optional = true }
