@@ -240,7 +240,7 @@ dependencies = [
  "dialoguer",
  "dirs",
  "distrib",
- "edikt-core",
+ "edikt-core 0.5.0",
  "edikt-jsonc",
  "futures-lite",
  "hex",
@@ -2276,12 +2276,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "edikt-core"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce2b4eda3fc7bd7ba8378d60fa27a698b0a8626b4427240922ec0ba494816573"
+dependencies = [
+ "logos",
+ "regex",
+ "thiserror 2.0.20",
+]
+
+[[package]]
 name = "edikt-jsonc"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c0025871a7f6df0555fd5b29a23143d77d3e18524b381d811b33430da474d808"
 dependencies = [
- "edikt-core",
+ "edikt-core 0.3.1",
  "edikt-syntax",
  "logos",
  "rowan",
