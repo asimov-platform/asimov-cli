@@ -216,11 +216,11 @@ dependencies = [
 name = "asimov-cli"
 version = "25.5.0"
 dependencies = [
- "apple-native-keyring-store",
  "asimov-directory",
  "asimov-env",
  "asimov-id",
  "asimov-installer",
+ "asimov-keyring",
  "asimov-module",
  "asimov-module-kit",
  "asimov-patterns",
@@ -255,10 +255,8 @@ dependencies = [
  "jiff",
  "jq",
  "jsonc-parser",
- "keyring-core",
  "known-types-pypi",
  "known-types-rubygems",
- "linux-keyutils-keyring-store",
  "miette",
  "mime",
  "open",
@@ -282,7 +280,6 @@ dependencies = [
  "treelog",
  "url",
  "whoami",
- "windows-native-keyring-store",
 ]
 
 [[package]]
@@ -406,6 +403,26 @@ dependencies = [
  "derive_more",
  "serde",
  "serde_with",
+]
+
+[[package]]
+name = "asimov-keyring"
+version = "25.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "008b676ebeba9f9809379e1008fa8c2a4dcc3d9d685c10d0e6bc2d6f2d5b57b4"
+dependencies = [
+ "apple-native-keyring-store",
+ "asimov-core",
+ "asimov-directory",
+ "asimov-id",
+ "derive_more",
+ "iroh-base",
+ "keyring-core",
+ "linux-keyutils-keyring-store",
+ "secrecy",
+ "thiserror 2.0.20",
+ "whoami",
+ "windows-native-keyring-store",
 ]
 
 [[package]]

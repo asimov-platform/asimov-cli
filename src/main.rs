@@ -5,8 +5,8 @@
 use asimov_cli::{
     BoxError,
     commands::{self, ExternalSubcommand, Help, HelpCmd},
-    keyring::Keyring,
 };
+use asimov_keyring::Keyring;
 use clientele::{
     ColorChoiceExt, StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},

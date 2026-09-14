@@ -86,6 +86,7 @@ asimov-directory = "25.4.0"
 asimov-env = "25.4.0"
 asimov-id = { version = "25.4.0", features = ["iroh"] }
 asimov-installer = "25.4.0"
+asimov-keyring = "25.4.0"
 asimov-module = "25.4.0"
 asimov-patterns = "25.4.0"
 asimov-registry = "25.4.0"
@@ -169,7 +170,6 @@ iroh-base = { version = "1.1", default-features = false, features = ["key"] }
 jsonc-parser = { version = "0.33", default-features = false, features = [
   "cst",
 ], optional = true }
-keyring-core = "1.0"
 rustls = { version = "0.23", default-features = false, features = [
   "logging",
   "ring",
@@ -185,15 +185,6 @@ tokio-rustls = { version = "0.26", default-features = false, features = [
 tokio-socks = { version = "0.5", optional = true }
 tower-service = { version = "0.3", optional = true }
 whoami = "2.1"
-
-[target.'cfg(target_vendor = "apple")'.dependencies]
-apple-native-keyring-store = { version = "1.0", features = ["keychain"] }
-
-[target.'cfg(target_os = "windows")'.dependencies]
-windows-native-keyring-store = "1.1"
-
-[target.'cfg(target_os = "linux")'.dependencies]
-linux-keyutils-keyring-store = "1.0"
 
 [profile.release]
 opt-level = "z"

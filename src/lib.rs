@@ -3,7 +3,6 @@
 pub mod aliases;
 pub mod commands;
 pub mod options {}
-pub mod keyring;
 pub mod registry;
 pub mod shared;
 
