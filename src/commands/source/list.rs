@@ -8,6 +8,7 @@ use color_print::ceprintln;
 use miette::Result;
 use std::io::Write;
 
+/// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(
     input_urls: Vec<String>,
     module: Option<ModuleName>,
@@ -15,6 +16,7 @@ pub async fn list(
     offset: Option<usize>,
     limit: Option<usize>,
     output: Option<String>,
+    jev: Option<String>,
     jq: Option<String>,
     cache: super::cache::CacheArgs,
     flags: &StandardOptions,
@@ -81,6 +83,9 @@ pub async fn list(
         match task.await? {
             Ok(output) => {
                 let mut stdout = std::io::stdout().lock();
+                if let Some(_noul) = jev.as_ref() {
+                    // TODO: implement Jev noul filtering
+                }
                 if let Some(filter) = jq.as_ref() {
                     for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
                         ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");

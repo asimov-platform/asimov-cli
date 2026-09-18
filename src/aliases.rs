@@ -16,6 +16,7 @@ pub static ALIASES: &[(&str, &[&str])] = &[
     ("fetch", &["source", "fetch"]),
     ("install", &["module", "install"]),
     ("list", &["source", "list"]),
+    ("read", &["source", "read"]),
     ("resolve", &["module", "resolve"]),
     ("snap", &["source", "snap"]),
     ("uninstall", &["module", "uninstall"]),

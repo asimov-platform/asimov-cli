@@ -6,6 +6,7 @@ use asimov_runner::{GraphOutput, Input, ReaderOptions};
 use color_print::ceprintln;
 use miette::Result;
 
+/// See: <https://asimov-specs.github.io/program-patterns/#reader%E2%91%A0>
 pub async fn read(
     input_urls: Vec<String>,
     module: Option<ModuleName>,

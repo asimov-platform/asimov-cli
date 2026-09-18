@@ -8,6 +8,7 @@ use color_print::ceprintln;
 use miette::Result;
 use std::io::Write;
 
+/// See: <https://asimov-specs.github.io/program-patterns/#fetcher-arguments>
 #[derive(Args, Clone, Debug, Default)]
 pub struct SourceFetchArgs {
     /// Optionally choose the module instead of using module resolution.
@@ -29,6 +30,7 @@ pub struct SourceFetchArgs {
     urls: Vec<String>,
 }
 
+/// See: <https://asimov-specs.github.io/program-patterns/#fetcher%E2%91%A0>
 pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     let jq = shared::compile_jq(args.jq.as_deref())?;
     let registry = asimov_registry::Registry::default();

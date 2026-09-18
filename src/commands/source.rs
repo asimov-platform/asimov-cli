@@ -42,7 +42,11 @@ pub enum SourceCommand {
         #[arg(value_name = "FORMAT", short = 'o', long)]
         output: Option<String>, // TODO: OutputFormat, default_value = "jsonl"
 
-        /// Filter JSON output using a jq expression.
+        /// Filter output using a Jev noul (a yes/no question, e.g., "Is this written in English?").
+        #[arg(long, value_name = "NOUL")]
+        jev: Option<String>,
+
+        /// Filter and/or transform JSON-LD output using a jq expression (e.g., "select(.name)").
         #[arg(long, value_name = "EXPR")]
         jq: Option<String>,
     },
@@ -87,9 +91,15 @@ impl SourceCommand {
                 offset,
                 limit,
                 output,
+                jev,
                 jq,
                 cache,
-            } => list(urls, module, sort, offset, limit, output, jq, cache, flags).await,
+            } => {
+                list(
+                    urls, module, sort, offset, limit, output, jev, jq, cache, flags,
+                )
+                .await
+            },
 
             Read { module, urls } => read(urls, module, flags).await,
 
