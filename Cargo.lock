@@ -475,6 +475,8 @@ dependencies = [
 [[package]]
 name = "asimov-patterns"
 version = "25.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0fcabf881808ae30ee9fa4c526e1309b6e996c6164750363e9cb788ffbbea13"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -563,27 +565,26 @@ dependencies = [
 [[package]]
 name = "asimov-runner"
 version = "25.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8bf4dc9b55f6e5047837c73d1ff56daefabffc3934a59a0787c2c67a60ad790"
 dependencies = [
  "asimov-core",
  "asimov-env",
  "asimov-module",
  "asimov-patterns",
  "asimov-prompt",
- "async-stream",
  "async-trait",
- "bytes",
  "clientele",
  "derive_more",
- "futures-lite",
- "memchr",
  "tokio",
  "tracing",
- "url",
 ]
 
 [[package]]
 name = "asimov-snapshot"
 version = "25.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbea72bab04e74afb46394c9e5cf3bcc749ed6a68c75c8592a550e70f53d7d5e"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -5355,9 +5356,9 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "open"
-version = "5.4.3"
+version = "5.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c603ab8300cf18bc3b14146b19fe3dfcc4843ae5a400cd0e7a30b95aa366634"
+checksum = "aa576c76302b7b808eecc68061e67336c47833ef9d22caa74dda10fa9675eebc"
 dependencies = [
  "is-wsl",
  "libc",
