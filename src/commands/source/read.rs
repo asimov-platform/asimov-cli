@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_runner::{GraphOutput, Input, ReaderOptions};
+use asimov_runner::{GraphOutput, Input, ReaderOptions, StreamExt};
 use color_print::ceprintln;
 use miette::Result;
 
@@ -82,7 +82,14 @@ pub async fn read(
             EX_UNAVAILABLE
         })?;
 
-        tokio::io::copy(&mut output, &mut tokio::io::stdout()).await?;
+        // Inherited stdout yields no payload, but the stream must be drained to
+        // wait for the reader and observe any execution errors.
+        while let Some(result) = output.next().await {
+            result.map_err(|e| {
+                ceprintln!("<s,r>error:</> reader execution failed: {e}");
+                EX_UNAVAILABLE
+            })?;
+        }
 
         if flags.verbose > 0 {
             ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);

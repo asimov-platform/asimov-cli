@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_runner::{GraphOutput, Lister, ListerOptions};
+use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
@@ -81,23 +81,45 @@ pub async fn list(
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
         match task.await? {
-            Ok(output) => {
-                let mut stdout = std::io::stdout().lock();
-                if let Some(_noul) = jev.as_ref() {
-                    // TODO: implement Jev noul filtering
-                }
-                if let Some(filter) = jq.as_ref() {
-                    for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
-                        ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");
-                        EX_DATAERR
-                    })? {
-                        writeln!(stdout, "{value}")?;
+            Ok(mut output) => {
+                let mut succeeded = true;
+                while let Some(batch) = output.next().await {
+                    let batch = match batch {
+                        Ok(batch) => batch,
+                        Err(err) => {
+                            failed = true;
+                            succeeded = false;
+                            ceprintln!(
+                                "<s,r>error:</> lister execution failed for <s>{url}</>: {err}"
+                            );
+                            break;
+                        },
+                    };
+
+                    if let Some(_noul) = jev.as_ref() {
+                        // TODO: implement Jev noul filtering
+                        continue;
                     }
-                } else {
-                    stdout.write_all(&output.into_inner())?;
+
+                    let mut stdout = std::io::stdout().lock();
+                    for line in batch.lines() {
+                        if let Some(filter) = jq.as_ref() {
+                            for value in shared::filter_json(filter, line).map_err(|e| {
+                                ceprintln!(
+                                    "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                );
+                                EX_DATAERR
+                            })? {
+                                writeln!(stdout, "{value}")?;
+                            }
+                            continue;
+                        }
+
+                        stdout.write_all(line)?;
+                    }
+                    stdout.flush()?;
                 }
-                stdout.flush()?;
-                if verbose > 0 {
+                if succeeded && verbose > 0 {
                     ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
                 }
             },

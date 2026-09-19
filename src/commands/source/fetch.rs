@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_runner::{FetcherOptions, GraphOutput};
+use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
 use miette::Result;
@@ -94,20 +94,39 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
         match task.await? {
-            Ok(output) => {
-                let mut stdout = std::io::stdout().lock();
-                if let Some(filter) = jq.as_ref() {
-                    for value in shared::filter_json(filter, output.into_inner()).map_err(|e| {
-                        ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {e}");
-                        EX_DATAERR
-                    })? {
-                        writeln!(stdout, "{value}")?;
+            Ok(mut output) => {
+                let mut succeeded = true;
+                while let Some(batch) = output.next().await {
+                    let batch = match batch {
+                        Ok(batch) => batch,
+                        Err(err) => {
+                            failed = true;
+                            succeeded = false;
+                            ceprintln!(
+                                "<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}"
+                            );
+                            break;
+                        },
+                    };
+
+                    let mut stdout = std::io::stdout().lock();
+                    for line in batch.lines() {
+                        if let Some(filter) = jq.as_ref() {
+                            for value in shared::filter_json(filter, line).map_err(|e| {
+                                ceprintln!(
+                                    "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                );
+                                EX_DATAERR
+                            })? {
+                                writeln!(stdout, "{value}")?;
+                            }
+                        } else {
+                            stdout.write_all(line)?;
+                        }
                     }
-                } else {
-                    stdout.write_all(&output.into_inner())?;
+                    stdout.flush()?;
                 }
-                stdout.flush()?;
-                if verbose > 0 {
+                if succeeded && verbose > 0 {
                     ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
                 }
             },
