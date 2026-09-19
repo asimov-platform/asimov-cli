@@ -112,7 +112,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                     let mut stdout = std::io::stdout().lock();
                     for line in batch.lines() {
                         if let Some(filter) = jq.as_ref() {
-                            for value in shared::filter_json(filter, line).map_err(|e| {
+                            for value in shared::filter_jq(filter, line).map_err(|e| {
                                 ceprintln!(
                                     "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
                                 );

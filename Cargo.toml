@@ -104,12 +104,14 @@ open = "5"
 rayon = "1.11"
 reqwest = { version = "0.12", default-features = false, features = [
   "json",
+  "stream",
   "rustls-tls",
   "rustls-tls-native-roots",
 ] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yml = { version = "0.0.13", default-features = false }
+json-escape = "0.3"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 tracing = { version = "0.1", default-features = false, features = ["std"] }

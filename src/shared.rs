@@ -4,7 +4,20 @@ use crate::{BoxError, Result};
 use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
-use std::rc::Rc;
+use std::io::Write;
+use std::{rc::Rc, sync::LazyLock};
+
+/// Returns a lazily initialized HTTP client with a shared connection pool.
+///
+/// Clones are cheap and reuse the same underlying client and connection pool.
+pub fn http_client() -> reqwest::Client {
+    // let http_client = reqwest::Client::builder()
+    //     .connect_timeout(std::time::Duration::from_secs(10))
+    //     .timeout(std::time::Duration::from_secs(120))
+    //     .build()?;
+    static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+    CLIENT.clone()
+}
 
 /// Locates the given subcommand or prints an error.
 pub fn locate_subcommand(name: &str) -> Result<Subcommand> {
@@ -148,6 +161,125 @@ pub async fn pick_module(
     }
 }
 
+pub async fn filter_jev(
+    filter: impl AsRef<str>,
+    input: impl AsRef<[u8]>,
+) -> std::result::Result<bool, BoxError> {
+    let Ok(api_token) = std::env::var("TYPESAFE_API_TOKEN") else {
+        return Ok(true);
+    };
+    let filter = filter.as_ref().to_string();
+    let input = input.as_ref().to_vec();
+    let response = post_typesafe(&api_token, move |out| {
+        write!(out, r#"{{"#)?;
+        write!(out, r#""model":"jev-latest","#)?;
+        write!(out, r#""state":"#)?;
+        out.write_all(input.trim_ascii())?;
+        write!(out, r#","#)?; // "state":{...},
+        write!(out, r#""questions":{{"#)?;
+        write!(out, r#""output":{{"#)?;
+        write!(out, r#""type":"noul","#)?;
+        write!(out, r#""instructions":"{}""#, filter)?;
+        write!(out, r#"}}"#)?; // "output":{...},
+        write!(out, r#"}}"#)?; // "questions":{...},
+        write!(out, r#"}}"#)?;
+        Ok(())
+    })
+    .await?;
+    let output: JevResponse = response.json().await?;
+    //eprintln!("{:?}", output);
+    let answer = output.answers.output.noul;
+    Ok(answer >= 0.9)
+}
+
+/// Posts caller-written JSON to TypeSafe's API without buffering the entire body.
+///
+/// `write_json` runs on a blocking worker and must write a complete JSON value.
+/// It can use `write!`, `serde_json::to_writer`, or
+/// `json_streaming::blocking::JsonWriter`. Captured data must be owned
+/// (`Send + 'static`). Upload buffering is bounded, with backpressure applied
+/// to the writer. The response body is returned unread; non-success HTTP status
+/// codes and errors generating the request body are reported as errors.
+pub async fn post_typesafe<F>(api_token: &str, write_json: F) -> Result<reqwest::Response, BoxError>
+where
+    F: FnOnce(&mut dyn Write) -> std::io::Result<()> + Send + 'static,
+{
+    struct BodyWriter(tokio::sync::mpsc::Sender<Vec<u8>>);
+
+    impl Write for BodyWriter {
+        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+            if bytes.is_empty() {
+                return Ok(0);
+            }
+            let len = bytes.len().min(16 * 1024);
+            self.0.blocking_send(bytes[..len].to_vec()).map_err(|_| {
+                std::io::Error::new(std::io::ErrorKind::BrokenPipe, "request body closed")
+            })?;
+            Ok(len)
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    let (sender, receiver) = tokio::sync::mpsc::channel(4);
+    let producer = tokio::task::spawn_blocking(move || {
+        let mut writer = std::io::BufWriter::with_capacity(16 * 1024, BodyWriter(sender));
+        write_json(&mut writer)?;
+        writer.flush()
+    });
+    let body = futures_lite::stream::unfold(
+        (receiver, Some(producer)),
+        |(mut receiver, mut producer)| async move {
+            if let Some(chunk) = receiver.recv().await {
+                return Some((Ok(chunk), (receiver, producer)));
+            }
+            // Check the worker before signaling EOF, so generation errors (and
+            // panics) fail the upload rather than silently truncating the JSON.
+            let result = producer
+                .take()?
+                .await
+                .unwrap_or_else(|err| Err(std::io::Error::other(err)));
+            result.err().map(|err| (Err(err), (receiver, producer)))
+        },
+    );
+
+    Ok(http_client()
+        .post("https://api.typesafe.ai/v1/systemone")
+        .bearer_auth(api_token)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .body(reqwest::Body::wrap_stream(body))
+        .send()
+        .await?
+        .error_for_status()?)
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct JevResponse {
+    pub model: String,
+    pub answers: JevAnswers,
+    pub usage: JevUsage,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct JevAnswers {
+    pub output: JevOutput,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct JevOutput {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    pub noul: f64,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct JevUsage {
+    pub input_tokens: u32,
+    pub output_tokens: u32,
+}
+
 pub fn compile_jq(expression: Option<&str>) -> Result<Option<jq::JsonFilter>> {
     expression
         .map(|expression| {
@@ -159,7 +291,7 @@ pub fn compile_jq(expression: Option<&str>) -> Result<Option<jq::JsonFilter>> {
         .transpose()
 }
 
-pub fn filter_json(
+pub fn filter_jq(
     filter: &jq::JsonFilter,
     input: impl AsRef<[u8]>,
 ) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
@@ -191,7 +323,7 @@ mod tests {
     #[test]
     fn filters_json_values() {
         let filter = ".name".parse::<jq::JsonFilter>().unwrap();
-        let values = filter_json(
+        let values = filter_jq(
             &filter,
             br#"{"name":"first"}
 {"name":"second"}"#,
@@ -207,7 +339,7 @@ mod tests {
     #[test]
     fn suppresses_values_without_jq_output() {
         let filter = "select(.keep)".parse::<jq::JsonFilter>().unwrap();
-        let values = filter_json(
+        let values = filter_jq(
             &filter,
             br#"{"name":"first","keep":true}
 {"name":"second","keep":false}"#,
