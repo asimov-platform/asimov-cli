@@ -7,9 +7,6 @@ use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
 use std::io::Write;
-use tokio::task::JoinSet;
-
-const JEV_BATCH_SIZE: usize = 10;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(
@@ -123,23 +120,14 @@ pub async fn list(
 
                     if let Some(filter) = jev.as_ref() {
                         let mut lines = batch.lines();
-                        let mut requests = JoinSet::new();
                         while lines.len() > 0 {
-                            for line in lines.by_ref().take(JEV_BATCH_SIZE) {
-                                let filter = filter.clone();
-                                let line = line.to_vec();
-                                requests.spawn(async move {
-                                    let keep = shared::filter_jev(filter, &line).await;
-                                    (line, keep)
-                                });
-                            }
-
-                            // Drain this group in completion order before starting another.
-                            while let Some(result) = requests.join_next().await {
-                                let (line, keep) = result?;
-                                if keep? {
-                                    write_line(&line)?;
-                                }
+                            let matches = shared::filter_jev_batch(
+                                filter,
+                                lines.by_ref().take(shared::JEV_BATCH_SIZE),
+                            );
+                            futures_lite::pin!(matches);
+                            while let Some(line) = matches.next().await {
+                                write_line(&line?)?;
                             }
                         }
                     } else {

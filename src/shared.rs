@@ -161,15 +161,55 @@ pub async fn pick_module(
     }
 }
 
-pub async fn filter_jev(
+/// Maximum number of lines in a Jev filtering group.
+pub const JEV_BATCH_SIZE: usize = 10;
+
+pub const JEV_MATCH_THRESHOLD: f64 = 0.90;
+
+/// Filters a Jev group, yielding passing lines in completion order.
+///
+/// Pass at most `JEV_BATCH_SIZE` lines and drain the stream before submitting
+/// the next group. Currently each line is sent as an individual HTTP request;
+/// upstream batch support can replace that implementation behind this API.
+/// Dropping the stream aborts any outstanding requests in the group.
+pub fn filter_jev_batch(
+    filter: impl AsRef<str>,
+    inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
+) -> impl futures_lite::Stream<Item = Result<Vec<u8>, BoxError>> {
+    let filter = filter.as_ref();
+    let mut requests = tokio::task::JoinSet::new();
+    for input in inputs {
+        let filter = filter.to_owned();
+        let input = input.as_ref().to_vec();
+        requests.spawn(async move {
+            let keep = filter_jev(filter, &input).await;
+            (input, keep)
+        });
+    }
+
+    futures_lite::stream::unfold(requests, |mut requests| async move {
+        while let Some(result) = requests.join_next().await {
+            let result = match result {
+                Ok((line, Ok(true))) => Ok(line),
+                Ok((_, Ok(false))) => continue,
+                Ok((_, Err(err))) => Err(err),
+                Err(err) => Err(err.into()),
+            };
+            return Some((result, requests));
+        }
+        None
+    })
+}
+
+async fn filter_jev(
     filter: impl AsRef<str>,
     input: impl AsRef<[u8]>,
 ) -> std::result::Result<bool, BoxError> {
     let Ok(api_token) = std::env::var("TYPESAFE_API_TOKEN") else {
         return Ok(true);
     };
-    let filter = filter.as_ref().to_string();
     let input = input.as_ref().to_vec();
+    let filter: String = json_escape::escape_str(filter.as_ref()).collect();
     let response = post_typesafe(&api_token, move |out| {
         write!(out, r#"{{"#)?;
         write!(out, r#""model":"jev-latest","#)?;
@@ -189,7 +229,7 @@ pub async fn filter_jev(
     let output: JevResponse = response.json().await?;
     //eprintln!("{:?}", output);
     let answer = output.answers.output.noul;
-    Ok(answer >= 0.9)
+    Ok(answer >= JEV_MATCH_THRESHOLD)
 }
 
 /// Posts caller-written JSON to TypeSafe's API without buffering the entire body.
