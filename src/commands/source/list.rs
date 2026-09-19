@@ -7,6 +7,9 @@ use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
 use std::io::Write;
+use tokio::task::JoinSet;
+
+const JEV_BATCH_SIZE: usize = 10;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(
@@ -97,14 +100,7 @@ pub async fn list(
                     };
 
                     let mut stdout = std::io::stdout().lock();
-                    for line in batch.lines() {
-                        if let Some(filter) = jev.as_ref()
-                            && !shared::filter_jev(filter, line).await?
-                        // TODO: optimize `--jev` performance
-                        {
-                            continue; // skip this input
-                        }
-
+                    let mut write_line = |line: &[u8]| -> Result<(), BoxError> {
                         if let Some(filter) = jq.as_ref() {
                             for value in shared::filter_jq(filter, line).map_err(|e| {
                                 ceprintln!(
@@ -114,10 +110,42 @@ pub async fn list(
                             })? {
                                 writeln!(stdout, "{value}")?;
                             }
-                            continue;
+                        } else {
+                            stdout.write_all(line)?;
                         }
 
-                        stdout.write_all(line)?;
+                        if jev.is_some() {
+                            // Make each passing line visible as its request completes.
+                            stdout.flush()?;
+                        }
+                        Ok(())
+                    };
+
+                    if let Some(filter) = jev.as_ref() {
+                        let mut lines = batch.lines();
+                        let mut requests = JoinSet::new();
+                        while lines.len() > 0 {
+                            for line in lines.by_ref().take(JEV_BATCH_SIZE) {
+                                let filter = filter.clone();
+                                let line = line.to_vec();
+                                requests.spawn(async move {
+                                    let keep = shared::filter_jev(filter, &line).await;
+                                    (line, keep)
+                                });
+                            }
+
+                            // Drain this group in completion order before starting another.
+                            while let Some(result) = requests.join_next().await {
+                                let (line, keep) = result?;
+                                if keep? {
+                                    write_line(&line)?;
+                                }
+                            }
+                        }
+                    } else {
+                        for line in batch.lines() {
+                            write_line(line)?;
+                        }
                     }
                     stdout.flush()?;
                 }
