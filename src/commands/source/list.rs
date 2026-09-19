@@ -21,7 +21,12 @@ pub async fn list(
     cache: super::cache::CacheArgs,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
+    if jev.is_some() && std::env::var("TYPESAFE_API_TOKEN").is_err() {
+        ceprintln!("<s,r>error:</> --jev requires TYPESAFE_API_TOKEN to be set");
+        return Err(EX_CONFIG.into());
+    }
     let jq = shared::compile_jq(jq.as_deref())?;
+
     let registry = asimov_registry::Registry::default();
     let installed_modules = shared::installed_modules(&registry, Some("lister")).await?;
 
