@@ -129,7 +129,7 @@ pub async fn list(
                             let matches = shared::filter_jev_batch(
                                 filter,
                                 lines.by_ref().take(shared::JEV_BATCH_SIZE),
-                            );
+                            )?;
                             futures_lite::pin!(matches);
                             while let Some(line) = matches.next().await {
                                 write_line(&line?)?;

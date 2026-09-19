@@ -5,6 +5,7 @@ use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
 use std::io::Write;
+use std::pin::Pin;
 use std::{rc::Rc, sync::LazyLock};
 
 /// Returns a lazily initialized HTTP client with a shared connection pool.
@@ -164,7 +165,7 @@ pub async fn pick_module(
 /// Maximum number of lines in a Jev filtering group.
 pub const JEV_BATCH_SIZE: usize = 10;
 
-pub const JEV_MATCH_THRESHOLD: f64 = 0.90;
+pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 
 /// Filters a Jev group, yielding passing lines in completion order.
 ///
@@ -175,61 +176,49 @@ pub const JEV_MATCH_THRESHOLD: f64 = 0.90;
 pub fn filter_jev_batch(
     filter: impl AsRef<str>,
     inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
-) -> impl futures_lite::Stream<Item = Result<Vec<u8>, BoxError>> {
-    let filter = filter.as_ref();
-    let mut requests = tokio::task::JoinSet::new();
-    for input in inputs {
-        let filter = filter.to_owned();
-        let input = input.as_ref().to_vec();
-        requests.spawn(async move {
-            let keep = filter_jev(filter, &input).await;
-            (input, keep)
-        });
-    }
-
-    futures_lite::stream::unfold(requests, |mut requests| async move {
-        while let Some(result) = requests.join_next().await {
-            let result = match result {
-                Ok((line, Ok(true))) => Ok(line),
-                Ok((_, Ok(false))) => continue,
-                Ok((_, Err(err))) => Err(err),
-                Err(err) => Err(err.into()),
-            };
-            return Some((result, requests));
-        }
-        None
-    })
-}
-
-async fn filter_jev(
-    filter: impl AsRef<str>,
-    input: impl AsRef<[u8]>,
-) -> std::result::Result<bool, BoxError> {
+) -> Result<Pin<Box<impl futures_lite::Stream<Item = Result<Vec<u8>, BoxError>>>>, BoxError> {
     let Ok(api_token) = std::env::var("TYPESAFE_API_TOKEN") else {
-        return Ok(true);
+        return Err(EX_CONFIG)?;
     };
-    let input = input.as_ref().to_vec();
     let filter: String = json_escape::escape_str(filter.as_ref()).collect();
-    let response = post_typesafe(&api_token, move |out| {
-        write!(out, r#"{{"#)?;
-        write!(out, r#""model":"jev-latest","#)?;
-        write!(out, r#""state":"#)?;
-        out.write_all(input.trim_ascii())?;
-        write!(out, r#","#)?; // "state":{...},
-        write!(out, r#""questions":{{"#)?;
-        write!(out, r#""output":{{"#)?;
-        write!(out, r#""type":"noul","#)?;
-        write!(out, r#""instructions":"{}""#, filter)?;
-        write!(out, r#"}}"#)?; // "output":{...},
-        write!(out, r#"}}"#)?; // "questions":{...},
-        write!(out, r#"}}"#)?;
-        Ok(())
-    })
-    .await?;
-    let output: JevResponse = response.json().await?;
-    //eprintln!("{:?}", output);
-    let answer = output.answers.output.noul;
-    Ok(answer >= JEV_MATCH_THRESHOLD)
+    let inputs: Vec<Vec<u8>> = inputs
+        .into_iter()
+        .map(|input| input.as_ref().to_vec())
+        .collect();
+    let moved_inputs = inputs.clone();
+    Ok(Box::pin(async_stream::stream! {
+        let response = post_typesafe(&api_token, move |out| {
+            write!(out, r#"{{"#)?;
+            write!(out, r#""model":"jev-latest","#)?;
+            write!(out, r#""state":{{"#)?;
+            write!(out, r#""rubric":"{}","#, filter)?;
+            write!(out, r#""inputs":["#)?;
+            for (i, input) in moved_inputs.iter().enumerate() {
+                if i > 0 {
+                    out.write(b",")?;
+                }
+                out.write_all(input.trim_ascii())?;
+            }
+            write!(out, r#"]"#)?;
+            write!(out, r#"}},"#)?; // "state":{...},
+            write!(out, r#""questions":{{"#)?;
+            for i in 0..moved_inputs.len() {
+                if i > 0 {
+                    out.write(b",")?;
+                }
+                write!(out, r#""q{i}":{{"type":"noul","instructions":"Does `rubric` describe `inputs[{i}]`?"}}"#)?;
+            }
+            write!(out, r#"}}"#)?; // "questions":{...},
+            write!(out, r#"}}"#)?;
+            Ok(())
+        }).await?;
+        let output: JevResponse = response.json().await?;
+        for (i, answer) in output.answers.0.into_iter().enumerate() {
+            if answer.noul > JEV_MATCH_THRESHOLD {
+                yield Ok(inputs[i].clone());
+            }
+        }
+    }))
 }
 
 /// Posts caller-written JSON to TypeSafe's API without buffering the entire body.
@@ -295,26 +284,49 @@ where
         .error_for_status()?)
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct JevResponse {
     pub model: String,
     pub answers: JevAnswers,
     pub usage: JevUsage,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct JevAnswers {
-    pub output: JevOutput,
+#[derive(Debug)]
+pub struct JevAnswers(pub Vec<JevOutput>);
+
+impl<'de> serde::Deserialize<'de> for JevAnswers {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        // 1. Parse JSON map into a BTreeMap
+        let map = std::collections::BTreeMap::<String, JevOutput>::deserialize(deserializer)?;
+
+        // 2. Filter keys starting with "q", extract integer index
+        let mut entries: Vec<(usize, JevOutput)> = map
+            .into_iter()
+            .filter_map(|(key, val)| {
+                key.strip_prefix('q')
+                    .and_then(|idx_str| idx_str.parse::<usize>().ok())
+                    .map(|idx| (idx, val))
+            })
+            .collect();
+
+        // 3. Sort numerically by index (ensuring q2 comes before q10)
+        entries.sort_by_key(|(idx, _)| *idx);
+
+        Ok(Self(entries.into_iter().map(|(_, val)| val).collect()))
+    }
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct JevOutput {
     #[serde(rename = "type")]
     pub r#type: String,
     pub noul: f64,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct JevUsage {
     pub input_tokens: u32,
     pub output_tokens: u32,
