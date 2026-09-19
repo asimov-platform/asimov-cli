@@ -238,7 +238,7 @@ dependencies = [
  "color-print",
  "derive_more",
  "dialoguer",
- "dirs",
+ "dirs 7.0.0",
  "distrib",
  "edikt-core",
  "edikt-jsonc",
@@ -677,7 +677,7 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aec364a6ee335b23a7e77703100f5103965810f91a9ef6319a004a7e7b8e2b66"
 dependencies = [
- "dirs",
+ "dirs 6.0.0",
  "git2",
  "terminal-prompt",
 ]
@@ -1261,7 +1261,7 @@ dependencies = [
  "argfile",
  "camino",
  "clap",
- "dirs",
+ "dirs 6.0.0",
  "dogma 0.1.11",
  "dotenvy",
  "duration-str",
@@ -1913,6 +1913,15 @@ name = "dirs"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs"
+version = "7.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d57d423b3c82e89b9a24ca3091fee61f456a26edbd28d26c65906f4bc1dcd8f"
 dependencies = [
  "dirs-sys",
 ]
@@ -3201,7 +3210,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "629d8f3bbeda9d148036d6b0de0a3ab947abd08ce90626327fc3547a49d59d97"
 dependencies = [
- "dirs",
+ "dirs 6.0.0",
  "http",
  "indicatif 0.17.11",
  "libc",
