@@ -82,24 +82,24 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.4.0"
-asimov-env = "25.4.0"
-asimov-id = { version = "25.4.0", features = ["iroh"] }
-asimov-installer = "25.4.0"
-asimov-keyring = "25.4.0"
-asimov-module = "25.4.0"
-asimov-patterns = "25.4.0"
-asimov-registry = "25.4.0"
-asimov-runner = "25.4.0"
+asimov-directory = "25.5.0"
+asimov-env = "25.5.0"
+asimov-id = { version = "25.5.0", features = ["iroh"] }
+asimov-installer = "25.5.0"
+asimov-keyring = "25.5.0"
+asimov-module = "25.5.0"
+asimov-patterns = "25.5.0"
+asimov-registry = "25.5.0"
+asimov-runner = "25.5.0"
 async-stream = "0.3.6"
 clap = { version = "4.5", default-features = false }
-clientele = { version = "0.3.14", features = ["gofer", "serde-json", "tokio"] }
+clientele = { version = "0.4.0", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
 derive_more = { version = "2", features = ["display"] }
 humantime = "2"
 jq = "0.1"
-known-types-pypi = { version = "0.0.1", features = ["serde"] }
-known-types-rubygems = { version = "0.0.1", features = ["serde"] }
+known-types-pypi = { version = "0.1.5", features = ["serde"] }
+known-types-rubygems = { version = "0.1.5", features = ["serde"] }
 miette = { version = "7.5", features = ["fancy"] }
 open = "5"
 rayon = "1.11"
@@ -122,10 +122,10 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
-asimov-module-kit = { version = "25.4.0", optional = true }
-asimov-protocol = { version = "25.4.0", optional = true }
-asimov-proxy = { version = "25.4.0", optional = true }
-asimov-snapshot = { version = "25.4.0", optional = true }
+asimov-module-kit = { version = "25.5.0", optional = true }
+asimov-protocol = { version = "25.5.0", optional = true }
+asimov-proxy = { version = "25.5.0", optional = true }
+asimov-snapshot = { version = "25.5.0", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
@@ -153,8 +153,8 @@ base64 = { version = "0.23", default-features = false, features = [
   "std",
 ], optional = true }
 dirs = { version = "6", default-features = false, optional = true }
-edikt-core = { version = "0.3.1", optional = true }
-edikt-jsonc = { version = "0.2.3", optional = true }
+edikt-core = { version = "0.5.0", optional = true }
+edikt-jsonc = { version = "0.4.0", optional = true }
 http-body-util = { version = "0.1", default-features = false, optional = true }
 hyper = { version = "1", default-features = false, optional = true }
 hyper-rustls = { version = "0.27", default-features = false, features = [
@@ -169,7 +169,7 @@ hyper-util = { version = "0.1", default-features = false, features = [
   "http1",
   "tokio",
 ], optional = true }
-iroh-base = { version = "1.1", default-features = false, features = ["key"] }
+iroh-base = { version = "1.2", default-features = false, features = ["key"] }
 jsonc-parser = { version = "0.33", default-features = false, features = [
   "cst",
 ], optional = true }
@@ -227,7 +227,16 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 
 [patch.crates-io]
 #asimov-directory = { path = "../asimov-sdk/rust/lib/asimov-directory" }
+#asimov-env = { path = "../asimov-sdk/rust/lib/asimov-env" }
 #asimov-id = { path = "../asimov-sdk/rust/lib/asimov-id" }
+#asimov-installer = { path = "../asimov-sdk/rust/lib/asimov-installer" }
+#asimov-keyring = { path = "../asimov-sdk/rust/lib/asimov-keyring" }
+#asimov-module = { path = "../asimov-sdk/rust/lib/asimov-module" }
+#asimov-module-kit = { path = "../asimov-sdk/rust/lib/asimov-module-kit" }
 #asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }
 #asimov-protocol = { path = "../asimov-sdk/rust/lib/asimov-protocol" }
+#asimov-proxy = { path = "../asimov-sdk/rust/lib/asimov-proxy" }
+#asimov-registry = { path = "../asimov-sdk/rust/lib/asimov-registry" }
+#asimov-remote = { path = "../asimov-sdk/rust/lib/asimov-remote" }
 #asimov-runner = { path = "../asimov-sdk/rust/lib/asimov-runner" }
+#asimov-snapshot = { path = "../asimov-sdk/rust/lib/asimov-snapshot" }
