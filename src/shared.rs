@@ -163,7 +163,7 @@ pub async fn pick_module(
 }
 
 /// Maximum number of lines in a Jev filtering group.
-pub const JEV_BATCH_SIZE: usize = 10;
+pub const JEV_BATCH_SIZE: usize = 20;
 
 pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 
