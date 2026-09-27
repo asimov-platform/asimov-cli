@@ -81,3 +81,14 @@
 - This CLI currently depends on `std`, declares no `std` feature, and uses
   `default = ["all"]`. Review how to reconcile this with the baseline's
   feature/no_std policy; `--no-default-features` alone is not `no_std` support.
+
+# Project repositories
+- ASIMOV CLI: <https://github.com/asimov-platform/asimov-cli>
+- ASIMOV SDK: <https://github.com/asimov-platform/asimov-sdk>
+- ASIMOV Specs: <https://github.com/asimov-specs/asimov-specs>
+- ASIMOV Modules: <https://github.com/asimov-modules/asimov-modules>
+- Async-Flow: <https://github.com/artob/async-flow>
+- Bitcache: <https://github.com/artob/bitcache>
+- RDF.rs: <https://github.com/rust-rdf/rdf.rs>
+- Readmer: <https://github.com/artob/readmer>
+- SPARQL.rs: <https://github.com/rust-rdf/sparql.rs>
