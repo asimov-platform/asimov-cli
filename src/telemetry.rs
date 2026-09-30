@@ -9,16 +9,28 @@ use std::{string::String, sync::OnceLock, time::Instant, vec::Vec};
 
 static TELEMETRY: OnceLock<Telemetry> = OnceLock::new();
 
-pub fn initialize(public_key: &PublicKey, installed: bool) {
-    if let Some(telemetry) = Telemetry::new(
-        env!("ASIMOV_STATSIG_CLIENT_KEY"),
-        public_key.to_string(),
-        env!("CARGO_PKG_VERSION"),
-    ) {
-        let _ = TELEMETRY.set(telemetry);
-        if installed {
-            log(Event::Installed);
-        }
+pub fn initialize(public_key: &PublicKey) {
+    let directory = asimov_env::paths::asimov_root().join(".telemetry");
+    let Some(telemetry) = option_env!("ASIMOV_STATSIG_CLIENT_KEY").and_then(|key| {
+        Telemetry::new(
+            key.trim(),
+            public_key.to_string(),
+            env!("CARGO_PKG_VERSION"),
+            &directory,
+        )
+    }) else {
+        return;
+    };
+    let _ = TELEMETRY.set(telemetry);
+
+    if std::fs::File::create_new(directory.join("installed")).is_ok() {
+        log(Event::Installed);
+    }
+}
+
+pub fn shutdown() {
+    if let Some(telemetry) = TELEMETRY.get() {
+        telemetry.shutdown();
     }
 }
 

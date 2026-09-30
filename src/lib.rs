@@ -5,7 +5,7 @@ pub mod commands;
 pub mod options {}
 pub mod registry;
 pub mod shared;
-#[cfg_attr(not(telemetry_enabled), path = "telemetry_disabled.rs")]
+#[cfg_attr(not(feature = "telemetry"), path = "telemetry_disabled.rs")]
 pub mod telemetry;
 
 #[cfg(feature = "source-snap")]

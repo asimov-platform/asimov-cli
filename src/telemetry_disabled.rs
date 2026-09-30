@@ -3,7 +3,9 @@
 use asimov_id::PublicKey;
 use clientele::crates::clap::{ArgMatches, CommandFactory};
 
-pub fn initialize(_: &PublicKey, _: bool) {}
+pub fn initialize(_: &PublicKey) {}
+
+pub fn shutdown() {}
 
 #[derive(Clone, Copy, Debug)]
 pub enum Operation {

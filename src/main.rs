@@ -98,18 +98,8 @@ pub async fn main() -> SysexitsError {
     };
 
     // Ensure (since 25.4.1) that we have a public key for this host/user:
-    let identity = (|| -> Result<_, KeyringError> {
-        let mut keyring = Keyring::open()?;
-        let user = whoami::username().unwrap_or_else(|_| "default".to_string());
-        let identity = match keyring.get_public_key(&user)? {
-            Some(public_key) => (public_key, false),
-            None => (keyring.rekey(&user)?.1, true),
-        };
-        keyring.close()?;
-        Ok(identity)
-    })();
-    let (public_key, installed) = match identity {
-        Ok(identity) => identity,
+    let public_key = match Keyring::my_public_key() {
+        Ok(public_key) => public_key,
         Err(error) => {
             ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
             return match error {
@@ -121,7 +111,7 @@ pub async fn main() -> SysexitsError {
         },
     };
 
-    telemetry::initialize(&public_key, installed);
+    telemetry::initialize(&public_key);
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
@@ -351,6 +341,7 @@ pub async fn main() -> SysexitsError {
     .await;
 
     telemetry.finish(result as i32);
+    telemetry::shutdown();
 
     result
 }
