@@ -1,14 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
-use asimov_telemetry::Operation;
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
-use std::{io::Write, time::Instant};
+use std::io::Write;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(
@@ -73,25 +73,28 @@ pub async fn list(
                 .build(),
         );
 
-        listers.push((input_url, module.name.to_string(), lister));
+        listers.push((
+            input_url,
+            ModuleMetadata::new(Operation::List, &module.name),
+            lister,
+        ));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = listers
         .into_iter()
-        .map(|(url, module, mut lister)| {
+        .map(|(url, metadata, mut lister)| {
             (
                 url,
-                module,
-                Instant::now(),
+                metadata.start(),
                 tokio::spawn(async move { lister.execute().await }),
             )
         })
         .collect();
 
     let mut failed = false;
-    for (url, module, started, task) in tasks {
+    for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
@@ -167,12 +170,7 @@ pub async fn list(
         }
         .await;
 
-        crate::telemetry::module_operation(
-            Operation::List,
-            module,
-            result.is_ok() && succeeded,
-            started,
-        );
+        telemetry.finish(result.is_ok() && succeeded);
 
         result?;
     }

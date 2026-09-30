@@ -1,14 +1,14 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, TimingOptions};
 use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
-use asimov_telemetry::Operation;
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
 use miette::Result;
-use std::{io::Write, time::Instant};
+use std::io::Write;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#fetcher-arguments>
 #[derive(Args, Clone, Debug, Default)]
@@ -84,25 +84,28 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                 .build(),
         );
 
-        fetchers.push((input_url, module.name.to_string(), fetcher));
+        fetchers.push((
+            input_url,
+            ModuleMetadata::new(Operation::Fetch, &module.name),
+            fetcher,
+        ));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = fetchers
         .into_iter()
-        .map(|(url, module, mut fetcher)| {
+        .map(|(url, metadata, mut fetcher)| {
             (
                 url,
-                module,
-                Instant::now(),
+                metadata.start(),
                 tokio::spawn(async move { fetcher.execute().await }),
             )
         })
         .collect();
 
     let mut failed = false;
-    for (url, module, started, task) in tasks {
+    for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
@@ -154,12 +157,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         }
         .await;
 
-        crate::telemetry::module_operation(
-            Operation::Fetch,
-            module,
-            result.is_ok() && succeeded,
-            started,
-        );
+        telemetry.finish(result.is_ok() && succeeded);
 
         result?;
     }

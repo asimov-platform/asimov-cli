@@ -121,7 +121,7 @@ pub async fn main() -> SysexitsError {
         },
     };
 
-    telemetry::initialize(public_key.to_string(), installed);
+    telemetry::initialize(&public_key, installed);
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
@@ -138,7 +138,7 @@ pub async fn main() -> SysexitsError {
         .after_help(after_help(use_color))
         .after_long_help(after_long_help(use_color))
         .try_get_matches_from(&args);
-    let matches = match matches {
+    let mut matches = match matches {
         Ok(matches) => matches,
 
         // VARIANT 1
@@ -250,7 +250,8 @@ pub async fn main() -> SysexitsError {
         // just let clap handle the error
         Err(err) => err.exit(),
     };
-    let options = match Options::from_arg_matches(&matches) {
+    let metadata = CommandMetadata::from_matches::<Options>(&matches);
+    let options = match Options::from_arg_matches_mut(&mut matches) {
         Ok(options) => options,
         Err(err) => err.format(&mut Options::command().color(color)).exit(),
     };
@@ -287,7 +288,7 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    let telemetry = CommandMetadata::from_matches(&matches, &Options::command()).start();
+    let telemetry = metadata.start();
 
     let result = async {
         // From asimov-module-cli:

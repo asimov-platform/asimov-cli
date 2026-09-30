@@ -5,6 +5,14 @@ use shadow_rs::ShadowBuilder;
 use std::collections::BTreeSet;
 
 fn main() {
+    println!("cargo:rerun-if-env-changed=ASIMOV_STATSIG_CLIENT_KEY");
+    println!("cargo:rustc-check-cfg=cfg(telemetry_enabled)");
+    if std::env::var_os("CARGO_FEATURE_TELEMETRY").is_some()
+        && std::env::var("ASIMOV_STATSIG_CLIENT_KEY").is_ok_and(|key| !key.trim().is_empty())
+    {
+        println!("cargo:rustc-cfg=telemetry_enabled");
+    }
+
     // See: https://github.com/katharostech/cfg_aliases
     cfg_aliases! {
         android: { target_os = "android" },

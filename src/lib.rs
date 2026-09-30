@@ -5,8 +5,10 @@ pub mod commands;
 pub mod options {}
 pub mod registry;
 pub mod shared;
+#[cfg_attr(not(telemetry_enabled), path = "telemetry_disabled.rs")]
 pub mod telemetry;
 
+#[cfg(feature = "source-snap")]
 pub(crate) mod timestamps;
 
 use clientele::{StandardOptions, SysexitsError};
