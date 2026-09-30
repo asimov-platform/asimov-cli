@@ -4,10 +4,11 @@ use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
+use asimov_telemetry::Operation;
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
-use std::io::Write;
+use std::{io::Write, time::Instant};
 
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(
@@ -72,87 +73,108 @@ pub async fn list(
                 .build(),
         );
 
-        listers.push((input_url, lister));
+        listers.push((input_url, module.name.to_string(), lister));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = listers
         .into_iter()
-        .map(|(url, mut lister)| (url, tokio::spawn(async move { lister.execute().await })))
+        .map(|(url, module, mut lister)| {
+            (
+                url,
+                module,
+                Instant::now(),
+                tokio::spawn(async move { lister.execute().await }),
+            )
+        })
         .collect();
 
     let mut failed = false;
-    for (url, task) in tasks {
+    for (url, module, started, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
-        match task.await? {
-            Ok(mut output) => {
-                let mut succeeded = true;
-                while let Some(batch) = output.next().await {
-                    let batch = match batch {
-                        Ok(batch) => batch,
-                        Err(err) => {
-                            failed = true;
-                            succeeded = false;
-                            ceprintln!(
-                                "<s,r>error:</> lister execution failed for <s>{url}</>: {err}"
-                            );
-                            break;
-                        },
-                    };
-
-                    let mut stdout = std::io::stdout().lock();
-                    let mut write_line = |line: &[u8]| -> Result<(), BoxError> {
-                        if let Some(filter) = jq.as_ref() {
-                            for value in shared::filter_jq(filter, line).map_err(|e| {
+        let mut succeeded = false;
+        let result: Result<(), BoxError> = async {
+            match task.await? {
+                Ok(mut output) => {
+                    succeeded = true;
+                    while let Some(batch) = output.next().await {
+                        let batch = match batch {
+                            Ok(batch) => batch,
+                            Err(err) => {
+                                failed = true;
+                                succeeded = false;
                                 ceprintln!(
-                                    "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                    "<s,r>error:</> lister execution failed for <s>{url}</>: {err}"
                                 );
-                                EX_DATAERR
-                            })? {
-                                writeln!(stdout, "{value}")?;
+                                break;
+                            },
+                        };
+
+                        let mut stdout = std::io::stdout().lock();
+                        let mut write_line = |line: &[u8]| -> Result<(), BoxError> {
+                            if let Some(filter) = jq.as_ref() {
+                                for value in shared::filter_jq(filter, line).map_err(|e| {
+                                    ceprintln!(
+                                        "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                    );
+                                    EX_DATAERR
+                                })? {
+                                    writeln!(stdout, "{value}")?;
+                                }
+                            } else {
+                                stdout.write_all(line)?;
+                            }
+
+                            if jev.is_some() {
+                                // Make each passing line visible as its request completes.
+                                stdout.flush()?;
+                            }
+                            Ok(())
+                        };
+
+                        if let Some(filter) = jev.as_ref() {
+                            let mut lines = batch.lines();
+                            while lines.len() > 0 {
+                                let matches = shared::filter_jev_batch(
+                                    filter,
+                                    lines.by_ref().take(shared::JEV_BATCH_SIZE),
+                                )?;
+                                futures_lite::pin!(matches);
+                                while let Some(line) = matches.next().await {
+                                    write_line(&line?)?;
+                                }
                             }
                         } else {
-                            stdout.write_all(line)?;
-                        }
-
-                        if jev.is_some() {
-                            // Make each passing line visible as its request completes.
-                            stdout.flush()?;
-                        }
-                        Ok(())
-                    };
-
-                    if let Some(filter) = jev.as_ref() {
-                        let mut lines = batch.lines();
-                        while lines.len() > 0 {
-                            let matches = shared::filter_jev_batch(
-                                filter,
-                                lines.by_ref().take(shared::JEV_BATCH_SIZE),
-                            )?;
-                            futures_lite::pin!(matches);
-                            while let Some(line) = matches.next().await {
-                                write_line(&line?)?;
+                            for line in batch.lines() {
+                                write_line(line)?;
                             }
                         }
-                    } else {
-                        for line in batch.lines() {
-                            write_line(line)?;
-                        }
+                        stdout.flush()?;
                     }
-                    stdout.flush()?;
-                }
-                if succeeded && verbose > 0 {
-                    ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
-                }
-            },
-            Err(err) => {
-                failed = true;
-                ceprintln!("<s,r>error:</> lister execution failed for <s>{url}</>: {err}");
-            },
+                    if succeeded && verbose > 0 {
+                        ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
+                    }
+                },
+                Err(err) => {
+                    failed = true;
+                    ceprintln!("<s,r>error:</> lister execution failed for <s>{url}</>: {err}");
+                },
+            }
+            Ok(())
         }
+        .await;
+
+        crate::telemetry::module_operation(
+            Operation::List,
+            module,
+            result.is_ok() && succeeded,
+            started,
+        );
+
+        result?;
     }
 
     if failed {

@@ -3,8 +3,10 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{GraphOutput, Input, ReaderOptions, StreamExt};
+use asimov_telemetry::Operation;
 use color_print::ceprintln;
 use miette::Result;
+use std::time::Instant;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#reader%E2%91%A0>
 pub async fn read(
@@ -77,23 +79,37 @@ pub async fn read(
                 .build(),
         );
 
-        let mut output = reader.execute().await.map_err(|e| {
-            ceprintln!("<s,r>error:</> reader execution failed: {e}");
-            EX_UNAVAILABLE
-        })?;
-
-        // Inherited stdout yields no payload, but the stream must be drained to
-        // wait for the reader and observe any execution errors.
-        while let Some(result) = output.next().await {
-            result.map_err(|e| {
+        let started = Instant::now();
+        let result: Result<(), BoxError> = async {
+            let mut output = reader.execute().await.map_err(|e| {
                 ceprintln!("<s,r>error:</> reader execution failed: {e}");
                 EX_UNAVAILABLE
             })?;
-        }
 
-        if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);
+            // Inherited stdout yields no payload, but the stream must be drained to
+            // wait for the reader and observe any execution errors.
+            while let Some(result) = output.next().await {
+                result.map_err(|e| {
+                    ceprintln!("<s,r>error:</> reader execution failed: {e}");
+                    EX_UNAVAILABLE
+                })?;
+            }
+
+            if flags.verbose > 0 {
+                ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);
+            }
+            Ok(())
         }
+        .await;
+
+        crate::telemetry::module_operation(
+            Operation::Read,
+            module.name.to_string(),
+            result.is_ok(),
+            started,
+        );
+
+        result?;
     }
 
     Ok(())

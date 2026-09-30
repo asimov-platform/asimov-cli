@@ -91,6 +91,7 @@ asimov-module = "25.6.0"
 asimov-patterns = { version = "25.6.0", features = ["clap"] }
 asimov-registry = "25.6.0"
 asimov-runner = "25.6.0"
+asimov-telemetry = "25.6.0"
 async-stream = "0.3.6"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.4.0", features = ["gofer", "serde-json", "tokio"] }
@@ -239,3 +240,4 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-remote = { path = "../asimov-sdk/rust/lib/asimov-remote" }
 #asimov-runner = { path = "../asimov-sdk/rust/lib/asimov-runner" }
 #asimov-snapshot = { path = "../asimov-sdk/rust/lib/asimov-snapshot" }
+asimov-telemetry = { path = "../asimov-sdk/rust/lib/asimov-telemetry" }

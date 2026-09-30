@@ -5,8 +5,9 @@
 use asimov_cli::{
     BoxError,
     commands::{self, ExternalSubcommand, Help, HelpCmd},
+    telemetry::{self, CommandMetadata},
 };
-use asimov_keyring::Keyring;
+use asimov_keyring::{Keyring, KeyringError};
 use clientele::{
     ColorChoiceExt, StandardOptions, SubcommandsProvider,
     SysexitsError::{self, *},
@@ -97,8 +98,30 @@ pub async fn main() -> SysexitsError {
     };
 
     // Ensure (since 25.4.1) that we have a public key for this host/user:
-    let _public_key = Keyring::my_public_key().unwrap(); // FIXME
-    //eprintln!("{:?}", _public_key.to_string()); // DEBUG
+    let identity = (|| -> Result<_, KeyringError> {
+        let mut keyring = Keyring::open()?;
+        let user = whoami::username().unwrap_or_else(|_| "default".to_string());
+        let identity = match keyring.get_public_key(&user)? {
+            Some(public_key) => (public_key, false),
+            None => (keyring.rekey(&user)?.1, true),
+        };
+        keyring.close()?;
+        Ok(identity)
+    })();
+    let (public_key, installed) = match identity {
+        Ok(identity) => identity,
+        Err(error) => {
+            ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
+            return match error {
+                KeyringError::IoError(_) => EX_IOERR,
+                KeyringError::KeyError(_) => EX_DATAERR,
+                KeyringError::KeyringError(_) => EX_UNAVAILABLE,
+                KeyringError::UserNotFound => EX_NOUSER,
+            };
+        },
+    };
+
+    telemetry::initialize(public_key.to_string(), installed);
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
@@ -109,18 +132,14 @@ pub async fn main() -> SysexitsError {
     let use_color = color.to_bool();
 
     // Parse command-line options:
-    let options = Options::command()
+    let matches = Options::command()
         .color(color)
         .help_template(help_template(use_color))
         .after_help(after_help(use_color))
         .after_long_help(after_long_help(use_color))
-        .try_get_matches_from(&args)
-        .and_then(|mut matches| {
-            Options::from_arg_matches_mut(&mut matches)
-                .map_err(|err| err.format(&mut Options::command().color(color)))
-        });
-    let options = match options {
-        Ok(options) => options,
+        .try_get_matches_from(&args);
+    let matches = match matches {
+        Ok(matches) => matches,
 
         // VARIANT 1
         // this handles:
@@ -231,6 +250,10 @@ pub async fn main() -> SysexitsError {
         // just let clap handle the error
         Err(err) => err.exit(),
     };
+    let options = match Options::from_arg_matches(&matches) {
+        Ok(options) => options,
+        Err(err) => err.format(&mut Options::command().color(color)).exit(),
+    };
     let flags = &options.flags;
 
     asimov_module::init_tracing_subscriber(flags).expect("failed to initialize logging");
@@ -264,61 +287,71 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    // From asimov-module-cli:
-    asimov_registry::Registry::default()
-        .create_file_tree()
-        .await
-        .inspect_err(|e| {
-            tracing::debug!("failed to create module file tree: {e}");
-        })
-        .ok();
+    let telemetry = CommandMetadata::from_matches(&matches, &Options::command()).start();
 
-    // From asimov-snapshot-cli:
-    if let Err(err) = std::fs::create_dir_all(asimov_env::paths::asimov_root().join("snapshots"))
+    let result = async {
+        // From asimov-module-cli:
+        asimov_registry::Registry::default()
+            .create_file_tree()
+            .await
+            .inspect_err(|e| {
+                tracing::debug!("failed to create module file tree: {e}");
+            })
+            .ok();
+
+        // From asimov-snapshot-cli:
+        if let Err(err) = std::fs::create_dir_all(
+            asimov_env::paths::asimov_root().join("snapshots"),
+        )
         .map_err(|e| {
             ceprintln!("<s,r>error:</> failed to create snapshot directory: {e}");
             EX_IOERR
-        })
-    {
-        return err;
+        }) {
+            return err;
+        }
+
+        // Execute the given command:
+        use Command::*;
+        let result = match command {
+            #[cfg(feature = "module")]
+            Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+
+            #[cfg(feature = "proxy")]
+            Proxy { command, args } => command
+                .unwrap_or(ProxyCommand::Serve { args })
+                .run(flags)
+                .await
+                .map_err(sysexits)
+                .map(|_| EX_OK),
+
+            #[cfg(feature = "source")]
+            Source { command, args } => command
+                .unwrap_or(SourceCommand::Fetch { args })
+                .run(flags)
+                .await
+                .map_err(sysexits)
+                .map(|_| EX_OK),
+
+            External(args) => {
+                let cmd = ExternalSubcommand {
+                    is_debug: flags.debug,
+                    pipe_output: false,
+                };
+                cmd.execute(&args[0], &args[1..]).map(|result| result.code)
+            },
+        };
+
+        // Return whatever status code we got.
+        // NOTE: We could return Result<...> here, however
+        // in that case we would get an annoying `Error: ...` message,
+        // which is not what we want. So we just return an error like this.
+        result.unwrap_or_else(|e| e)
     }
+    .await;
 
-    // Execute the given command:
-    use Command::*;
-    let result = match command {
-        #[cfg(feature = "module")]
-        Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+    telemetry.finish(result as i32);
 
-        #[cfg(feature = "proxy")]
-        Proxy { command, args } => command
-            .unwrap_or(ProxyCommand::Serve { args })
-            .run(flags)
-            .await
-            .map_err(sysexits)
-            .map(|_| EX_OK),
-
-        #[cfg(feature = "source")]
-        Source { command, args } => command
-            .unwrap_or(SourceCommand::Fetch { args })
-            .run(flags)
-            .await
-            .map_err(sysexits)
-            .map(|_| EX_OK),
-
-        External(args) => {
-            let cmd = ExternalSubcommand {
-                is_debug: flags.debug,
-                pipe_output: false,
-            };
-            cmd.execute(&args[0], &args[1..]).map(|result| result.code)
-        },
-    };
-
-    // Return whatever status code we got.
-    // NOTE: We could return Result<...> here, however
-    // in that case we would get an annoying `Error: ...` message,
-    // which is not what we want. So we just return an error like this.
-    result.unwrap_or_else(|e| e)
+    result
 }
 
 /// Builds the help template, inserting an "Aliases" section between the

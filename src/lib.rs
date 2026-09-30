@@ -5,6 +5,7 @@ pub mod commands;
 pub mod options {}
 pub mod registry;
 pub mod shared;
+pub mod telemetry;
 
 pub(crate) mod timestamps;
 
