@@ -2,6 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
+use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
@@ -16,11 +17,12 @@ pub async fn list(
     offset: Option<usize>,
     limit: Option<usize>,
     output: Option<String>,
-    jev: Option<String>,
-    jq: Option<String>,
-    cache: super::cache::CacheArgs,
+    filtering: FilteringOptions,
+    cache: CachingOptions,
+    timing: TimingOptions,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
+    let FilteringOptions { jev, jq } = filtering;
     if jev.is_some() && std::env::var("TYPESAFE_API_TOKEN").is_err() {
         ceprintln!("<s,r>error:</> --jev requires TYPESAFE_API_TOKEN to be set");
         return Err(EX_CONFIG.into());
@@ -65,7 +67,7 @@ pub async fn list(
                 .maybe_limit(limit)
                 .maybe_output(output.as_deref())
                 .maybe_other(cache.max_age_option())
-                .maybe_other(cache.deadline_option())
+                .maybe_other(timing.deadline_option())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );

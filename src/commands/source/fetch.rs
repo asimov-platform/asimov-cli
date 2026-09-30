@@ -2,6 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
+use asimov_patterns::{CachingOptions, TimingOptions};
 use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
@@ -26,7 +27,11 @@ pub struct SourceFetchArgs {
     jq: Option<String>,
 
     #[clap(flatten)]
-    cache: super::cache::CacheArgs,
+    cache: CachingOptions,
+
+    #[clap(flatten)]
+    timing: TimingOptions,
+
     urls: Vec<String>,
 }
 
@@ -73,7 +78,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
             FetcherOptions::builder()
                 .maybe_output(args.output.as_deref())
                 .maybe_other(args.cache.max_age_option())
-                .maybe_other(args.cache.deadline_option())
+                .maybe_other(args.timing.deadline_option())
                 .maybe_other(flags.debug.then_some("--debug"))
                 .build(),
         );
@@ -141,5 +146,40 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         Err(EX_UNAVAILABLE.into())
     } else {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clientele::crates::clap::Parser;
+
+    #[derive(Parser)]
+    struct Command {
+        #[command(flatten)]
+        args: SourceFetchArgs,
+    }
+
+    #[test]
+    fn forwards_only_explicit_options() {
+        let args = Command::try_parse_from(["test"]).unwrap().args;
+        assert_eq!(args.cache.max_age_option(), None);
+        assert_eq!(args.timing.deadline_option(), None);
+        let args = Command::try_parse_from(["test", "--max-age", "1h", "--deadline", "30s"])
+            .unwrap()
+            .args;
+        assert_eq!(args.cache.max_age_option().as_deref(), Some("--max-age=1h"));
+        assert_eq!(
+            args.timing.deadline_option().as_deref(),
+            Some("--deadline=30s")
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_options() {
+        for args in [["test", "--max-age", "0s"], ["test", "--deadline", "nope"]] {
+            assert!(Command::try_parse_from(args).is_err());
+        }
+        assert!(Command::try_parse_from(["test", "--wait"]).is_err());
     }
 }
