@@ -17,6 +17,9 @@ use clientele::{
 use color_print::ceprintln;
 use std::ffi::OsString;
 
+#[cfg(feature = "telemetry")]
+use crate::commands::configure::{ConfigureCommand, TelemetryCommand};
+
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
 
@@ -57,7 +60,7 @@ enum Command {
     /// Configure the CLI itself
     #[cfg(feature = "telemetry")]
     #[clap(subcommand)]
-    Configure(commands::configure::ConfigureCommand),
+    Configure(ConfigureCommand),
 
     /// Manage modules, installing/enabling/disabling them
     #[cfg(feature = "module")]
@@ -115,8 +118,6 @@ pub async fn main() -> SysexitsError {
             };
         },
     };
-
-    telemetry::initialize(&public_key);
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
@@ -283,6 +284,12 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
+    match command {
+        // Starting up could flush the very events this command is about to discard.
+        #[cfg(feature = "telemetry")]
+        Command::Configure(ConfigureCommand::Telemetry(TelemetryCommand::Disable {})) => {},
+        _ => telemetry::initialize(&public_key),
+    }
     let telemetry = metadata.start();
 
     let result = async {
