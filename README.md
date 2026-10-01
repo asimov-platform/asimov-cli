@@ -374,6 +374,8 @@ collected.
 
 Events are stored locally in `~/.asimov/.telemetry/` and periodically sent to
 [Statsig](https://statsig.com) in the background.
+
+The events are defined in the [`asimov-telemetry`] crate.
 </details>
 
 ## 👨‍💻 Development
@@ -391,6 +393,7 @@ git clone https://github.com/asimov-platform/asimov-cli.git
 [![Share on LinkedIn](https://img.shields.io/badge/share%20on-linkedin-3949AB?logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli)
 
 [`asimov`]: https://github.com/asimov-platform/asimov-cli#command-line-interface
+[`asimov-telemetry`]: https://github.com/asimov-platform/asimov-sdk/tree/master/rust/lib/asimov-telemetry
 [Crates.io]: https://crates.io/crates/asimov-cli
 [GitHub releases]: https://github.com/asimov-platform/asimov-cli/releases
 [feature flags]: https://docs.rs/crate/asimov-cli/latest/features
