@@ -54,6 +54,7 @@ Now you can install ASIMOV CLI with:
 ```bash
 brew install asimov-cli
 ```
+
 </details>
 
 <details>
@@ -72,6 +73,7 @@ Now, installing ASIMOV CLI is as easy as running:
 ```bash
 scoop install asimov-platform/asimov-cli
 ```
+
 </details>
 
 <details>
@@ -96,6 +98,7 @@ And then install ASIMOV CLI with:
 ```bash
 nix profile install asimov-cli#default --no-write-lock-file
 ```
+
 </details>
 
 <details>
@@ -126,6 +129,7 @@ You may want to create an alias for it:
 ```bash
 alias asimov="flatpak run so.asimov.cli"
 ```
+
 </details>
 
 ## 👉 Examples
@@ -154,6 +158,7 @@ asimov fetch -M http https://example.com/
 # Fetch multiple URLs
 asimov fetch https://asimov.sh/ https://asimov.blog/
 ```
+
 </details>
 
 <details>
@@ -170,6 +175,7 @@ asimov import https://x.com/asimov_platform
 # Import using the specific module
 asimov import -M brightdata https://x.com/asimov_platform
 ```
+
 </details>
 
 <details>
@@ -189,6 +195,7 @@ asimov module install http
 # Get help for external commands
 asimov help module
 ```
+
 </details>
 
 ## 📚 Reference
@@ -211,6 +218,7 @@ $ asimov module --help
 ```shellsession
 $ asimov module install --help
 ```
+
 </details>
 
 #### `asimov proxy`
@@ -225,6 +233,7 @@ $ asimov proxy --help
 ```shellsession
 $ asimov proxy serve --help
 ```
+
 </details>
 
 <details>
@@ -233,6 +242,7 @@ $ asimov proxy serve --help
 ```shellsession
 $ asimov proxy url --help
 ```
+
 </details>
 
 <details>
@@ -241,6 +251,7 @@ $ asimov proxy url --help
 ```shellsession
 $ asimov proxy host --help
 ```
+
 </details>
 
 <details>
@@ -249,6 +260,7 @@ $ asimov proxy host --help
 ```shellsession
 $ asimov proxy port --help
 ```
+
 </details>
 
 <details>
@@ -257,6 +269,7 @@ $ asimov proxy port --help
 ```shellsession
 $ asimov proxy models --help
 ```
+
 </details>
 
 <details>
@@ -265,6 +278,7 @@ $ asimov proxy models --help
 ```shellsession
 $ asimov proxy config --help
 ```
+
 </details>
 
 <details>
@@ -273,6 +287,7 @@ $ asimov proxy config --help
 ```shellsession
 $ asimov proxy install --help
 ```
+
 </details>
 
 #### `asimov source`
@@ -287,6 +302,7 @@ $ asimov source --help
 ```shellsession
 $ asimov source fetch --help
 ```
+
 </details>
 
 <details>
@@ -295,6 +311,7 @@ $ asimov source fetch --help
 ```shellsession
 $ asimov source list --help
 ```
+
 </details>
 
 <details>
@@ -303,6 +320,7 @@ $ asimov source list --help
 ```shellsession
 $ asimov source read --help
 ```
+
 </details>
 
 <details>
