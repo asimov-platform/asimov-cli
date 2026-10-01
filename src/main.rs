@@ -54,6 +54,11 @@ struct Options {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Configure the CLI itself
+    #[cfg(feature = "telemetry")]
+    #[clap(subcommand)]
+    Configure(commands::configure::ConfigureCommand),
+
     /// Manage modules, installing/enabling/disabling them
     #[cfg(feature = "module")]
     #[clap(subcommand)]
@@ -304,6 +309,9 @@ pub async fn main() -> SysexitsError {
         // Execute the given command:
         use Command::*;
         let result = match command {
+            #[cfg(feature = "telemetry")]
+            Configure(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+
             #[cfg(feature = "module")]
             Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 

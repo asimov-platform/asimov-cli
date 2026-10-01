@@ -5,12 +5,24 @@ use asimov_module::ModuleName;
 pub use asimov_telemetry::Operation;
 use asimov_telemetry::{Event, Outcome, Telemetry};
 use clientele::crates::clap::{ArgMatches, CommandFactory};
-use std::{string::String, sync::OnceLock, time::Instant, vec::Vec};
+use std::{path::PathBuf, string::String, sync::OnceLock, time::Instant, vec::Vec};
 
 static TELEMETRY: OnceLock<Telemetry> = OnceLock::new();
 
+fn directory() -> PathBuf {
+    asimov_env::paths::asimov_root().join(".telemetry")
+}
+
+pub fn enable() -> std::io::Result<()> {
+    asimov_telemetry::enable(&directory())
+}
+
+pub fn disable() -> std::io::Result<()> {
+    asimov_telemetry::disable(&directory())
+}
+
 pub fn initialize(public_key: &PublicKey) {
-    let directory = asimov_env::paths::asimov_root().join(".telemetry");
+    let directory = directory();
     let Some(telemetry) = option_env!("ASIMOV_STATSIG_CLIENT_KEY").and_then(|key| {
         Telemetry::new(
             key.trim(),
