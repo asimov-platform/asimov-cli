@@ -297,13 +297,18 @@ asimov help module
 
 </details>
 
-## 📡 Telemetry
+## ⚙️ Configuration
+
+<details>
+<summary>Telemetry</summary>
+
+### Telemetry
 
 The ASIMOV CLI binaries published in [GitHub releases] come with **opt-out
 telemetry**. Builds from source, such as `cargo install asimov-cli`, don't
 send anything.
 
-### Opting Out
+#### Opting Out
 
 Any one of these disables telemetry:
 
@@ -327,7 +332,7 @@ To turn it back on, run `asimov configure telemetry enable`.
 Each command you run records when it started and finished. Each event
 contains:
 
-- Your ASIMOV public key (`~/.asimov/keyring/$USER`), as an identifier
+- A random installation ID (`~/.asimov/.telemetry/id`), as an identifier
 - The command that was run (e.g., `source fetch`), without its arguments
 - The names of the modules involved
 - The exit code and duration
@@ -341,6 +346,8 @@ Events are stored locally in `~/.asimov/.telemetry/` and periodically sent to
 [Statsig](https://statsig.com) in the background.
 
 The events are defined in the [`asimov-telemetry`] crate.
+
+</details>
 
 </details>
 
