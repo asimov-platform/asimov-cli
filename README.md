@@ -376,6 +376,7 @@ Events are stored locally in `~/.asimov/.telemetry/` and periodically sent to
 [Statsig](https://statsig.com) in the background.
 
 The events are defined in the [`asimov-telemetry`] crate.
+
 </details>
 
 ## 👨‍💻 Development
