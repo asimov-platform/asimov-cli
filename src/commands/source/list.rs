@@ -87,15 +87,14 @@ pub async fn list(
         .map(|(url, metadata, mut lister)| {
             (
                 url,
-                metadata,
+                metadata.start(),
                 tokio::spawn(async move { lister.execute().await }),
             )
         })
         .collect();
 
     let mut failed = false;
-    for (url, metadata, task) in tasks {
-        let telemetry = metadata.start();
+    for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }

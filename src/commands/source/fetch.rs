@@ -98,15 +98,14 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
         .map(|(url, metadata, mut fetcher)| {
             (
                 url,
-                metadata,
+                metadata.start(),
                 tokio::spawn(async move { fetcher.execute().await }),
             )
         })
         .collect();
 
     let mut failed = false;
-    for (url, metadata, task) in tasks {
-        let telemetry = metadata.start();
+    for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
