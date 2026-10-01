@@ -311,6 +311,51 @@ $ asimov source read --help
 ```shellsession
 $ asimov source snap --help
 ```
+
+</details>
+
+## 📡 Telemetry
+
+The ASIMOV CLI binaries published in [GitHub releases] come with **opt-out
+telemetry**. Builds from source, such as `cargo install asimov-cli`, don't
+send anything.
+
+### Opting Out
+
+Any one of these disables telemetry:
+
+```bash
+# Permanently, for the current user:
+asimov configure telemetry disable
+
+# Per invocation or per shell, using an environment variable:
+export ASIMOV_TELEMETRY=0   # or `false`
+
+# By building the CLI yourself, without the `telemetry` feature:
+cargo install asimov-cli --locked --no-default-features --features module,proxy,source
+```
+
+Disabling telemetry also discards any events that haven't been sent yet.
+To turn it back on, run `asimov configure telemetry enable`.
+
+<details>
+<summary>What is collected</summary>
+
+Each command you run records when it started and finished. Each event
+contains:
+
+- Your ASIMOV public key (`~/.asimov/keyring/$USER`), as an identifier
+- The command that was run (e.g., `source fetch`), without its arguments
+- The names of the modules involved
+- The exit code and duration
+- The CLI version, operating system, and CPU architecture
+- Whether the CLI was invoked by a coding agent, and which one
+
+URLs, arguments, file paths, command output, and error messages are never
+collected.
+
+Events are stored locally in `~/.asimov/.telemetry/` and periodically sent to
+[Statsig](https://statsig.com) in the background.
 </details>
 
 ## 👨‍💻 Development
@@ -328,11 +373,10 @@ git clone https://github.com/asimov-platform/asimov-cli.git
 [![Share on LinkedIn](https://img.shields.io/badge/share%20on-linkedin-3949AB?logo=linkedin)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fasimov-platform%2Fasimov-cli)
 
 [`asimov`]: https://github.com/asimov-platform/asimov-cli#command-line-interface
-
 [Crates.io]: https://crates.io/crates/asimov-cli
+[GitHub releases]: https://github.com/asimov-platform/asimov-cli/releases
 [feature flags]: https://docs.rs/crate/asimov-cli/latest/features
 [naming conventions]: https://rust-lang.github.io/api-guidelines/naming.html
-
 [ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli
 [Cargo]: https://rustup.rs
 [Cargo Binstall]: https://crates.io/crates/cargo-binstall
