@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 25.6.1 - 2026-10-02
+### Added
+- Optional telemetry (`asimov configure telemetry {enable,disable}`)
+### Changed
+- Double the default `--jev` batch size
+- Bump the SDK and dependencies
+
 ## 25.6.0 - 2026-09-21
 ### Added
 - `asimov list --jev=NOUL` (requires `TYPESAFE_API_TOKEN`)
