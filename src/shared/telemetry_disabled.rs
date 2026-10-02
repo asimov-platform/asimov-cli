@@ -1,9 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-use asimov_id::PublicKey;
 use clientele::crates::clap::{ArgMatches, CommandFactory};
 
-pub fn initialize(_: &PublicKey) {}
+pub fn initialize() {}
 
 pub fn shutdown() {}
 

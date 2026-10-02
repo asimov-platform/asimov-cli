@@ -1,6 +1,5 @@
 // This is free and unencumbered software released into the public domain.
 
-use asimov_id::PublicKey;
 use asimov_module::ModuleName;
 pub use asimov_telemetry::Operation;
 use asimov_telemetry::{Event, Outcome, Telemetry};
@@ -21,22 +20,11 @@ pub fn disable() -> std::io::Result<()> {
     asimov_telemetry::disable(&directory())
 }
 
-pub fn initialize(public_key: &PublicKey) {
-    let directory = directory();
-    let Some(telemetry) = option_env!("ASIMOV_STATSIG_CLIENT_KEY").and_then(|key| {
-        Telemetry::new(
-            key.trim(),
-            public_key.to_string(),
-            env!("CARGO_PKG_VERSION"),
-            &directory,
-        )
-    }) else {
-        return;
-    };
-    let _ = TELEMETRY.set(telemetry);
-
-    if std::fs::File::create_new(directory.join("installed")).is_ok() {
-        log(Event::Installed);
+pub fn initialize() {
+    if let Some(telemetry) = option_env!("ASIMOV_STATSIG_CLIENT_KEY")
+        .and_then(|key| Telemetry::new(key.trim(), env!("CARGO_PKG_VERSION"), &directory()))
+    {
+        let _ = TELEMETRY.set(telemetry);
     }
 }
 

@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, SysexitsError::*, telemetry};
+use crate::{BoxError, SysexitsError::*, shared::telemetry};
 use clientele::{StandardOptions, crates::clap::Subcommand};
 use color_print::{ceprintln, cprintln};
 

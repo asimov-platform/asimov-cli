@@ -5,7 +5,7 @@
 use asimov_cli::{
     BoxError,
     commands::{self, ExternalSubcommand, Help, HelpCmd},
-    telemetry::{self, CommandMetadata},
+    shared::telemetry::{self, CommandMetadata},
 };
 use asimov_keyring::{Keyring, KeyringError};
 use clientele::{
@@ -106,18 +106,15 @@ pub async fn main() -> SysexitsError {
     };
 
     // Ensure (since 25.4.1) that we have a public key for this host/user:
-    let public_key = match Keyring::my_public_key() {
-        Ok(public_key) => public_key,
-        Err(error) => {
-            ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
-            return match error {
-                KeyringError::IoError(_) => EX_IOERR,
-                KeyringError::KeyError(_) => EX_DATAERR,
-                KeyringError::KeyringError(_) => EX_UNAVAILABLE,
-                KeyringError::UserNotFound => EX_NOUSER,
-            };
-        },
-    };
+    if let Err(error) = Keyring::my_public_key() {
+        ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
+        return match error {
+            KeyringError::IoError(_) => EX_IOERR,
+            KeyringError::KeyError(_) => EX_DATAERR,
+            KeyringError::KeyringError(_) => EX_UNAVAILABLE,
+            KeyringError::UserNotFound => EX_NOUSER,
+        };
+    }
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
@@ -288,7 +285,7 @@ pub async fn main() -> SysexitsError {
         // Starting up could flush the very events this command is about to discard.
         #[cfg(feature = "telemetry")]
         Command::Configure(ConfigureCommand::Telemetry(TelemetryCommand::Disable {})) => {},
-        _ => telemetry::initialize(&public_key),
+        _ => telemetry::initialize(),
     }
     let telemetry = metadata.start();
 
