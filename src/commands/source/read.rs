@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::shared::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{GraphOutput, Input, ReaderOptions, StreamExt};
@@ -77,23 +78,32 @@ pub async fn read(
                 .build(),
         );
 
-        let mut output = reader.execute().await.map_err(|e| {
-            ceprintln!("<s,r>error:</> reader execution failed: {e}");
-            EX_UNAVAILABLE
-        })?;
-
-        // Inherited stdout yields no payload, but the stream must be drained to
-        // wait for the reader and observe any execution errors.
-        while let Some(result) = output.next().await {
-            result.map_err(|e| {
+        let telemetry = ModuleMetadata::new(Operation::Read, &module.name).start();
+        let result: Result<(), BoxError> = async {
+            let mut output = reader.execute().await.map_err(|e| {
                 ceprintln!("<s,r>error:</> reader execution failed: {e}");
                 EX_UNAVAILABLE
             })?;
-        }
 
-        if flags.verbose > 0 {
-            ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);
+            // Inherited stdout yields no payload, but the stream must be drained to
+            // wait for the reader and observe any execution errors.
+            while let Some(result) = output.next().await {
+                result.map_err(|e| {
+                    ceprintln!("<s,r>error:</> reader execution failed: {e}");
+                    EX_UNAVAILABLE
+                })?;
+            }
+
+            if flags.verbose > 0 {
+                ceprintln!("<s,g>✓</> Read <s>{}</>.", &input_url);
+            }
+            Ok(())
         }
+        .await;
+
+        telemetry.finish(result.is_ok());
+
+        result?;
     }
 
     Ok(())

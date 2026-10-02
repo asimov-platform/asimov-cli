@@ -6,6 +6,7 @@ pub mod options {}
 pub mod registry;
 pub mod shared;
 
+#[cfg(feature = "source-snap")]
 pub(crate) mod timestamps;
 
 use clientele::{StandardOptions, SysexitsError};

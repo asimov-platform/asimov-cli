@@ -51,6 +51,7 @@ Now you can install ASIMOV CLI with:
 ```bash
 brew install asimov-cli
 ```
+
 </details>
 
 <details>
@@ -69,6 +70,7 @@ Now, installing ASIMOV CLI is as easy as running:
 ```bash
 scoop install asimov-platform/asimov-cli
 ```
+
 </details>
 
 <details>
@@ -93,6 +95,7 @@ And then install ASIMOV CLI with:
 ```bash
 nix profile install asimov-cli#default --no-write-lock-file
 ```
+
 </details>
 
 <details>
@@ -123,6 +126,7 @@ You may want to create an alias for it:
 ```bash
 alias asimov="flatpak run so.asimov.cli"
 ```
+
 </details>
 
 ## 👉 Examples
@@ -151,6 +155,7 @@ asimov fetch -M http https://example.com/
 # Fetch multiple URLs
 asimov fetch https://asimov.sh/ https://asimov.blog/
 ```
+
 </details>
 
 <details>
@@ -167,6 +172,7 @@ asimov import https://x.com/asimov_platform
 # Import using the specific module
 asimov import -M brightdata https://x.com/asimov_platform
 ```
+
 </details>
 
 <details>
@@ -186,6 +192,7 @@ asimov module install http
 # Get help for external commands
 asimov help module
 ```
+
 </details>
 
 ## 📚 Reference
@@ -202,6 +209,7 @@ asimov help module
 <summary><code>asimov module install</code></summary>
 
 {% render 'etc/readmer/asimov-module-install.sh-session' %}
+
 </details>
 
 #### `asimov proxy`
@@ -212,42 +220,49 @@ asimov help module
 <summary><code>asimov proxy serve</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-serve.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy url</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-url.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy host</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-host.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy port</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-port.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy models</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-models.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy config</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-config.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov proxy install</code></summary>
 
 {% render 'etc/readmer/asimov-proxy-install.sh-session' %}
+
 </details>
 
 #### `asimov source`
@@ -258,24 +273,82 @@ asimov help module
 <summary><code>asimov source fetch</code></summary>
 
 {% render 'etc/readmer/asimov-source-fetch.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov source list</code></summary>
 
 {% render 'etc/readmer/asimov-source-list.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov source read</code></summary>
 
 {% render 'etc/readmer/asimov-source-read.sh-session' %}
+
 </details>
 
 <details>
 <summary><code>asimov source snap</code></summary>
 
 {% render 'etc/readmer/asimov-source-snap.sh-session' %}
+
+</details>
+
+## ⚙️ Configuration
+
+<details>
+<summary>Telemetry</summary>
+
+### Telemetry
+
+The ASIMOV CLI binaries published in [GitHub releases] come with **opt-out
+telemetry**. Builds from source, such as `cargo install asimov-cli`, don't
+send anything.
+
+#### Opting Out
+
+Any one of these disables telemetry:
+
+```bash
+# Permanently, for the current user:
+asimov configure telemetry disable
+
+# Per invocation or per shell, using an environment variable:
+export ASIMOV_TELEMETRY=0   # or `false`
+
+# By building the CLI yourself, without the `telemetry` feature:
+cargo install asimov-cli --locked --no-default-features --features module,proxy,source
+```
+
+Disabling telemetry also discards any events that haven't been sent yet.
+To turn it back on, run `asimov configure telemetry enable`.
+
+<details>
+<summary>What is collected</summary>
+
+Each command you run records when it started and finished. Each event
+contains:
+
+- A random installation ID (`~/.asimov/.telemetry/id`), as an identifier
+- The command that was run (e.g., `source fetch`), without its arguments
+- The names of the modules involved
+- The exit code and duration
+- The CLI version, operating system, and CPU architecture
+- Whether the CLI was invoked by a coding agent, and which one
+
+URLs, arguments, file paths, command output, and error messages are never
+collected.
+
+Events are stored locally in `~/.asimov/.telemetry/` and periodically sent to
+[Statsig](https://statsig.com) in the background.
+
+The events are defined in the [`asimov-telemetry`] crate.
+
+</details>
+
 </details>
 
 ## 👨‍💻 Development
@@ -289,11 +362,11 @@ git clone {{ github.repository.url }}
 {% render 'footer/share', title: package.description, url: github.repository.link %}
 
 [`asimov`]: {{ github.repository.link }}#command-line-interface
-
+[`asimov-telemetry`]: https://github.com/asimov-platform/asimov-sdk/tree/master/rust/lib/asimov-telemetry
 [Crates.io]: https://crates.io/crates/{{ package.name }}
+[GitHub releases]: {{ github.repository.link }}/releases
 [feature flags]: https://docs.rs/crate/{{ package.name }}/latest/features
 [naming conventions]: https://rust-lang.github.io/api-guidelines/naming.html
-
 [ASIMOV Module CLI]: https://github.com/asimov-platform/asimov-module-cli
 [Cargo]: https://rustup.rs
 [Cargo Binstall]: https://crates.io/crates/cargo-binstall

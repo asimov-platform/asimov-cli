@@ -1,5 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::shared::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, TimingOptions};
@@ -83,63 +84,82 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                 .build(),
         );
 
-        fetchers.push((input_url, fetcher));
+        fetchers.push((
+            input_url,
+            ModuleMetadata::new(Operation::Fetch, &module.name),
+            fetcher,
+        ));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = fetchers
         .into_iter()
-        .map(|(url, mut fetcher)| (url, tokio::spawn(async move { fetcher.execute().await })))
+        .map(|(url, metadata, mut fetcher)| {
+            (
+                url,
+                metadata.start(),
+                tokio::spawn(async move { fetcher.execute().await }),
+            )
+        })
         .collect();
 
     let mut failed = false;
-    for (url, task) in tasks {
+    for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
-        match task.await? {
-            Ok(mut output) => {
-                let mut succeeded = true;
-                while let Some(batch) = output.next().await {
-                    let batch = match batch {
-                        Ok(batch) => batch,
-                        Err(err) => {
-                            failed = true;
-                            succeeded = false;
-                            ceprintln!(
-                                "<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}"
-                            );
-                            break;
-                        },
-                    };
-
-                    let mut stdout = std::io::stdout().lock();
-                    for line in batch.lines() {
-                        if let Some(filter) = jq.as_ref() {
-                            for value in shared::filter_jq(filter, line).map_err(|e| {
+        let mut succeeded = false;
+        let result: Result<(), BoxError> = async {
+            match task.await? {
+                Ok(mut output) => {
+                    succeeded = true;
+                    while let Some(batch) = output.next().await {
+                        let batch = match batch {
+                            Ok(batch) => batch,
+                            Err(err) => {
+                                failed = true;
+                                succeeded = false;
                                 ceprintln!(
-                                    "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                    "<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}"
                                 );
-                                EX_DATAERR
-                            })? {
-                                writeln!(stdout, "{value}")?;
+                                break;
+                            },
+                        };
+
+                        let mut stdout = std::io::stdout().lock();
+                        for line in batch.lines() {
+                            if let Some(filter) = jq.as_ref() {
+                                for value in shared::filter_jq(filter, line).map_err(|e| {
+                                    ceprintln!(
+                                        "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
+                                    );
+                                    EX_DATAERR
+                                })? {
+                                    writeln!(stdout, "{value}")?;
+                                }
+                            } else {
+                                stdout.write_all(line)?;
                             }
-                        } else {
-                            stdout.write_all(line)?;
                         }
+                        stdout.flush()?;
                     }
-                    stdout.flush()?;
-                }
-                if succeeded && verbose > 0 {
-                    ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
-                }
-            },
-            Err(err) => {
-                failed = true;
-                ceprintln!("<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}");
-            },
+                    if succeeded && verbose > 0 {
+                        ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
+                    }
+                },
+                Err(err) => {
+                    failed = true;
+                    ceprintln!("<s,r>error:</> fetcher execution failed for <s>{url}</>: {err}");
+                },
+            }
+            Ok(())
         }
+        .await;
+
+        telemetry.finish(result.is_ok() && succeeded);
+
+        result?;
     }
 
     if failed {
