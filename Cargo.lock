@@ -265,6 +265,7 @@ dependencies = [
  "miette",
  "mime",
  "open",
+ "percent-encoding",
  "rayon",
  "reqwest 0.12.28",
  "rustls",

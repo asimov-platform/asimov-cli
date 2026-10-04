@@ -47,6 +47,7 @@ proxy = [
   "dep:hyper-rustls",
   "dep:hyper-util",
   "dep:jsonc-parser",
+  "dep:percent-encoding",
   "dep:rustls",
   "dep:tokio-rustls",
   "dep:tokio-socks",
@@ -123,6 +124,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
+percent-encoding = { version = "2", optional = true }
 tempfile = { version = "3", optional = true }
 asimov-module-kit = { version = "25.6.1", optional = true }
 asimov-protocol = { version = "25.6.1", optional = true }

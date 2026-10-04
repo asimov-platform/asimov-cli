@@ -110,15 +110,22 @@ impl ProxyConfig {
             url::Host::Ipv6(ip) => ip.to_string(),
         };
 
-        let username = url.username();
-        let password = url.password();
+        let username = percent_encoding::percent_decode_str(url.username())
+            .decode_utf8()
+            .map_err(|_| "proxy username is not valid UTF-8")?;
+        let password = url
+            .password()
+            .map(|password| percent_encoding::percent_decode_str(password).decode_utf8())
+            .transpose()
+            .map_err(|_| "proxy password is not valid UTF-8")?;
 
         match url.scheme() {
             "http" | "https" => {
                 let tls = url.scheme() == "https";
                 let port = url.port().unwrap_or(if tls { 443 } else { 80 });
                 let basic_auth = if !username.is_empty() || password.is_some() {
-                    let credentials = format!("{}:{}", username, password.unwrap_or_default());
+                    let credentials =
+                        format!("{}:{}", username, password.as_deref().unwrap_or_default());
                     Some(base64::engine::general_purpose::STANDARD.encode(credentials))
                 } else {
                     None
@@ -133,10 +140,10 @@ impl ProxyConfig {
 
             "socks5" | "socks5h" => {
                 let port = url.port().unwrap_or(1080);
-                let auth = if !username.is_empty() {
+                let auth = if !username.is_empty() || password.is_some() {
                     Some((
                         username.to_string(),
-                        password.unwrap_or_default().to_string(),
+                        password.as_deref().unwrap_or_default().to_string(),
                     ))
                 } else {
                     None
@@ -184,6 +191,33 @@ fn no_proxy_list_matches(no_proxy: &str, host: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn proxy_credentials_are_percent_decoded() {
+        for scheme in ["http", "https", "socks5", "socks5h"] {
+            let config = ProxyConfig::parse(&format!(
+                "{scheme}://user%40domain:p%3Aa%25ss+@proxy.example"
+            ))
+            .unwrap();
+            match config {
+                ProxyConfig::HttpConnect { basic_auth, .. } => {
+                    let decoded = base64::engine::general_purpose::STANDARD
+                        .decode(basic_auth.unwrap())
+                        .unwrap();
+                    assert_eq!(decoded, b"user@domain:p:a%ss+");
+                },
+                ProxyConfig::Socks5 { auth, .. } => {
+                    assert_eq!(auth, Some(("user@domain".into(), "p:a%ss+".into())));
+                },
+                ProxyConfig::Direct => panic!("expected proxy credentials"),
+            }
+            let error = ProxyConfig::parse(&format!("{scheme}://user:secret%FF@proxy.example"))
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains("UTF-8"));
+            assert!(!error.contains("secret"));
+        }
+    }
 
     #[test]
     fn ipv6_proxy_hosts_resolve_without_url_brackets() {
