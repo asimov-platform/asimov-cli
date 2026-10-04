@@ -245,10 +245,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   strict Clippy findings and feature-specific dead imports/functions. Document
   public error/output contracts.
 
-- [ ] Reject unusable browser targets when all manifest links are malformed,
-  hostless, or use non-web schemes (`src/commands/module/browse.rs`). Cover
-  empty and invalid-only manifests without launching a browser.
-
 - [ ] Repair generated command examples and reference snippets
   (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
   Examples still use the absent top-level `asimov import` alias and describe
