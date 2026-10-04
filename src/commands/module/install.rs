@@ -96,6 +96,8 @@ pub async fn install(
             EX_UNAVAILABLE
         })?;
 
+        super::config::validate_variables(&manifest.manifest)?;
+
         let variables = manifest
             .manifest
             .config

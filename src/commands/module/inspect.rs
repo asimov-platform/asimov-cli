@@ -30,6 +30,7 @@ pub async fn inspect(
         })?;
 
     let manifest = &installed.manifest;
+    super::config::validate_variables(manifest)?;
 
     let conf_vars = manifest
         .config

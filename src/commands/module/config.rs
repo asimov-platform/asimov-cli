@@ -134,29 +134,7 @@ pub(super) async fn open(module_name: &ModuleName) -> Result<Module, BoxError> {
         })?
         .manifest;
 
-    // Variable names become file names under the configuration directory;
-    // reject anything that could escape it or hide files.
-    let is_valid_name = |name: &str| {
-        !name.is_empty()
-            && !name.starts_with('.')
-            && name
-                .chars()
-                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
-    };
-
-    let variables = manifest
-        .config
-        .as_ref()
-        .map(|c| c.variables.as_slice())
-        .unwrap_or_default();
-
-    if let Some(var) = variables.iter().find(|var| !is_valid_name(&var.name)) {
-        ceprintln!(
-            "<s,r>error:</> module <s>{module_name}</> declares an invalid configuration variable name: `{}`",
-            var.name
-        );
-        return Err(EX_DATAERR.into());
-    }
+    validate_variables(&manifest)?;
 
     let profile = "default"; // TODO
     let conf_dir = asimov_root()
@@ -170,6 +148,38 @@ pub(super) async fn open(module_name: &ModuleName) -> Result<Module, BoxError> {
         profile,
         conf_dir,
     })
+}
+
+/// Validates portable file names before any configuration value is accessed.
+pub(super) fn validate_variables(manifest: &ModuleManifest) -> Result<(), BoxError> {
+    let mut names = std::collections::BTreeSet::new();
+    for var in manifest.config.iter().flat_map(|config| &config.variables) {
+        let name = &var.name;
+        let folded = name.to_ascii_lowercase();
+        let stem = folded.split('.').next().unwrap_or_default();
+        let reserved = matches!(stem, "con" | "prn" | "aux" | "nul")
+            || ["com", "lpt"].iter().any(|prefix| {
+                stem.strip_prefix(prefix).is_some_and(|suffix| {
+                    suffix.len() == 1 && matches!(suffix.as_bytes()[0], b'1'..=b'9')
+                })
+            });
+        if name.is_empty()
+            || name.starts_with('.')
+            || name.ends_with('.')
+            || !name
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+            || reserved
+            || !names.insert(folded)
+        {
+            ceprintln!(
+                "<s,r>error:</> module <s>{}</> declares an invalid or duplicate configuration variable name: `{name}`",
+                manifest.name
+            );
+            return Err(EX_DATAERR.into());
+        }
+    }
+    Ok(())
 }
 
 impl Module {

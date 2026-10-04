@@ -169,6 +169,34 @@ fn a_manifest_declaring_an_unusable_variable_name_is_rejected() -> Result {
 }
 
 #[test]
+fn configuration_readers_reject_unsafe_and_colliding_names() -> Result {
+    for names in [
+        vec!["../escape"],
+        vec!["CON"],
+        vec!["nul.txt"],
+        vec!["com1"],
+        vec!["LPT9.txt"],
+        vec!["host."],
+        vec!["host", "host"],
+        vec!["host", "HOST"],
+    ] {
+        let manifest = serde_json::json!({"name": "demo", "config": {"variables":
+            names.iter().map(|name| serde_json::json!({"name": name, "default_value": "value"})).collect::<Vec<_>>()
+        }});
+        let sandbox = Sandbox::with_manifest(&manifest.to_string())?;
+        for args in [
+            vec!["config", "show", "demo"],
+            vec!["inspect", "demo"],
+            vec!["install", "demo"],
+        ] {
+            let run = sandbox.module(&args)?;
+            assert_eq!(run.code, EX_DATAERR as i32, "{names:?}: {args:?}");
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn secret_values_are_shown_only_when_read_by_name() -> Result {
     let sandbox = Sandbox::new()?;
     sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;

@@ -96,12 +96,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   value and provenance together, preserve errors, and test directories in place
   of values, invalid UTF-8, and permissions failures with defaults present.
 
-- [ ] Reuse manifest-variable validation across all configuration readers
-  (`src/commands/module/config.rs::open` and its sibling handlers). Inspection
-  and install-time readiness checks bypass config command validation. Extend
-  validation for duplicate/case-colliding names and Windows reserved filenames,
-  then test that no declared name can alias another value or escape its module.
-
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
