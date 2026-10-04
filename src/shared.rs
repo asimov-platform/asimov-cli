@@ -335,56 +335,31 @@ pub struct JevUsage {
     pub output_tokens: u32,
 }
 
-/// A compiled jq expression that can produce zero or more results per input.
-pub struct JqFilter(jaq_core::Filter<jaq_core::Native<jaq_json::Val>>);
-
-pub fn compile_jq(expression: Option<&str>) -> Result<Option<JqFilter>> {
+pub fn compile_jq(expression: Option<&str>) -> Result<Option<jq::JsonFilter>> {
     expression
         .map(|expression| {
-            let loader = jaq_core::load::Loader::new(jaq_std::defs().chain(jaq_json::defs()));
-            let arena = jaq_core::load::Arena::default();
-            let modules = loader
-                .load(
-                    &arena,
-                    jaq_core::load::File {
-                        code: expression,
-                        path: (),
-                    },
-                )
-                .map_err(|e| {
-                    ceprintln!("<s,r>error:</> invalid jq expression: {e:?}");
-                    EX_DATAERR
-                })?;
-            jaq_core::Compiler::default()
-                .with_funs(jaq_std::funs().chain(jaq_json::funs()))
-                .compile(modules)
-                .map(JqFilter)
-                .map_err(|e| {
-                    ceprintln!("<s,r>error:</> invalid jq expression: {e:?}");
-                    EX_DATAERR
-                })
+            expression.parse::<jq::JsonFilter>().map_err(|e| {
+                ceprintln!("<s,r>error:</> invalid jq expression: {e}");
+                EX_DATAERR
+            })
         })
         .transpose()
 }
 
 /// Collects every jq result in input order, failing on any JSON or jq error.
 pub fn filter_jq(
-    filter: &JqFilter,
+    filter: &jq::JsonFilter,
     input: impl AsRef<[u8]>,
 ) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
     let mut values = Vec::new();
     for input in
         serde_json::Deserializer::from_slice(input.as_ref()).into_iter::<serde_json::Value>()
     {
-        let inputs = jaq_core::RcIter::new(core::iter::empty());
-        let outputs = filter
-            .0
-            .run((jaq_core::Ctx::new([], &inputs), input?.into()));
-        for output in outputs {
-            let value = output
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
-            values.push(value.into());
-        }
+        values.extend(
+            filter
+                .filter_json_all(input?)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?,
+        );
     }
     Ok(values)
 }

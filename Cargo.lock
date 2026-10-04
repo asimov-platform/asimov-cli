@@ -256,10 +256,8 @@ dependencies = [
  "indoc",
  "infer",
  "iroh-base",
- "jaq-core",
- "jaq-json",
- "jaq-std",
  "jiff",
+ "jq",
  "json-escape",
  "jsonc-parser",
  "known-types-pypi",
@@ -4239,6 +4237,19 @@ checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
 dependencies = [
  "getrandom 0.4.3",
  "libc",
+]
+
+[[package]]
+name = "jq"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d19900ca4b780fdf857e83ae0ced28dc90606c7ddf333150ff438afd9bf77c35"
+dependencies = [
+ "jaq-core",
+ "jaq-json",
+ "jaq-std",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
