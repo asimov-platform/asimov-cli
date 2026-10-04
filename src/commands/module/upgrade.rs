@@ -29,11 +29,6 @@ pub async fn upgrade(
             .collect::<Result<Vec<_>, _>>()?
     };
 
-    let install_options = InstallOptions::builder()
-        .maybe_version(version.clone())
-        .maybe_model_size(model_size.clone())
-        .build();
-
     for module_name in module_names {
         let current = registry.module_version(&module_name).await.map_err(|_| {
             tracing::error!("failed to read installed version of `{module_name}`");
@@ -73,6 +68,10 @@ pub async fn upgrade(
             cprintln!("<s,c>»</> Upgrading module <s>{module_name}</>...");
         }
 
+        let install_options = InstallOptions::builder()
+            .version(target_version.clone())
+            .maybe_model_size(model_size.clone())
+            .build();
         installer
             .upgrade_module(&module_name, &install_options)
             .await

@@ -122,12 +122,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   validation for duplicate/case-colliding names and Windows reserved filenames,
   then test that no declared name can alias another value or escape its module.
 
-- [ ] Install the exact release that was resolved
-  (`src/commands/module/{install,upgrade}.rs`). `target_version` is resolved for
-  reporting/comparison, but the installer still receives the original optional
-  version, permitting another latest-release lookup. Pass the resolved version
-  into installation and test changing release metadata. Also propagate registry
-  state-check errors instead of treating them as "not installed/enabled".
+- [ ] Test module installation/upgrade against changing release metadata using
+  an injectable installer. Propagate registry state-check errors instead of
+  treating them as "not installed/enabled" (`src/commands/module/install.rs`).
 
 - [ ] Bound source subprocess concurrency and make cancellation explicit
   (`src/commands/source/{fetch,list}.rs`). All URL tasks are spawned at once and

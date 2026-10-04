@@ -14,11 +14,6 @@ pub async fn install(
     let registry = asimov_registry::Registry::default();
     let installer = asimov_installer::Installer::default();
 
-    let install_options = InstallOptions::builder()
-        .maybe_version(version.clone())
-        .maybe_model_size(model_size.clone())
-        .build();
-
     let module_names = if module_names.len() == 1 && module_names[0].as_str() == "all" {
         fetch_all_module_names()
             .await
@@ -63,6 +58,10 @@ pub async fn install(
                 cprintln!("<s,c>»</> Installing module <s>{module_name}</>...");
             }
 
+            let install_options = InstallOptions::builder()
+                .version(target_version.clone())
+                .maybe_model_size(model_size.clone())
+                .build();
             installer
                 .install_module(&module_name, &install_options)
                 .await

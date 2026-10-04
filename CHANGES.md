@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Install and upgrade to the exact module version resolved by the CLI
 - Handle incomplete writes when generating Jev requests
 - Preserve unreadable or invalid application configs during proxy installation
 - Escape special characters in module JSONL output
