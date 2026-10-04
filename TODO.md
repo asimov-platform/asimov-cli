@@ -41,12 +41,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Define and enforce symlink handling for directories and files, including
   replacement races, and test that external targets remain untouched.
 
-- [ ] Make application-config patching fail safely
-  (`src/commands/proxy/install.rs::patch_jsonc_file_with_edikt`). Every read
-  error becomes `{}`, so an existing non-UTF-8 config can be overwritten by a
-  minimal provider config (reproduced). Propagate read/parse errors and replace
-  successfully patched files atomically. Cover unreadable/invalid input,
-  interrupted writes, comments, unrelated settings, and repeated installation.
+- [ ] Replace successfully patched application configs atomically
+  (`src/commands/proxy/install.rs::patch_jsonc_file_with_edikt`). Cover
+  interrupted writes and preservation of the previous config on write failure.
 
 ## P2: CLI behavior and process lifecycle
 

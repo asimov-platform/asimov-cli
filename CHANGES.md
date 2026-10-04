@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Preserve unreadable or invalid application configs during proxy installation
 - Escape special characters in module JSONL output
 - Redact upstream proxy credentials from diagnostics
 - Hide secret defaults in JSON module inspection output

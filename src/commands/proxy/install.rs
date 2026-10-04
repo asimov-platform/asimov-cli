@@ -98,7 +98,12 @@ fn patch_jsonc_file_with_edikt(
 ) -> Result<(), BoxError> {
     use edikt_core::{Document, Step};
     let file_path = file_path.as_ref();
-    let input = std::fs::read_to_string(&file_path).unwrap_or_else(|_| "{}".to_string());
+    let input = std::fs::read_to_string(file_path)?;
+    // The editing parser recovers from malformed syntax; reject it first.
+    let parsed = jsonc_parser::parse_to_value(&input, &Default::default())?;
+    if !matches!(parsed, Some(jsonc_parser::JsonValue::Object(_))) {
+        return Err("application config must be a JSON object".into());
+    }
     let mut cst = edikt_jsonc::parse(&input)?;
     cst.set(
         json_path
@@ -112,6 +117,44 @@ fn patch_jsonc_file_with_edikt(
     let output = cst.to_source();
     std::fs::write(&file_path, output)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_configs_are_not_overwritten() -> Result<(), BoxError> {
+        let root = temp_dir::TempDir::new()?;
+        let path = root.child("settings.json");
+        for input in [b"\xff\xfe".as_slice(), b"{broken json", b"", b"null", b"[]"] {
+            std::fs::write(&path, input)?;
+            assert!(patch_jsonc_file_with_edikt(&path, &["provider"], "{}").is_err());
+            assert_eq!(std::fs::read(&path)?, input);
+        }
+        std::fs::remove_file(&path)?;
+        assert!(patch_jsonc_file_with_edikt(&path, &["provider"], "{}").is_err());
+        assert!(!path.exists());
+        std::fs::create_dir(&path)?;
+        assert!(patch_jsonc_file_with_edikt(&path, &["provider"], "{}").is_err());
+        assert!(path.is_dir());
+        Ok(())
+    }
+
+    #[test]
+    fn patching_preserves_comments_and_unrelated_settings() -> Result<(), BoxError> {
+        let root = temp_dir::TempDir::new()?;
+        let path = root.child("settings.json");
+        std::fs::write(&path, "{\n  // keep this comment\n  \"font_size\": 14\n}\n")?;
+        for _ in 0..2 {
+            patch_jsonc_file_with_edikt(&path, &["provider"], r#"{"name":"ASIMOV"}"#)?;
+            let output = std::fs::read_to_string(&path)?;
+            assert!(output.contains("// keep this comment"));
+            assert!(output.contains("\"font_size\": 14"));
+            assert_eq!(output.matches("ASIMOV").count(), 1);
+        }
+        Ok(())
+    }
 }
 
 #[cfg(false)]
