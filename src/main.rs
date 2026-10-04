@@ -298,17 +298,31 @@ pub async fn main() -> SysexitsError {
     let telemetry = metadata.start();
 
     let result = async {
-        // From asimov-module-cli:
-        asimov_registry::Registry::default()
-            .create_file_tree()
-            .await
-            .inspect_err(|e| {
-                tracing::debug!("failed to create module file tree: {e}");
-            })
-            .ok();
+        let needs_modules = match &command {
+            #[cfg(feature = "module")]
+            Command::Module(_) => true,
+            #[cfg(feature = "source")]
+            Command::Source { .. } => true,
+            _ => false,
+        };
+        if needs_modules {
+            asimov_registry::Registry::default()
+                .create_file_tree()
+                .await
+                .inspect_err(|e| {
+                    tracing::debug!("failed to create module file tree: {e}");
+                })
+                .ok();
+        }
 
-        // From asimov-snapshot-cli:
-        if let Err(err) = std::fs::create_dir_all(
+        #[cfg(all(feature = "source", feature = "source-snap"))]
+        if matches!(
+            &command,
+            Command::Source {
+                command: Some(SourceCommand::Snap { .. }),
+                ..
+            }
+        ) && let Err(err) = std::fs::create_dir_all(
             asimov_env::paths::asimov_root().join("snapshots"),
         )
         .map_err(|e| {

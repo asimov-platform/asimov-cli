@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Initialize module and snapshot storage only for commands that use it
 - Run external help discovery only when root long help is requested
 - Forward nested external help requests to the intended subcommand
 - Expand and advertise aliases only for commands enabled in the build

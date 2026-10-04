@@ -42,12 +42,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
 
-- [ ] Defer filesystem initialization to the commands needing it
-  (`src/main.rs`). Unrelated commands create module and snapshot directories.
-  Snapshot-directory failure can even prevent telemetry opt-out. Preserve
-  identity initialization for actual operations, and test independent commands
-  with unwritable storage.
-
 - [ ] Make external help respect the parsed command position
   (`src/main.rs`, `src/aliases.rs`).
   `asimov --color never help probe` fails although `asimov help probe` succeeds
