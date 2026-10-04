@@ -205,11 +205,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
-- [ ] Make integration tests feature-aware (`tests/module/main.rs`,
-  `Cargo.toml`). The no-default-features suite runs tests for an absent module
-  command: 13 fail and the noninteractive-setup test passes for the wrong
-  reason. Gate these tests or declare required features, then exercise default,
-  all-features, and supported reduced-feature builds in CI.
+- [ ] Exercise default, all-features, and supported reduced-feature builds in
+  CI, including the feature-gated module and source integration suites.
 
 - [ ] Strengthen and isolate CLI fixtures (`tests/shared.rs`, external-command
   tests, and `tests/module/`). Commented presence/success

@@ -199,6 +199,11 @@ lto = "thin"
 name = "asimov"
 path = "src/main.rs"
 
+[[test]]
+name = "module"
+path = "tests/module/main.rs"
+required-features = ["module"]
+
 # See: https://github.com/cargo-bins/cargo-binstall/blob/main/SUPPORT.md
 [package.metadata.binstall]
 pkg-fmt = "tgz"
