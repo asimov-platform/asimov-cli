@@ -349,6 +349,26 @@ fn inspect_redacts_secret_defaults_in_every_output_format() -> Result {
 }
 
 #[test]
+fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
+    let mut manifest: serde_json::Value = serde_json::from_str(MANIFEST)?;
+    let label = "quoted \"label\"\nwith\\slashes\r\t";
+    manifest["label"] = label.into();
+    let sandbox = Sandbox::with_manifest(&serde_json::to_string(&manifest)?)?;
+    let run = sandbox.module(&["list", "--output", "jsonl"])?;
+    assert_eq!(run.code, EX_OK as i32);
+    let lines: Vec<_> = run.stdout.lines().collect();
+    assert_eq!(lines.len(), 1);
+    let record: serde_json::Value = serde_json::from_str(lines[0])?;
+    assert_eq!(record["label"], label);
+    assert_eq!(record["name"], "demo");
+    assert_eq!(record["@type"], "AsimovModule");
+    assert_eq!(record["@id"], "https://asimov.directory/modules/demo");
+    assert_eq!(record["version"], "");
+    assert_eq!(record["enabled"], false);
+    Ok(())
+}
+
+#[test]
 fn setup_without_a_terminal_fails_rather_than_waiting() -> Result {
     let sandbox = Sandbox::new()?;
 

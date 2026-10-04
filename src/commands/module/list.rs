@@ -3,6 +3,18 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use color_print::cprintln;
 
+#[derive(serde::Serialize)]
+struct ModuleRecord<'a> {
+    #[serde(rename = "@type")]
+    kind: &'static str,
+    #[serde(rename = "@id")]
+    uri: String,
+    name: &'a str,
+    label: &'a str,
+    enabled: bool,
+    version: &'a str,
+}
+
 pub async fn list(output: String, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
     let modules = registry.installed_modules().await.map_err(|e| {
@@ -19,17 +31,15 @@ pub async fn list(output: String, _flags: &StandardOptions) -> Result<(), BoxErr
 
         match output.as_str() {
             "jsonl" => {
-                let version = module.version.unwrap_or_default();
-                let label = module.manifest.label;
-                let uri = format!("https://asimov.directory/modules/{name}");
-                println!(
-                    r#"{{"@type": "AsimovModule", "@id": "{}", "name": "{}", "label": "{}", "enabled": {}, "version": "{}"}}"#,
-                    uri,
-                    name,
-                    label.unwrap_or_default(),
-                    is_enabled,
-                    version
-                );
+                let record = ModuleRecord {
+                    kind: "AsimovModule",
+                    uri: format!("https://asimov.directory/modules/{name}"),
+                    name: &module.manifest.name,
+                    label: module.manifest.label.as_deref().unwrap_or_default(),
+                    enabled: is_enabled,
+                    version: module.version.as_deref().unwrap_or_default(),
+                };
+                println!("{}", serde_json::to_string(&record)?);
             },
             _ => {
                 if is_enabled {

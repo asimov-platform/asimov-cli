@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Escape special characters in module JSONL output
 - Redact upstream proxy credentials from diagnostics
 - Hide secret defaults in JSON module inspection output
 - Preserve all jq results and report later filter errors in source commands

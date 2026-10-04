@@ -97,11 +97,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   logging is unconditional. Share color-aware rendering across stdout/stderr,
   honor quiet/verbose modes, and test redirected output as well as help output.
 
-- [ ] Serialize module JSONL with Serde (`src/commands/module/list.rs:20-32`).
-  Raw interpolation of labels and versions produces invalid JSON for quotes,
-  newlines, or backslashes (reproduced with a quoted label). Define an output
-  record and validate every emitted line with adversarial string values.
-
 - [ ] Validate locally implemented formats and required operands in Clap
   (`src/commands/{module,source,proxy}.rs`, `src/commands/proxy/config.rs`).
   Invalid module formats fall back to human output; unsupported proxy formats
