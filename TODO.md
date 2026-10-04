@@ -94,11 +94,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   logging is unconditional. Share color-aware rendering across stdout/stderr,
   honor quiet/verbose modes, and test redirected output as well as help output.
 
-- [ ] Validate proxy formats (`src/commands/proxy.rs`,
-  `src/commands/proxy/config.rs`).
-  Unsupported proxy formats silently succeed with empty output (reproduced).
-  Use per-command/target value parsers.
-
 ## P2: Module configuration and source execution
 
 - [ ] Preserve whitespace on effective config retrieval

@@ -53,10 +53,9 @@ pub enum ProxyCommand {
         /// The target application to configure.
         app: ProxyConfigTarget,
 
-        /// The output format.
-        /// [default: auto]
-        /// [possible values: env, js, json, py, toml, sh, ts]
+        /// The output format (supported values depend on the target).
         #[clap(short, long)]
+        #[arg(value_parser = ["env", "export", "js", "json", "jsonc", "py", "toml", "ts", "dotnet", "set", "setx"])]
         format: Option<String>,
     },
 

@@ -69,7 +69,7 @@ pub async fn config(
                 println!("{export} {}={}", "OPENAI_API_BASE", base_url);
                 println!("{export} {}={}", "OPENAI_API_KEY", "aider");
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         Bash | Zsh => match format.as_deref() {
@@ -77,7 +77,7 @@ pub async fn config(
                 println!("export {}={}", "OPENAI_API_BASE", base_url);
                 println!("export {}={}", "OPENAI_API_KEY", "sh");
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         #[cfg(feature = "unstable")]
@@ -91,7 +91,7 @@ pub async fn config(
                 println!("{}={}", "OPENAI_API_BASE", base_url);
                 println!("{}={}", "OPENAI_API_KEY", "dotenv");
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://goose-docs.ai/docs/getting-started/providers/#configure-custom-provider>
@@ -108,7 +108,7 @@ pub async fn config(
                     include_str!("config/goose.json")
                 );
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://reference.langchain.com/python/langchain-openai/chat_models/base/ChatOpenAI>
@@ -120,7 +120,7 @@ pub async fn config(
             Some("js") | Some("ts") => {
                 print!("{}", include_str!("config/langchain.js"));
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://docs.litellm.ai/docs/contributing/adding_openai_compatible_providers>
@@ -135,7 +135,7 @@ pub async fn config(
                     include_str!("config/litellm.json")
                 );
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://developers.llamaindex.ai/python/framework-api-reference/llms/openai_like/>
@@ -143,7 +143,7 @@ pub async fn config(
             Some("py") | None => {
                 print!("{}", include_str!("config/llamaindex.py"));
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://opencode.ai/docs/providers/#custom-provider>
@@ -158,7 +158,7 @@ pub async fn config(
                     include_str!("config/opencode.json")
                 );
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://docs.openhands.dev/openhands/usage/llms/custom-llm-configs>
@@ -175,7 +175,7 @@ pub async fn config(
                 println!("api_key = \"{}\"", "openhands");
                 println!("model = \"{}\"", default_model);
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         Powershell => match format.as_deref() {
@@ -193,7 +193,7 @@ pub async fn config(
                 println!("setx {}={}", "OPENAI_API_BASE", base_url);
                 println!("setx {}={}", "OPENAI_API_KEY", "powershell");
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://pi.dev/docs/latest/providers#custom-providers>
@@ -209,7 +209,7 @@ pub async fn config(
                     include_str!("config/pi.json")
                 );
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
 
         // See: <https://zed.dev/docs/reference/all-settings#language-models>
@@ -224,10 +224,15 @@ pub async fn config(
                     zed_asimov_config()?
                 );
             },
-            Some(_) => {},
+            Some(format) => return unsupported_format(app, format),
         },
     };
     Ok(())
+}
+
+fn unsupported_format(app: ProxyConfigTarget, format: &str) -> Result<(), BoxError> {
+    eprintln!("error: output format `{format}` is not supported for {app:?}");
+    Err(crate::SysexitsError::EX_USAGE.into())
 }
 
 pub(crate) fn zed_asimov_config() -> Result<String, jsonc_parser::errors::ParseError> {
