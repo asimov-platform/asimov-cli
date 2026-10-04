@@ -19,7 +19,7 @@ use clientele::crates::clap::Args;
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::{ConfigBuilderExt as _, HttpsConnector};
 use hyper_util::{client::legacy::Client, rt::TokioExecutor};
-use std::{net::IpAddr, sync::Arc};
+use std::{net::IpAddr, sync::Arc, time::Duration};
 use tokio::net::TcpListener;
 
 const UPSTREAM_BASE_URL: &str = "https://openrouter.ai/api";
@@ -44,6 +44,10 @@ pub struct ProxyServeArgs {
     /// Maximum buffered request body size in bytes [default: 16777216]
     #[clap(long)]
     pub max_body_bytes: Option<usize>,
+
+    /// Seconds to wait for upstream response headers [default: 120]
+    #[clap(long, value_parser = clap::value_parser!(u64).range(1..))]
+    pub upstream_timeout: Option<u64>,
 }
 
 #[derive(Clone)]
@@ -53,6 +57,7 @@ struct ProxyState {
     authorization: HeaderValue,
     verbose: bool,
     max_body_bytes: usize,
+    upstream_timeout: Duration,
 }
 
 pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
@@ -89,6 +94,7 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
         authorization,
         verbose: flags.verbose > 0,
         max_body_bytes: args.max_body_bytes.unwrap_or(DEFAULT_MAX_BODY_BYTES),
+        upstream_timeout: Duration::from_secs(args.upstream_timeout.unwrap_or(120)),
     };
 
     let router = Router::new()
@@ -158,14 +164,11 @@ async fn proxy_handler(
 
     let upstream_request = http::Request::from_parts(head, Full::new(upstream_request_body));
 
-    let upstream_response = state
-        .client
-        .request(upstream_request)
-        .await
-        .map_err(|err| {
-            eprintln!("Upstream request failed: {}", err);
-            StatusCode::BAD_GATEWAY
-        })?;
+    let upstream_response = wait_for_upstream(
+        state.upstream_timeout,
+        state.client.request(upstream_request),
+    )
+    .await?;
 
     // Stream the upstream response body back to the client, teeing each data
     // frame into the body log (if enabled):
@@ -180,6 +183,23 @@ async fn proxy_handler(
 
     let response = Response::from_parts(head, Body::new(upstream_response_body));
     Ok(response)
+}
+
+async fn wait_for_upstream<T, E: core::fmt::Display>(
+    limit: Duration,
+    request: impl core::future::Future<Output = Result<T, E>>,
+) -> Result<T, StatusCode> {
+    match tokio::time::timeout(limit, request).await {
+        Ok(Ok(response)) => Ok(response),
+        Ok(Err(error)) => {
+            eprintln!("Upstream request failed: {error}");
+            Err(StatusCode::BAD_GATEWAY)
+        },
+        Err(_) => {
+            eprintln!("Upstream response headers timed out");
+            Err(StatusCode::GATEWAY_TIMEOUT)
+        },
+    }
 }
 
 async fn read_request_body(body: Body, limit: usize) -> Result<Bytes, StatusCode> {
@@ -243,6 +263,45 @@ fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn upstream_deadline_bounds_headers_without_buffering_the_body() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for send_headers in [false, true] {
+            let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let address = listener.local_addr().unwrap();
+            let server = tokio::spawn(async move {
+                let (mut socket, _) = listener.accept().await.unwrap();
+                let mut request = [0; 4096];
+                socket.read(&mut request).await.unwrap();
+                if send_headers {
+                    socket
+                        .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+                        .await
+                        .unwrap();
+                }
+                core::future::pending::<()>().await;
+            });
+            let client = Client::builder(TokioExecutor::new()).build_http::<Full<Bytes>>();
+            let request = http::Request::builder()
+                .uri(format!("http://{address}/"))
+                .body(Full::new(Bytes::new()))
+                .unwrap();
+            let result = tokio::time::timeout(
+                Duration::from_secs(2),
+                wait_for_upstream(Duration::from_millis(100), client.request(request)),
+            )
+            .await;
+            server.abort();
+            let _ = server.await;
+            let result = result.expect("header wait must finish");
+            if send_headers {
+                assert_eq!(result.unwrap().status(), StatusCode::OK);
+            } else {
+                assert_eq!(result.unwrap_err(), StatusCode::GATEWAY_TIMEOUT);
+            }
+        }
+    }
 
     #[tokio::test]
     async fn request_body_limits_apply_to_buffered_and_streamed_bodies() {

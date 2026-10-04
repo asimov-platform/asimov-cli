@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Return HTTP 504 after the proxy upstream timeout (`--upstream-timeout`)
 - Bound Jev HTTP connection, read, and total request waits
 - Validate proxy bind settings consistently in serving and reporting commands
 - Honor `--color` and redirected output in module listings

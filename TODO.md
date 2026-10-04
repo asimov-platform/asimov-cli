@@ -85,10 +85,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   and test custom ports and IPv4/IPv6 client URLs.
 
 - [ ] Bound proxy network waits and concurrency (`src/commands/proxy/serve.rs`
-  and its `ProxyConnector`). Connection, CONNECT, SOCKS, TLS, and upstream-header
-  waits have no explicit deadlines. Add configurable deadlines and appropriate
-  504 responses while preserving streaming. Test slow uploads/upstreams and
-  client disconnection.
+  and its `ProxyConnector`). Add per-stage deadlines inside connection,
+  CONNECT, SOCKS, and TLS setup, plus upload limits and bounded concurrency.
+  Test cancellation of connection attempts and client disconnection while
+  preserving streamed responses.
 
 - [ ] Strip hop-by-hop headers in both proxy directions
   (`src/commands/proxy/serve.rs::proxy_handler`). Forwarding currently removes
