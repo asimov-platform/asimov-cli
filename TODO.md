@@ -1,1 +1,335 @@
 # Enhancement backlog
+
+Review baseline: 2026-10-04. Scope: the Rust library and binary, all stable and
+experimental handlers, build configuration, dependencies, tests, proxy
+templates, and local CI/release workflows. P1 = data integrity/confidentiality;
+P2 = runtime correctness/reliability; P3 = maintenance, portability, and
+additional coverage.
+Items marked "reproduced" were checked with isolated synthetic fixtures.
+
+## Verification baseline
+
+- Rust/Cargo 1.98.1 on aarch64 macOS.
+- `cargo fmt --all -- --check` and `cargo check --locked`: pass.
+- `cargo test --locked`: 44 tests pass; one doctest is ignored.
+- `cargo +1.97.1 check --locked`: pass on the declared minimum toolchain.
+- `cargo check --locked --all-features`: pass.
+- `cargo check --locked --no-default-features`: pass with warnings. Individual
+  `module`, `proxy`, `source`, `telemetry`, and `source-snap` feature checks
+  also pass; several report unused imports/functions.
+- `cargo test --locked --no-default-features`: 13 module integration tests fail.
+- `cargo clippy --locked --all-targets --all-features -- -D warnings`: fails
+  with 35 diagnostics, including two default-deny `unused_io_amount` findings.
+- `cargo doc --locked --no-deps`: succeeds with 14 `rustdoc::bare_urls`
+  warnings.
+
+## P1: Data integrity and confidentiality
+
+- [ ] Preserve every result produced by jq filters (`src/shared.rs::filter_jq`).
+  Calling `filter_json` once per input silently drops additional outputs:
+  `.[]` over `[1,2]` yields only `1` (reproduced). Use an iterator-capable jq
+  interface and test multiple results, empty output, and errors after a result
+  through both `source fetch` and `source list`.
+
+- [ ] Preserve and validate Jev question IDs (`src/shared.rs::JevAnswers` and
+  `filter_jev_batch`). Deserialization sorts IDs but then discards them; a lone
+  `q1` becomes vector element zero (reproduced). Missing answers consequently
+  select the wrong input, and extra passing answers can index beyond `inputs`.
+  Validate IDs/counts, answer types, and score ranges before emitting records;
+  cover reordered, missing, duplicate, malformed, and out-of-range IDs.
+
+- [ ] Redact secret defaults throughout JSON inspection
+  (`src/commands/module/inspect.rs:52-75`). The summary masks
+  `config[].default`, but the embedded manifest exposes the same secret default
+  (reproduced). Serialize a redacted manifest/report and assert that secrets
+  occur nowhere in either human-readable or JSON inspection output.
+
+- [ ] Create private config files atomically, including on failure
+  (`src/commands/module/config/{set,setup}.rs`). New files use default creation
+  modes until the final permission repair. A valid first assignment followed by
+  an I/O failure leaves the first secret file at 0644 under a 022 umask
+  (reproduced); setup can also return before repair. Use 0600 temporary files
+  and atomic replacement inside a 0700 directory. Test interrupted writes,
+  partial batches, and preservation of an existing value on write failure.
+
+- [ ] Constrain config reads/writes to the intended directory
+  (`src/commands/module/config.rs::set_permissions` and
+  `src/commands/module/config/{get,set,setup}.rs`). Permission repair skips
+  symlinks, while value access follows them. Setting a symlinked variable
+  overwrites its target outside the config tree (reproduced).
+  Define and enforce symlink handling for directories and files, including
+  replacement races, and test that external targets remain untouched.
+
+- [ ] Redact upstream proxy credentials from diagnostics
+  (`src/commands/proxy/serve.rs:68-70` and its `ProxyConfig`). Derived `Debug`
+  prints SOCKS passwords and recoverable HTTP Basic credentials under `-v`;
+  URL parse errors also embed the complete input. Implement redacted formatting
+  and credential-safe errors, with assertions covering both proxy kinds.
+
+- [ ] Make application-config patching fail safely
+  (`src/commands/proxy/install.rs::patch_jsonc_file_with_edikt`). Every read
+  error becomes `{}`, so an existing non-UTF-8 config can be overwritten by a
+  minimal provider config (reproduced). Propagate read/parse errors and replace
+  successfully patched files atomically. Cover unreadable/invalid input,
+  interrupted writes, comments, unrelated settings, and repeated installation.
+
+## P2: CLI behavior and process lifecycle
+
+- [ ] Collect external help only when requested (`src/main.rs:128-132`,
+  `after_long_help`). Constructing the parser eagerly runs `Help.execute()`;
+  even `asimov --version` invokes every discovered external command with
+  `--help` (reproduced). Make ordinary dispatch and short informational paths
+  avoid those subprocesses; test startup with a side-effecting fake command.
+
+- [ ] Bound and correctly reap help subprocesses
+  (`src/commands/{help,help_cmd}.rs`). Collection waits for exit before draining
+  pipes, uses one deadline for the entire parallel batch, busy-polls, and kills
+  without waiting; explicit external help has no timeout. Drain stdout/stderr
+  concurrently, bound output, apply per-child deadlines, and always reap
+  children. Exercise large help output, hangs, failed spawns, and termination.
+
+- [ ] Defer identity and filesystem initialization to the commands needing it
+  (`src/main.rs:108-117,292-311`). Help/version/license require a working OS
+  keyring, while unrelated commands create module and snapshot directories.
+  Snapshot-directory failure can even prevent telemetry opt-out. Preserve
+  identity initialization for actual operations, but test informational commands
+  with an unavailable keyring and independent commands with unwritable storage.
+
+- [ ] Make external help and aliases respect the parsed command position
+  (`src/main.rs:178-211`, `src/commands/help_cmd.rs`, `src/aliases.rs`).
+  `asimov --color never help probe` fails although `asimov help probe` succeeds
+  (reproduced); nested external help prepends `--help` before subcommands.
+  Cover leading global options and nested help. Also feature-gate alias
+  expansion/help entries so reduced builds preserve external-command dispatch.
+
+- [ ] Preserve external command arguments and exit statuses
+  (`src/main.rs::Command::External`, `src/commands/external.rs`). An external
+  exit status of 42 becomes `EX_SOFTWARE` (reproduced), and signal statuses are
+  similarly forced into `SysexitsError`. Carry raw process exit status across
+  this boundary and retain `OsString` arguments for non-UTF-8 paths. Test normal
+  failures, Unix signals, and byte-preserving argument forwarding.
+
+- [ ] Report raw errors with context and handle broken pipes deliberately
+  (`src/main.rs::sysexits`, command output paths). Non-`SysexitsError` values
+  are silently reduced to `EX_SOFTWARE`; several config/filesystem errors reach
+  this path without diagnostics. Meanwhile, `println!` on a closed pipe panics
+  with exit 101 (reproduced). Introduce fallible output/error handling with
+  appropriate I/O/config exit codes, preserving existing explicit sysexits.
+
+- [ ] Apply standard color and verbosity options to handler output
+  (`src/commands/module/`, `src/commands/source/snap/`, and the proxy). Listing
+  still emits ANSI escapes with `--color never` (reproduced), and proxy request
+  logging is unconditional. Share color-aware rendering across stdout/stderr,
+  honor quiet/verbose modes, and test redirected output as well as help output.
+
+- [ ] Serialize module JSONL with Serde (`src/commands/module/list.rs:20-32`).
+  Raw interpolation of labels and versions produces invalid JSON for quotes,
+  newlines, or backslashes (reproduced with a quoted label). Define an output
+  record and validate every emitted line with adversarial string values.
+
+- [ ] Validate locally implemented formats and required operands in Clap
+  (`src/commands/{module,source,proxy}.rs`, `src/commands/proxy/config.rs`).
+  Invalid module formats fall back to human output; unsupported proxy formats
+  silently succeed with empty output (reproduced). Use per-command/target value
+  parsers and reject missing operands where no default operation is defined.
+  Keep deliberate defaults such as upgrading/compacting all entries explicit.
+
+## P2: Module configuration and source execution
+
+- [ ] Preserve config-value whitespace on explicit retrieval
+  (`src/commands/module/config/get.rs`). `set` stores exact assignment bytes,
+  but even `get --stored` applies `trim()` (reproduced). Define newline handling
+  independently from value content and test spaces, multiline values, CRLF,
+  empty strings, `--stdin`, and `--from-json` round trips.
+
+- [ ] Distinguish unset configuration from unreadable configuration
+  (`src/commands/module/config.rs::Module::source`, config show, and inspect).
+  `try_exists(...).unwrap_or(false)` and `.variable(...).ok()` suppress I/O and
+  decoding errors; inspection reduces read failures to an unset status. Resolve
+  value and provenance together, preserve errors, and test directories in place
+  of values, invalid UTF-8, and permissions failures with defaults present.
+
+- [ ] Reuse manifest-variable validation across all configuration readers
+  (`src/commands/module/config.rs::open` and its sibling handlers). Inspection
+  and install-time readiness checks bypass config command validation. Extend
+  validation for duplicate/case-colliding names and Windows reserved filenames,
+  then test that no declared name can alias another value or escape its module.
+
+- [ ] Install the exact release that was resolved
+  (`src/commands/module/{install,upgrade}.rs`). `target_version` is resolved for
+  reporting/comparison, but the installer still receives the original optional
+  version, permitting another latest-release lookup. Pass the resolved version
+  into installation and test changing release metadata. Also propagate registry
+  state-check errors instead of treating them as "not installed/enabled".
+
+- [ ] Bound source subprocess concurrency and make cancellation explicit
+  (`src/commands/source/{fetch,list}.rs`). All URL tasks are spawned at once and
+  drained in input order; early jq, HTTP, or stdout errors drop remaining join
+  handles. Use a bounded, cancellation-aware runner group and verify SDK child
+  cleanup on early return. Add fake-runner tests for delayed output, post-output
+  failures, ordering, debug/cache/deadline forwarding, and inherited reader I/O.
+
+- [ ] Bound shared HTTP requests and validate Jev payloads locally
+  (`src/shared.rs::{http_client,post_typesafe,filter_jev_batch}`). The shared
+  client configures no connect/read/overall timeout, so Jev filtering can stall
+  indefinitely despite a lister deadline. Validate each input as JSON before
+  uploading; expose useful, credential-safe status/body-generation errors.
+  Test slow responses, HTTP failures, malformed inputs, and upload cancellation
+  against an injectable local endpoint.
+
+## P2: Proxy reliability and interoperability
+
+- [ ] Replace proxy startup/request panics with validated state and errors
+  (`src/commands/proxy/serve.rs`). Missing API keys, invalid authorization
+  header values, bind failures, and serve errors use
+  `expect`/`unwrap`. Validate credentials once, keep the header in shared state,
+  and return contextual sysexits. Add graceful shutdown so in-flight responses,
+  logs, and command telemetry can finish on termination.
+
+- [ ] Share endpoint configuration across serving, reporting, and templates
+  (`src/commands/proxy/` and its `config/` templates).
+  IPv6 reporting emits invalid `http://::1:1920/v1` (reproduced); generated and
+  installed configs hardcode port 1920 despite environment overrides. Centralize
+  validation and URL rendering, reject malformed environment values, and test
+  custom ports, IPv4/IPv6, and wildcard-bind versus client-address semantics.
+
+- [ ] Bound proxy request buffering and network waits
+  (`src/commands/proxy/serve.rs:138-142` and its `ProxyConnector`). Bodies are
+  collected without a size limit, and connection, CONNECT, SOCKS, TLS, and
+  upstream-header waits have no explicit deadlines. Add configurable limits,
+  appropriate 413/504 responses, and bounded concurrency while preserving
+  streaming responses. Test slow uploads/upstreams and client disconnection.
+
+- [ ] Strip hop-by-hop headers in both proxy directions
+  (`src/commands/proxy/serve.rs::proxy_handler`). Forwarding currently removes
+  only request Host/Content-Length and passes upstream response headers through.
+  Remove Connection-nominated fields and standard hop-by-hop/proxy-auth headers,
+  reconcile framing, and test keep-alive, chunked responses, and streamed SSE
+  using a local upstream fixture.
+
+- [ ] Cover conventional upstream-proxy addressing and authentication
+  (`src/commands/proxy/serve/{proxy_config,proxy_connector}.rs`).
+  URL credentials lack percent-decoding, bracketed IPv6 hosts feed socket
+  resolution, and local SOCKS DNS uses only the first address. Add tests for
+  encoded credentials, IPv6, multiple addresses, and port-aware NO_PROXY rules.
+  Test CONNECT framing/status handling and both SOCKS DNS modes against local
+  servers rather than relying solely on parser tests.
+
+- [ ] Move body logging off the response polling path
+  (`src/commands/proxy/serve/body_logger.rs`). Each frame locks a shared mutex
+  and performs synchronous disk writes; write failures are discarded, concurrent
+  exchanges lack correlation IDs, and new logs use default file permissions.
+  Use a bounded writer queue with explicit failure/backpressure behavior,
+  request IDs, private file creation, and shutdown flushing. Test slow/full
+  sinks without losing response-stream correctness.
+
+- [ ] Correct and exercise Windows shell templates
+  (`src/commands/proxy/config.rs:65-73,182-198`). Generated `setx KEY=value`
+  commands use assignment syntax where `setx` requires separate name/value
+  arguments; the `set` format also emits `setx`. Render each shell's actual
+  syntax and validate quoting and persistence behavior on Windows.
+
+- [ ] Keep unfinished proxy commands from panicking under `--all-features`
+  (`src/commands/proxy/{config,install,models}.rs`). Claude Code/Cline config
+  and Cursor/Obsidian/VSCode installation use `todo!`; default installation in
+  an unstable build selects these targets automatically. Hide unfinished targets
+  or return explicit unsupported errors, and mark the static model list as a
+  placeholder until provider discovery is implemented.
+
+## P2: Verification and delivery
+
+- [ ] Make integration tests feature-aware (`tests/module/main.rs`,
+  `Cargo.toml`). The no-default-features suite runs tests for an absent module
+  command: 13 fail and the noninteractive-setup test passes for the wrong
+  reason. Gate these tests or declare required features, then exercise default,
+  all-features, and supported reduced-feature builds in CI.
+
+- [ ] Strengthen and isolate CLI fixtures (`tests/shared.rs`, external-command
+  tests, and `tests/module/`). Commented presence/success
+  assertions let several tests pass when every lookup/execution fails. Assert
+  expected success and failure paths, include stderr in failures, and verify
+  setup commands' statuses. Prefer per-child PATH/environment configuration over
+  unsafe global mutation; isolate cwd, dotenv, telemetry, and keyring state.
+
+- [ ] Pin and constrain delegated workflow execution
+  (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
+  `@master` refs and inherit all secrets; CI runs on `pull_request_target` with
+  pull-request write permission. Audit the shared workflow's PR-code execution
+  boundary, pin reviewed revisions, and pass only necessary secrets/permissions.
+  Add automated updates for pinned Actions dependencies.
+
+## P3: Portability, maintenance, and further coverage
+
+- [ ] Reconcile the feature/no_std baseline (`Cargo.toml`, `src/lib.rs`).
+  Defaults are `["all"]`, no `std` feature exists, and the library and its
+  dependencies rely on std. Design a real std boundary for portable library
+  APIs versus process/network/filesystem commands, adopt
+  `default = ["all", "std"]`, and verify the portable subset on a no_std target.
+  Clarify feature behavior: `source-snap` alone exposes no built-in commands.
+
+- [ ] Align minimum-toolchain policy (`Cargo.toml`, CI/release workflows,
+  `AGENTS.md`). The manifest/workflows require 1.97.1 while the baseline says
+  1.97. The declared 1.97.1 build passes; establish whether 1.97.0 is supported,
+  synchronize the requirement, and continuously check the chosen minimum with
+  the locked dependency graph as well as current stable Rust.
+
+- [ ] Reduce unused and unnecessarily unconditional dependencies
+  (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`, `whoami`,
+  optional `asimov-proxy`/`mime`, and generated shadow metadata, which have no
+  corresponding source consumers. Gate experimental SDK dependencies and narrow
+  broad Tokio/default features where practical. Measure clean-build time and
+  binary size, checking feature unification before removing dependencies.
+
+- [ ] Retire or explicitly deprecate the legacy registry API
+  (`src/registry.rs`, `src/registry/`). Public `fetch_modules` always returns an
+  empty list and `is_enabled` always returns true, while active CLI handlers use
+  the SDK registry. Migrate consumers before removal. If retained, repair HTTP
+  status handling, hardcoded package versions/endpoints, dependency-kind and
+  requirement parsing, and the use of parent-package versions for modules.
+
+- [ ] Establish readiness contracts before wiring experimental commands
+  (`src/commands/unstable.rs`, `src/commands/unstable/`). The root enum is
+  empty; several handlers return success without doing anything, and checks
+  report missing required files but still succeed. Before exposing each group,
+  replace stubs with explicit failures and add dispatch/exit-status tests.
+  Protocol follow-ups include validating tickets without panics, honoring
+  ignored `--ticket` values, observing subscriber task errors, bounded peer
+  waits, and guaranteed node termination on errors.
+
+- [ ] Add deterministic snapshot lifecycle and timestamp coverage
+  (`src/commands/source/snap/`, `src/timestamps.rs`). Exercise save/list/log/
+  compact with temporary storage, normalized URLs, corruption, and failures.
+  Replace wall-clock-dependent timestamp tests and global tracing initialization
+  with fixed instants; include month ends, leap years, DST, and future times.
+  Avoid panics from relative-time formatting and consolidate the unused parallel
+  `create` implementation with the dispatched `save` path.
+
+- [ ] Test telemetry's metadata and lifecycle contracts
+  (`src/shared/telemetry{,_disabled}.rs`, `src/commands/configure.rs`,
+  `src/main.rs`). Use a fake/local sink to cover aliases/default subcommands,
+  external-command redaction, module-name deduplication, failures, cancellation,
+  and opt-out without flushing queued events first. Assert that URLs, arbitrary
+  arguments, config values, and secrets never enter serialized events.
+
+- [ ] Establish warning-clean lint and rustdoc baselines
+  (`src/shared.rs`, `src/commands/`, public library APIs). Start with ignored
+  write counts in Jev JSON generation, then address the remaining strict Clippy
+  findings and feature-specific dead imports/functions. Fix the 14 bare-URL
+  rustdoc warnings and document public error/output contracts. Update Jev docs
+  that still describe per-line requests/completion order although the code now
+  sends one request per batch and iterates answers in numeric order.
+
+- [ ] Match parsed URL components when ranking module links
+  (`src/lib.rs::sort_links`, `src/commands/module/browse.rs`). Preference uses
+  a substring of the complete URL, and host preference uses unconstrained
+  suffixes such as `ends_with("github.com")`. Compare exact hosts/domain
+  boundaries and path segments, with table-driven tests for query-string
+  lookalikes, unrelated suffix hosts, malformed URLs, and usable browse targets.
+
+- [ ] Repair generated command examples and reference snippets
+  (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
+  Examples still use the absent top-level `asimov import` alias and describe
+  module management as a separate installation. Rake's help capture is commented
+  out, leaving reference snippets with only command prompts. Generate real,
+  deterministic help for supported commands, track snippet dependencies, and
+  regenerate the README from its template.
