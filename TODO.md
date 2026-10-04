@@ -77,10 +77,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   appropriate I/O/config exit codes, preserving existing explicit sysexits.
 
 - [ ] Apply standard color and verbosity options to handler output
-  (`src/commands/module/`, `src/commands/source/snap/`, and the proxy). Listing
-  still emits ANSI escapes with `--color never` (reproduced), and proxy request
-  logging is unconditional. Share color-aware rendering across stdout/stderr,
-  honor quiet/verbose modes, and test redirected output as well as help output.
+  (`src/commands/module/`, `src/commands/source/snap/`). Listing still emits
+  ANSI escapes with `--color never` (reproduced). Share color-aware rendering
+  across stdout/stderr, honor quiet/verbose modes, and test redirected output
+  as well as help output.
 
 ## P2: Module configuration and source execution
 

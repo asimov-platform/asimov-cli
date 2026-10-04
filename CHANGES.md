@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Log proxy request URLs only in verbose mode
 - Report proxy bind and server failures without panicking
 - Validate proxy API credentials at startup without panics or secret disclosure
 - Decode percent-encoded HTTP and SOCKS proxy credentials

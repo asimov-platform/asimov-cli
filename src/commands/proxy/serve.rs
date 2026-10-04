@@ -49,6 +49,7 @@ struct ProxyState {
     client: UpstreamClient,
     logger: Option<BodyLogger>,
     authorization: HeaderValue,
+    verbose: bool,
 }
 
 pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
@@ -82,6 +83,7 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
         client,
         logger: BodyLogger::from_env()?, // reads ASIMOV_PROXY_LOG_FILE
         authorization,
+        verbose: flags.verbose > 0,
     };
 
     let router = Router::new()
@@ -129,8 +131,7 @@ async fn proxy_handler(
         .map(|q| format!("?{q}"))
         .unwrap_or_default();
 
-    if true {
-        // TODO: flags.verbose > 0
+    if state.verbose {
         eprintln!("Proxying request: {} {}", request_path, request_query);
     }
 
