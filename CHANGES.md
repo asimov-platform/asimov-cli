@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Require module names for install, uninstall, enable, and disable
 - Report registry state errors before attempting module installation
 - Preserve value whitespace in `module config get --stored`
 - Report unsupported experimental proxy targets instead of panicking

@@ -28,6 +28,7 @@ pub enum ModuleCommand {
     /// Disable modules
     Disable {
         /// The names of the modules to disable
+        #[arg(required = true)]
         names: Vec<ModuleName>,
     },
 
@@ -41,6 +42,7 @@ pub enum ModuleCommand {
     /// Enable modules
     Enable {
         /// The names of the modules to enable
+        #[arg(required = true)]
         names: Vec<ModuleName>,
     },
 
@@ -67,6 +69,7 @@ pub enum ModuleCommand {
     /// Install an available module locally
     Install {
         /// The names of the modules to install
+        #[arg(required = true)]
         names: Vec<ModuleName>,
 
         /// Optionally install a specific version instead of latest
@@ -116,6 +119,7 @@ pub enum ModuleCommand {
     /// Uninstall a currently installed module
     Uninstall {
         /// The names of the modules to uninstall
+        #[arg(required = true)]
         names: Vec<ModuleName>,
     },
 
@@ -255,6 +259,20 @@ mod tests {
     struct Command {
         #[command(subcommand)]
         command: ModuleCommand,
+    }
+
+    #[test]
+    fn module_operations_require_names_except_upgrade() {
+        for operation in ["disable", "enable", "install", "uninstall"] {
+            let error = Command::try_parse_from(["module", operation])
+                .err()
+                .expect("module name is required");
+            assert_eq!(error.kind(), ErrorKind::MissingRequiredArgument);
+            assert!(Command::try_parse_from(["module", operation, "demo", "other"]).is_ok());
+        }
+        assert!(Command::try_parse_from(["module", "upgrade"]).is_ok());
+        assert!(Command::try_parse_from(["module", "update"]).is_ok());
+        assert!(Command::try_parse_from(["module", "install", "all"]).is_ok());
     }
 
     #[test]
