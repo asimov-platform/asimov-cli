@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Strip connection-specific headers from proxy requests and streamed responses
 - Drain in-flight proxy responses on Ctrl-C or SIGTERM before exiting
 - Return HTTP 504 after the proxy upstream timeout (`--upstream-timeout`)
 - Bound Jev HTTP connection, read, and total request waits

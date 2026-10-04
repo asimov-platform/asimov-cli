@@ -90,13 +90,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Test cancellation of connection attempts and client disconnection while
   preserving streamed responses.
 
-- [ ] Strip hop-by-hop headers in both proxy directions
-  (`src/commands/proxy/serve.rs::proxy_handler`). Forwarding currently removes
-  only request Host/Content-Length and passes upstream response headers through.
-  Remove Connection-nominated fields and standard hop-by-hop/proxy-auth headers,
-  reconcile framing, and test keep-alive, chunked responses, and streamed SSE
-  using a local upstream fixture.
-
 - [ ] Cover conventional upstream-proxy addressing and authentication
   (`src/commands/proxy/serve/{proxy_config,proxy_connector}.rs`).
   Local SOCKS DNS uses only the first address. Add network tests for encoded

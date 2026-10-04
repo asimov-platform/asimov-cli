@@ -193,6 +193,7 @@ async fn proxy_handler(
     head.version = Version::HTTP_11; // regardless of the inbound HTTP version
 
     // Modify request headers:
+    strip_hop_by_hop_headers(&mut head.headers);
     head.headers.remove("host"); // don't send "Host: 127.0.0.1"
     head.headers.remove("content-length"); // patching may change the length; hyper recomputes it
     head.headers
@@ -209,10 +210,17 @@ async fn proxy_handler(
     )
     .await?;
 
+    Ok(forward_response(upstream_response, state.logger.clone()))
+}
+
+fn forward_response(
+    response: http::Response<hyper::body::Incoming>,
+    logger: Option<BodyLogger>,
+) -> Response {
     // Stream the upstream response body back to the client, teeing each data
     // frame into the body log (if enabled):
-    let (head, upstream_response_body) = upstream_response.into_parts();
-    let logger = state.logger.clone();
+    let (mut head, upstream_response_body) = response.into_parts();
+    strip_hop_by_hop_headers(&mut head.headers);
     let upstream_response_body = upstream_response_body.map_frame(move |frame| {
         if let (Some(logger), Some(data)) = (&logger, frame.data_ref()) {
             logger.log_response_chunk(data);
@@ -220,8 +228,32 @@ async fn proxy_handler(
         frame
     });
 
-    let response = Response::from_parts(head, Body::new(upstream_response_body));
-    Ok(response)
+    Response::from_parts(head, Body::new(upstream_response_body))
+}
+
+fn strip_hop_by_hop_headers(headers: &mut HeaderMap) {
+    let nominated: Vec<_> = headers
+        .get_all(http::header::CONNECTION)
+        .iter()
+        .flat_map(|value| value.as_bytes().split(|byte| *byte == b','))
+        .filter_map(|name| http::header::HeaderName::from_bytes(name.trim_ascii()).ok())
+        .collect();
+    for name in nominated {
+        headers.remove(name);
+    }
+    for name in [
+        "connection",
+        "keep-alive",
+        "proxy-connection",
+        "proxy-authenticate",
+        "proxy-authorization",
+        "te",
+        "trailer",
+        "transfer-encoding",
+        "upgrade",
+    ] {
+        headers.remove(name);
+    }
 }
 
 async fn wait_for_upstream<T, E: core::fmt::Display>(
@@ -302,6 +334,97 @@ fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn removes_standard_and_connection_nominated_headers() {
+        let mut headers = HeaderMap::new();
+        for name in [
+            "keep-alive",
+            "proxy-connection",
+            "proxy-authenticate",
+            "proxy-authorization",
+            "te",
+            "trailer",
+            "transfer-encoding",
+            "upgrade",
+            "x-first",
+            "x-second",
+        ] {
+            headers.insert(
+                http::header::HeaderName::from_bytes(name.as_bytes()).unwrap(),
+                HeaderValue::from_static("value"),
+            );
+        }
+        headers.append(
+            "connection",
+            HeaderValue::from_static("keep-alive, X-First"),
+        );
+        headers.append(
+            "connection",
+            HeaderValue::from_static(" X-Second , invalid name"),
+        );
+        headers.insert(
+            "content-type",
+            HeaderValue::from_static("text/event-stream"),
+        );
+        headers.insert("x-end-to-end", HeaderValue::from_static("keep"));
+        strip_hop_by_hop_headers(&mut headers);
+        assert_eq!(headers.len(), 2);
+        assert_eq!(headers["content-type"], "text/event-stream");
+        assert_eq!(headers["x-end-to-end"], "keep");
+    }
+
+    #[tokio::test]
+    async fn sanitized_chunked_responses_remain_streaming() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (release, released) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = [0; 4096];
+            socket.read(&mut request).await.unwrap();
+            socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: keep-alive, x-private\r\nX-Private: secret\r\nProxy-Authenticate: Basic\r\nTransfer-Encoding: chunked\r\n\r\nd\r\ndata: first\n\n\r\n").await.unwrap();
+            released.await.unwrap();
+            socket
+                .write_all(b"e\r\ndata: second\n\n\r\n0\r\n\r\n")
+                .await
+                .unwrap();
+        });
+        let client = Client::builder(TokioExecutor::new()).build_http::<Full<Bytes>>();
+        let request = http::Request::builder()
+            .uri(format!("http://{address}/"))
+            .body(Full::new(Bytes::new()))
+            .unwrap();
+        let upstream = tokio::time::timeout(Duration::from_secs(2), client.request(request))
+            .await
+            .unwrap()
+            .unwrap();
+        let mut response = forward_response(upstream, None);
+        for name in [
+            "connection",
+            "x-private",
+            "proxy-authenticate",
+            "transfer-encoding",
+        ] {
+            assert!(!response.headers().contains_key(name));
+        }
+        assert_eq!(response.headers()["content-type"], "text/event-stream");
+        let first = tokio::time::timeout(Duration::from_secs(2), response.body_mut().frame())
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+        assert_eq!(first.into_data().unwrap(), "data: first\n\n");
+        release.send(()).unwrap();
+        let rest = tokio::time::timeout(Duration::from_secs(2), response.into_body().collect())
+            .await
+            .unwrap()
+            .unwrap()
+            .to_bytes();
+        assert_eq!(rest, "data: second\n\n");
+        server.await.unwrap();
+    }
 
     #[tokio::test]
     async fn graceful_shutdown_allows_in_flight_responses_to_finish() {
