@@ -68,12 +68,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   this boundary and retain `OsString` arguments for non-UTF-8 paths. Test normal
   failures, Unix signals, and byte-preserving argument forwarding.
 
-- [ ] Report raw errors with context and handle broken pipes deliberately
-  (`src/main.rs::sysexits`, command output paths). Non-`SysexitsError` values
-  are silently reduced to `EX_SOFTWARE`; several config/filesystem errors reach
-  this path without diagnostics. Meanwhile, `println!` on a closed pipe panics
-  with exit 101 (reproduced). Introduce fallible output/error handling with
-  appropriate I/O/config exit codes, preserving existing explicit sysexits.
+- [ ] Handle broken pipes deliberately in command output paths. `println!` on
+  a closed pipe panics with exit 101 (reproduced). Introduce fallible output
+  handling, preserving existing explicit sysexits, and add operation/path
+  context to filesystem errors at their origin.
 
 - [ ] Apply standard color and verbosity options to handler output
   (`src/commands/module/`, `src/commands/source/snap/`). Listing still emits

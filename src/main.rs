@@ -467,7 +467,40 @@ pub fn after_help(color: bool) -> String {
 // `From<Box<dyn Error>> for SysexitsError` discards the original code,
 // mapping everything to EX_SOFTWARE; recover it by downcasting instead.
 fn sysexits(err: BoxError) -> SysexitsError {
-    err.downcast_ref::<SysexitsError>()
-        .copied()
-        .unwrap_or(EX_SOFTWARE)
+    if let Some(code) = err.downcast_ref::<SysexitsError>() {
+        return *code;
+    }
+    use std::io::Write;
+    let _ = writeln!(std::io::stderr().lock(), "asimov: {err}");
+    if let Some(error) = err.downcast_ref::<std::io::Error>() {
+        match error.kind() {
+            std::io::ErrorKind::InvalidData => EX_DATAERR,
+            std::io::ErrorKind::PermissionDenied => EX_NOPERM,
+            _ => EX_IOERR,
+        }
+    } else {
+        EX_SOFTWARE
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preserves_explicit_exit_codes_and_classifies_io_failures() {
+        assert_eq!(sysexits(EX_CONFIG.into()), EX_CONFIG);
+        for (kind, expected) in [
+            (std::io::ErrorKind::InvalidData, EX_DATAERR),
+            (std::io::ErrorKind::PermissionDenied, EX_NOPERM),
+            (std::io::ErrorKind::BrokenPipe, EX_IOERR),
+            (std::io::ErrorKind::Other, EX_IOERR),
+        ] {
+            assert_eq!(
+                sysexits(std::io::Error::new(kind, "test I/O failure").into()),
+                expected
+            );
+        }
+        assert_eq!(sysexits("test unclassified failure".into()), EX_SOFTWARE);
+    }
 }

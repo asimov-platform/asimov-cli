@@ -39,6 +39,7 @@ struct Sandbox(TempDir);
 struct Run {
     code: i32,
     stdout: String,
+    stderr: String,
 }
 
 impl Sandbox {
@@ -119,6 +120,7 @@ impl Sandbox {
         Ok(Run {
             code: output.status.code().expect("should exit normally"),
             stdout: String::from_utf8(output.stdout)?,
+            stderr: String::from_utf8(output.stderr)?,
         })
     }
 }
@@ -253,7 +255,9 @@ fn partial_config_batches_leave_new_values_private() -> Result {
     let sandbox = Sandbox::new()?;
     std::fs::create_dir_all(sandbox.value_file("host"))?;
     let run = sandbox.config(&["set", "demo", "api-key=first-secret", "host=second-value"])?;
-    assert_ne!(run.code, EX_OK as i32);
+    assert_eq!(run.code, EX_IOERR as i32, "{}", run.stderr);
+    assert!(run.stderr.contains("asimov:"));
+    assert!(!run.stderr.contains("first-secret"));
     assert_eq!(
         std::fs::read_to_string(sandbox.value_file("api-key"))?,
         "first-secret"
