@@ -123,6 +123,8 @@ pub async fn main() -> SysexitsError {
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
+    let help_position =
+        asimov_cli::aliases::command_position(&args).filter(|&index| args[index] == "help");
 
     // Determine the color output mode ahead of parsing, so that clap's own
     // help/usage/error rendering honors `--color` (the default is "auto"):
@@ -191,10 +193,7 @@ pub async fn main() -> SysexitsError {
         // user desires help about a subprogram (`asimov-*`).
         Err(err)
             if err.kind() == clap::error::ErrorKind::InvalidSubcommand
-                && args
-                    .get(1)
-                    .and_then(|arg| arg.to_str())
-                    .is_some_and(|arg| arg == "help") =>
+                && help_position.is_some() =>
         {
             let debug =
                 args.contains(&OsString::from("-d")) || args.contains(&OsString::from("--debug"));
@@ -209,11 +208,10 @@ pub async fn main() -> SysexitsError {
                 return EX_USAGE;
             };
 
-            // we know the first arg is binary itself, second arg is `help`, skip those.
-            // then skip anything starting with `-`.
+            // Skip the program, leading global options, and the help command.
             let mut args = args
                 .into_iter()
-                .skip(2)
+                .skip(help_position.unwrap_or(1) + 1)
                 .skip_while(|arg| arg.starts_with("-"));
 
             // next arg is subcommand

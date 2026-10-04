@@ -36,6 +36,26 @@ pub static ALIASES: &[(&str, &[&str])] = &[
 /// the subcommand token.
 const OPTIONS_WITH_VALUES: &[&str] = &["--color"];
 
+/// Locates the root command after leading global options and their values.
+pub fn command_position(args: &[OsString]) -> Option<usize> {
+    let mut i = 1;
+    while i < args.len() {
+        let arg = args[i].to_str()?;
+        if arg == "--" {
+            return None;
+        }
+        if !arg.starts_with('-') || arg == "-" {
+            return Some(i);
+        }
+        i += if OPTIONS_WITH_VALUES.contains(&arg) {
+            2
+        } else {
+            1
+        };
+    }
+    None
+}
+
 /// Resolves command aliases by rewriting `args` in place.
 ///
 /// Locates the first subcommand token (the first argument after the program

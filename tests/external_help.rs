@@ -75,6 +75,11 @@ fn nested_external_help_places_the_help_flag_after_subcommands()
     std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755))?;
     for (args, expected) in [
         (vec!["help", "probe"], "--help\n"),
+        (vec!["--color", "never", "help", "probe"], "--help\n"),
+        (
+            vec!["-v", "--color=never", "help", "probe", "nested"],
+            "nested\n--help\n",
+        ),
         (
             vec!["help", "probe", "nested", "child"],
             "nested\nchild\n--help\n",

@@ -42,11 +42,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
 
-- [ ] Make external help respect the parsed command position
-  (`src/main.rs`, `src/aliases.rs`).
-  `asimov --color never help probe` fails although `asimov help probe` succeeds
-  (reproduced). Cover leading global options when locating the help command.
-
 - [ ] Preserve external command arguments and exit statuses
   (`src/main.rs::Command::External`, `src/commands/external.rs`). An external
   exit status of 42 becomes `EX_SOFTWARE` (reproduced), and signal statuses are
