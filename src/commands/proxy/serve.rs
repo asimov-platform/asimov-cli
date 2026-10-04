@@ -101,14 +101,20 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
             .unwrap_or(1920)
     });
     let addr = SocketAddr::from((bind, port));
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let listener = TcpListener::bind(addr).await.map_err(|error| {
+        eprintln!("error: failed to bind proxy listener at {addr}: {error}");
+        crate::SysexitsError::EX_UNAVAILABLE
+    })?;
 
     if flags.verbose > 0 {
         let addr = listener.local_addr()?;
         eprintln!("Listening on {}...", addr);
     }
 
-    axum::serve(listener, router).await.unwrap();
+    axum::serve(listener, router).await.map_err(|error| {
+        eprintln!("error: proxy server failed: {error}");
+        crate::SysexitsError::EX_IOERR
+    })?;
     Ok(())
 }
 

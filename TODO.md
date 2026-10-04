@@ -115,10 +115,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Proxy reliability and interoperability
 
-- [ ] Replace proxy listener panics with contextual errors
-  (`src/commands/proxy/serve.rs`). Bind failures and serve errors use `unwrap`.
-  Add graceful shutdown so in-flight responses,
-  logs, and command telemetry can finish on termination.
+- [ ] Add graceful proxy shutdown so in-flight responses, logs, and command
+  telemetry can finish on termination (`src/commands/proxy/serve.rs`).
 
 - [ ] Share endpoint configuration across serving, reporting, and templates
   (`src/commands/proxy/` and its `config/` templates).
