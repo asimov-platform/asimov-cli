@@ -29,7 +29,8 @@ impl HelpCmd {
 
         // Execute the `--help` command:
         let output = std::process::Command::new(&cmd.path)
-            .args([&[String::from("--help")], args].concat())
+            .args(args)
+            .arg("--help")
             .stdin(Stdio::inherit())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

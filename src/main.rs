@@ -202,8 +202,6 @@ pub async fn main() -> SysexitsError {
 
             // TODO: match color output. currently subprogram always outputs without colors
 
-            // TODO: enable help from external program's subcommands (e.g. `asimov help module list`)
-
             let result = cmd.execute(&cmd_name, &args);
             if let Ok(result) = &result {
                 if result.success {

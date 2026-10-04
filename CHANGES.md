@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Forward nested external help requests to the intended subcommand
 - Expand and advertise aliases only for commands enabled in the build
 - Stop module inspection on configuration read errors before emitting a report
 - Report unreadable configuration values instead of displaying them as unset
