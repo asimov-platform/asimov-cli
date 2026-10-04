@@ -76,8 +76,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Proxy reliability and interoperability
 
-- [ ] Add graceful proxy shutdown so in-flight responses, logs, and command
-  telemetry can finish on termination (`src/commands/proxy/serve.rs`).
+- [ ] Bound graceful proxy shutdown waits for stalled streamed responses
+  (`src/commands/proxy/serve.rs`) while allowing active responses to drain.
 
 - [ ] Use the validated proxy endpoint in generated and installed templates
   (`src/commands/proxy/config/`). Templates hardcode port 1920 despite

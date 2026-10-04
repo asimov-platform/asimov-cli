@@ -106,16 +106,55 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
         crate::SysexitsError::EX_UNAVAILABLE
     })?;
 
+    let shutdown = shutdown_signal().map_err(|error| {
+        eprintln!("error: failed to install proxy shutdown handlers: {error}");
+        crate::SysexitsError::EX_OSERR
+    })?;
+
     if flags.verbose > 0 {
         let addr = listener.local_addr()?;
         eprintln!("Listening on {}...", addr);
     }
 
-    axum::serve(listener, router).await.map_err(|error| {
-        eprintln!("error: proxy server failed: {error}");
-        crate::SysexitsError::EX_IOERR
-    })?;
+    serve_until_shutdown(listener, router, shutdown)
+        .await
+        .map_err(|error| {
+            eprintln!("error: proxy server failed: {error}");
+            crate::SysexitsError::EX_IOERR
+        })?;
     Ok(())
+}
+
+async fn serve_until_shutdown(
+    listener: TcpListener,
+    router: Router,
+    shutdown: impl core::future::Future<Output = ()> + Send + 'static,
+) -> std::io::Result<()> {
+    axum::serve(listener, router)
+        .with_graceful_shutdown(shutdown)
+        .await
+}
+
+fn shutdown_signal() -> std::io::Result<impl core::future::Future<Output = ()>> {
+    #[cfg(unix)]
+    let (mut interrupt, mut terminate) = {
+        use tokio::signal::unix::{SignalKind, signal};
+        (
+            signal(SignalKind::interrupt())?,
+            signal(SignalKind::terminate())?,
+        )
+    };
+    Ok(async move {
+        #[cfg(unix)]
+        tokio::select! {
+            _ = interrupt.recv() => {},
+            _ = terminate.recv() => {},
+        }
+        #[cfg(not(unix))]
+        if let Err(error) = tokio::signal::ctrl_c().await {
+            eprintln!("error: failed to wait for proxy shutdown: {error}");
+        }
+    })
 }
 
 async fn proxy_handler(
@@ -263,6 +302,62 @@ fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn graceful_shutdown_allows_in_flight_responses_to_finish() {
+        let entered = Arc::new(tokio::sync::Notify::new());
+        let release = Arc::new(tokio::sync::Notify::new());
+        let router = Router::new().route(
+            "/",
+            any({
+                let entered = entered.clone();
+                let release = release.clone();
+                move || {
+                    let entered = entered.clone();
+                    let release = release.clone();
+                    async move {
+                        entered.notify_one();
+                        release.notified().await;
+                        "completed response"
+                    }
+                }
+            }),
+        );
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (stop, stopped) = tokio::sync::oneshot::channel();
+        let server = tokio::spawn(serve_until_shutdown(listener, router, async {
+            let _ = stopped.await;
+        }));
+        let client = reqwest::Client::builder()
+            .no_proxy()
+            .timeout(Duration::from_secs(2))
+            .build()
+            .unwrap();
+        let request = tokio::spawn(async move {
+            client
+                .get(format!("http://{address}/"))
+                .send()
+                .await
+                .unwrap()
+                .text()
+                .await
+                .unwrap()
+        });
+        tokio::time::timeout(Duration::from_secs(2), entered.notified())
+            .await
+            .unwrap();
+        stop.send(()).unwrap();
+        tokio::task::yield_now().await;
+        assert!(!server.is_finished());
+        release.notify_one();
+        assert_eq!(request.await.unwrap(), "completed response");
+        tokio::time::timeout(Duration::from_secs(2), server)
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
+    }
 
     #[tokio::test]
     async fn upstream_deadline_bounds_headers_without_buffering_the_body() {

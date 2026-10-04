@@ -5,6 +5,51 @@
 use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
+#[cfg(unix)]
+#[tokio::test]
+async fn termination_signals_stop_the_proxy_cleanly() -> Result<(), Box<dyn core::error::Error>> {
+    use std::time::Duration;
+    use tokio::io::AsyncBufReadExt;
+    for signal in ["-INT", "-TERM"] {
+        let root = temp_dir::TempDir::new()?;
+        let mut child = tokio::process::Command::new(env!("CARGO_BIN_EXE_asimov"))
+            .args(["-v", "proxy", "serve", "--bind", "127.0.0.1", "--port", "0"])
+            .env("ASIMOV_ROOT", root.path())
+            .current_dir(root.path())
+            .env("OPENROUTER_API_KEY", "test-key")
+            .env("ASIMOV_TELEMETRY", "0")
+            .env("no_proxy", "*")
+            .env("NO_PROXY", "*")
+            .env_remove("ASIMOV_PROXY_LOG_FILE")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .spawn()?;
+        let mut lines = tokio::io::BufReader::new(child.stderr.take().unwrap()).lines();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            loop {
+                let line = lines
+                    .next_line()
+                    .await?
+                    .ok_or("proxy exited before listening")?;
+                if line.starts_with("Listening on ") {
+                    break;
+                }
+            }
+            Ok::<_, Box<dyn core::error::Error>>(())
+        })
+        .await??;
+        let status = Command::new("/bin/kill")
+            .args([signal, &child.id().unwrap().to_string()])
+            .status()?;
+        assert!(status.success());
+        let status = tokio::time::timeout(Duration::from_secs(5), child.wait()).await??;
+        assert!(status.success(), "{signal}: {status}");
+    }
+    Ok(())
+}
+
 #[test]
 fn occupied_proxy_ports_return_a_contextual_error() -> Result<(), Box<dyn core::error::Error>> {
     let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
