@@ -41,14 +41,17 @@ pub async fn inspect(
     let conf_status: Vec<bool> = conf_vars
         .iter()
         .map(|var| match manifest.variable(&var.name, Some("default")) {
-            Ok(_) => true,
-            Err(asimov_module::ReadVarError::UnconfiguredVar(_)) => false,
+            Ok(_) => Ok(true),
+            Err(asimov_module::ReadVarError::UnconfiguredVar(_)) => Ok(false),
             Err(e) => {
-                tracing::warn!("failed to read configuration variable `{}`: {e}", var.name);
-                false
+                ceprintln!(
+                    "<s,r>error:</> failed to read configuration variable `{}`: {e}",
+                    var.name
+                );
+                Err(BoxError::from(EX_IOERR))
             },
         })
-        .collect();
+        .collect::<Result<_, _>>()?;
 
     match output.as_str() {
         "json" => {

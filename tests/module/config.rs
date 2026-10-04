@@ -444,6 +444,48 @@ fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
 }
 
 #[test]
+fn inspect_rejects_unreadable_configuration_before_emitting_a_report() -> Result {
+    for directory in [false, true] {
+        let sandbox = Sandbox::new()?;
+        std::fs::create_dir_all(sandbox.root().join("configs/default/demo"))?;
+        if directory {
+            std::fs::create_dir(sandbox.value_file("host"))?;
+        } else {
+            std::fs::write(sandbox.value_file("host"), b"\xff")?;
+        }
+        for format in ["cli", "json"] {
+            let run = sandbox.module(&["inspect", "demo", "--output", format])?;
+            assert_eq!(run.code, EX_IOERR as i32, "{}", run.stderr);
+            assert!(run.stdout.is_empty());
+            assert!(run.stderr.contains("host"));
+        }
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn config_readers_report_permission_failures_even_with_defaults() -> Result {
+    use std::os::unix::fs::PermissionsExt;
+    let sandbox = Sandbox::new()?;
+    std::fs::create_dir_all(sandbox.root().join("configs/default/demo"))?;
+    let path = sandbox.value_file("host");
+    std::fs::write(&path, "private-value")?;
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000))?;
+    // Privileged test runners can still read mode-000 files.
+    if std::fs::read_to_string(&path).is_err() {
+        for args in [vec!["inspect", "demo"], vec!["config", "show", "demo"]] {
+            let run = sandbox.module(&args)?;
+            assert_eq!(run.code, EX_IOERR as i32, "{}", run.stderr);
+            assert!(run.stdout.is_empty());
+            assert!(!run.stderr.contains("private-value"));
+        }
+    }
+    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+    Ok(())
+}
+
+#[test]
 fn config_show_reports_read_errors_instead_of_unset_values() -> Result {
     for directory in [false, true] {
         let sandbox = Sandbox::new()?;

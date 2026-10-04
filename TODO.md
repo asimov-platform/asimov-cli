@@ -81,11 +81,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
-- [ ] Propagate configuration read failures during module inspection
-  (`src/commands/module/inspect.rs`). Inspection reduces read failures to an
-  unset status. Cover directories in place of values, invalid UTF-8, and
-  permissions failures with defaults present.
-
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
