@@ -58,8 +58,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/main.rs:178-211`, `src/commands/help_cmd.rs`, `src/aliases.rs`).
   `asimov --color never help probe` fails although `asimov help probe` succeeds
   (reproduced); nested external help prepends `--help` before subcommands.
-  Cover leading global options and nested help. Also feature-gate alias
-  expansion/help entries so reduced builds preserve external-command dispatch.
+  Cover leading global options and nested help.
 
 - [ ] Preserve external command arguments and exit statuses
   (`src/main.rs::Command::External`, `src/commands/external.rs`). An external

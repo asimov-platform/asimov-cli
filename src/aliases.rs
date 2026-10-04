@@ -13,13 +13,21 @@ use std::ffi::OsString;
 
 /// The table of command aliases, mapping an alias name to its expansion.
 pub static ALIASES: &[(&str, &[&str])] = &[
+    #[cfg(feature = "source")]
     ("fetch", &["source", "fetch"]),
+    #[cfg(feature = "module")]
     ("install", &["module", "install"]),
+    #[cfg(feature = "source")]
     ("list", &["source", "list"]),
+    #[cfg(feature = "source")]
     ("read", &["source", "read"]),
+    #[cfg(feature = "module")]
     ("resolve", &["module", "resolve"]),
+    #[cfg(all(feature = "source", feature = "source-snap"))]
     ("snap", &["source", "snap"]),
+    #[cfg(feature = "module")]
     ("uninstall", &["module", "uninstall"]),
+    #[cfg(feature = "module")]
     ("upgrade", &["module", "upgrade"]),
 ];
 
@@ -85,6 +93,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "source")]
     fn expands_fetch() {
         assert_eq!(
             resolved(&["asimov", "fetch", "http://example.org"]),
@@ -93,11 +102,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source", feature = "source-snap"))]
     fn expands_snap() {
         assert_eq!(resolved(&["asimov", "snap"]), ["asimov", "source", "snap"]);
     }
 
     #[test]
+    #[cfg(feature = "module")]
     fn expands_install() {
         assert_eq!(
             resolved(&["asimov", "install", "serpapi"]),
@@ -106,6 +117,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "source")]
     fn skips_leading_flags() {
         assert_eq!(
             resolved(&["asimov", "-d", "--color", "auto", "fetch", "url"]),
@@ -130,15 +142,47 @@ mod tests {
     }
 
     #[test]
+    #[cfg(any(feature = "source", feature = "module"))]
     fn expands_alias_after_help() {
+        #[cfg(feature = "source")]
         assert_eq!(
             resolved(&["asimov", "help", "fetch"]),
             ["asimov", "help", "source", "fetch"]
         );
+        #[cfg(feature = "module")]
         assert_eq!(
             resolved(&["asimov", "help", "install"]),
             ["asimov", "help", "module", "install"]
         );
+    }
+
+    #[test]
+    fn unavailable_aliases_remain_available_for_external_dispatch() {
+        for (alias, enabled) in [
+            ("fetch", cfg!(feature = "source")),
+            ("list", cfg!(feature = "source")),
+            ("read", cfg!(feature = "source")),
+            (
+                "snap",
+                cfg!(all(feature = "source", feature = "source-snap")),
+            ),
+            ("install", cfg!(feature = "module")),
+            ("uninstall", cfg!(feature = "module")),
+            ("upgrade", cfg!(feature = "module")),
+            ("resolve", cfg!(feature = "module")),
+        ] {
+            assert_eq!(ALIASES.iter().any(|(name, _)| *name == alias), enabled);
+            if !enabled {
+                assert_eq!(
+                    resolved(&["asimov", alias, "argument"]),
+                    ["asimov", alias, "argument"]
+                );
+                assert_eq!(
+                    resolved(&["asimov", "help", alias]),
+                    ["asimov", "help", alias]
+                );
+            }
+        }
     }
 
     #[test]

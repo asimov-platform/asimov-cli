@@ -381,6 +381,9 @@ fn help_template(color: bool) -> String {
 
 /// Renders the "Aliases" help section listing the hardcoded command aliases.
 fn aliases_help() -> String {
+    if asimov_cli::aliases::ALIASES.is_empty() {
+        return String::new();
+    }
     let mut help = String::new();
     help.push_str(color_print::cstr!("<y>Aliases:</y>\n"));
 
