@@ -83,6 +83,15 @@ impl Sandbox {
     }
 
     fn module_env(&self, args: &[&str], env: &[(&str, &str)]) -> Result<Run> {
+        self.module_env_input(args, env, None)
+    }
+
+    fn module_env_input(
+        &self,
+        args: &[&str],
+        env: &[(&str, &str)],
+        input: Option<&[u8]>,
+    ) -> Result<Run> {
         let mut command = Command::new(env!("CARGO_BIN_EXE_asimov"));
         command
             .arg("module")
@@ -95,7 +104,18 @@ impl Sandbox {
             // never inherit a terminal: a test must fail rather than block
             .stdin(Stdio::null());
 
-        let output = command.output()?;
+        let output = if let Some(input) = input {
+            use std::io::Write;
+            let mut child = command
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()?;
+            child.stdin.take().expect("piped stdin").write_all(input)?;
+            child.wait_with_output()?
+        } else {
+            command.output()?
+        };
         Ok(Run {
             code: output.status.code().expect("should exit normally"),
             stdout: String::from_utf8(output.stdout)?,
@@ -365,6 +385,49 @@ fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
     assert_eq!(record["@id"], "https://asimov.directory/modules/demo");
     assert_eq!(record["version"], "");
     assert_eq!(record["enabled"], false);
+    Ok(())
+}
+
+#[test]
+fn stored_config_retrieval_preserves_value_whitespace() -> Result {
+    let sandbox = Sandbox::new()?;
+    for value in [
+        "  padded  ",
+        "\t",
+        "first\nsecond\n",
+        "first\r\nsecond\r\n",
+        "",
+    ] {
+        let assignment = format!("host={value}");
+        let run = sandbox.config(&["set", "demo", &assignment])?;
+        assert_eq!(run.code, EX_OK as i32);
+        let run = sandbox.config(&["get", "demo", "host", "--stored"])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert_eq!(run.stdout, format!("{value}\n"));
+
+        let json = serde_json::to_vec(&serde_json::json!({"host": value}))?;
+        let run = sandbox.module_env_input(
+            &["config", "set", "demo", "--from-json"],
+            &[],
+            Some(&json),
+        )?;
+        assert_eq!(run.code, EX_OK as i32);
+        let run = sandbox.config(&["get", "demo", "host", "--stored"])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert_eq!(run.stdout, format!("{value}\n"));
+
+        // --stdin removes one transport newline, not whitespace in the value.
+        let piped = format!("{value}\r\n");
+        let run = sandbox.module_env_input(
+            &["config", "set", "demo", "host", "--stdin"],
+            &[],
+            Some(piped.as_bytes()),
+        )?;
+        assert_eq!(run.code, EX_OK as i32);
+        let run = sandbox.config(&["get", "demo", "host", "--stored"])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert_eq!(run.stdout, format!("{value}\n"));
+    }
     Ok(())
 }
 

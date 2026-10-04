@@ -103,11 +103,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
-- [ ] Preserve config-value whitespace on explicit retrieval
-  (`src/commands/module/config/get.rs`). `set` stores exact assignment bytes,
-  but even `get --stored` applies `trim()` (reproduced). Define newline handling
-  independently from value content and test spaces, multiline values, CRLF,
-  empty strings, `--stdin`, and `--from-json` round trips.
+- [ ] Preserve whitespace on effective config retrieval
+  (`src/commands/module/config/get.rs` and SDK resolution). Define whitespace
+  handling consistently across environment, stored values, and defaults, and
+  cover precedence and exact output for `get` without `--stored`.
 
 - [ ] Distinguish unset configuration from unreadable configuration
   (`src/commands/module/config.rs::Module::source`, config show, and inspect).

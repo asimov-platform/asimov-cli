@@ -8,6 +8,7 @@ use color_print::ceprintln;
 
 /// Prints the effective value of a configuration variable, resolved the same
 /// way modules resolve it: environment, then stored value, then default.
+/// With `stored`, preserves the exact file contents and appends one newline.
 pub async fn get(
     module_name: &ModuleName,
     key: &str,
@@ -21,7 +22,7 @@ pub async fn get(
     if stored {
         return match tokio::fs::read_to_string(module.var_file(key)).await {
             Ok(value) => {
-                println!("{}", value.trim());
+                println!("{value}");
                 Ok(())
             },
             Err(e) if e.kind() == tokio::io::ErrorKind::NotFound => {
