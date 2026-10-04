@@ -60,6 +60,7 @@ pub enum ModuleCommand {
 
         /// Set the output format [default: cli] [possible values: cli, json]
         #[arg(value_name = "FORMAT", short = 'o', long)]
+        #[arg(value_parser = ["cli", "json"], hide_possible_values = true)]
         output: Option<String>,
     },
 
@@ -90,6 +91,7 @@ pub enum ModuleCommand {
     List {
         /// Set the output format [default: cli] [possible values: cli, jsonl]
         #[arg(value_name = "FORMAT", short = 'o', long)]
+        #[arg(value_parser = ["cli", "jsonl"], hide_possible_values = true)]
         output: Option<String>,
     },
 
@@ -107,6 +109,7 @@ pub enum ModuleCommand {
 
         /// Set the output format [default: cli] [possible values: cli, jsonl]
         #[arg(value_name = "FORMAT", short = 'o', long)]
+        #[arg(value_parser = ["cli", "jsonl"], hide_possible_values = true)]
         output: Option<String>,
     },
 
@@ -242,3 +245,39 @@ pub use uninstall::*;
 
 mod upgrade;
 pub use upgrade::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clientele::crates::clap::{Parser, error::ErrorKind};
+
+    #[derive(Parser)]
+    struct Command {
+        #[command(subcommand)]
+        command: ModuleCommand,
+    }
+
+    #[test]
+    fn output_formats_are_checked_before_dispatch() {
+        for (args, supported, unsupported) in [
+            (vec!["module", "inspect", "demo"], "json", "jsonl"),
+            (vec!["module", "list"], "jsonl", "json"),
+            (vec!["module", "search", "demo"], "jsonl", "json"),
+        ] {
+            assert!(Command::try_parse_from(&args).is_ok());
+            for format in ["cli", supported] {
+                assert!(
+                    Command::try_parse_from(args.iter().copied().chain(["--output", format]))
+                        .is_ok()
+                );
+            }
+            for format in [unsupported, "typo"] {
+                let error =
+                    Command::try_parse_from(args.iter().copied().chain(["--output", format]))
+                        .err()
+                        .expect("unsupported output should fail");
+                assert_eq!(error.kind(), ErrorKind::InvalidValue);
+            }
+        }
+    }
+}

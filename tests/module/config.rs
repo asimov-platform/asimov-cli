@@ -320,7 +320,7 @@ fn inspect_redacts_secret_defaults_in_every_output_format() -> Result {
     manifest["config"]["variables"][0]["default_value"] = "secret-default-value".into();
     let sandbox = Sandbox::with_manifest(&serde_json::to_string(&manifest)?)?;
 
-    for format in ["human", "json"] {
+    for format in ["cli", "json"] {
         let run = sandbox.module(&["inspect", "demo", "--output", format])?;
         assert_eq!(run.code, EX_OK as i32);
         assert!(
