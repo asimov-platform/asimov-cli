@@ -189,9 +189,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   arguments; the `set` format also emits `setx`. Render each shell's actual
   syntax and validate quoting and persistence behavior on Windows.
 
-- [ ] Mark the static proxy model list as a placeholder until provider
-  discovery is implemented (`src/commands/proxy/models.rs`).
-
 ## P2: Verification and delivery
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in

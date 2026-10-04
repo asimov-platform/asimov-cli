@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Identify proxy model output as a static example and reject invalid formats
 - Require URLs for source fetch, list, and read operations
 - Require module names for install, uninstall, enable, and disable
 - Report registry state errors before attempting module installation

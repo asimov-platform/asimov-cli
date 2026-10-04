@@ -2,6 +2,7 @@
 
 use crate::{BoxError, StandardOptions};
 
+/// Prints a static example model, not a live provider inventory.
 pub async fn models(format: Option<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
     match format.as_deref() {
         Some("csv") => println!("id,label\nopenrouter/free,Free"),
@@ -9,7 +10,10 @@ pub async fn models(format: Option<String>, _flags: &StandardOptions) -> Result<
         Some("list") | None => println!("openrouter/free"),
         Some("md") => println!("| ID | Label |\n| :- | :---- |\n| openrouter/free | Free |"),
         Some("tsv") => println!("id\tlabel\nopenrouter/free\tFree"),
-        Some(_) => {}, // TODO
+        Some(format) => {
+            eprintln!("error: unsupported model output format: {format}");
+            return Err(crate::SysexitsError::EX_USAGE.into());
+        },
     }
     Ok(())
 }

@@ -37,13 +37,14 @@ pub enum ProxyCommand {
     /// Print the proxy port.
     Port {},
 
-    /// List available models.
+    /// List the built-in example model (provider discovery is not implemented).
     #[cfg(feature = "unstable")]
     Models {
         /// The output format.
         /// [default: list]
         /// [possible values: csv, json, list, md, tsv]
         #[clap(short, long)]
+        #[arg(value_parser = ["csv", "json", "list", "md", "tsv"], hide_possible_values = true)]
         format: Option<String>,
     },
 
@@ -104,3 +105,27 @@ pub use serve::*;
 
 mod url;
 pub use url::*;
+
+#[cfg(all(test, feature = "unstable"))]
+mod tests {
+    use super::*;
+    use clap::Parser;
+
+    #[derive(Parser)]
+    struct Command {
+        #[command(subcommand)]
+        command: ProxyCommand,
+    }
+
+    #[test]
+    fn model_formats_are_validated() {
+        assert!(Command::try_parse_from(["proxy", "models"]).is_ok());
+        for format in ["csv", "json", "list", "md", "tsv"] {
+            assert!(Command::try_parse_from(["proxy", "models", "--format", format]).is_ok());
+        }
+        let error = Command::try_parse_from(["proxy", "models", "--format", "xml"])
+            .err()
+            .expect("unsupported format");
+        assert_eq!(error.kind(), clap::error::ErrorKind::InvalidValue);
+    }
+}
