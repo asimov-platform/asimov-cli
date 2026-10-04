@@ -6,19 +6,19 @@ use std::path::{Path, PathBuf};
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyInstallTarget {
-    /// Cursor (https://zed.dev).
+    /// Cursor (<https://cursor.com>).
     #[cfg(feature = "unstable")]
     Cursor,
 
-    /// Obsidian (https://obsidian.md).
+    /// Obsidian (<https://obsidian.md>).
     #[cfg(feature = "unstable")]
     Obsidian,
 
-    /// Visual Studio Code (https://code.visualstudio.com).
+    /// Visual Studio Code (<https://code.visualstudio.com>).
     #[cfg(feature = "unstable")]
     VSCode,
 
-    /// Zed (https://zed.dev).
+    /// Zed (<https://zed.dev>).
     Zed,
 }
 

@@ -5,51 +5,51 @@ use clap::ValueEnum;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyConfigTarget {
-    /// Aider (https://aider.chat).
+    /// Aider (<https://aider.chat>).
     Aider,
 
-    /// Bash (https://gnu.org/software/bash/).
+    /// Bash (<https://gnu.org/software/bash/>).
     Bash,
 
-    /// Claude Code (https://claude.com/product/claude-code).
+    /// Claude Code (<https://claude.com/product/claude-code>).
     #[cfg(feature = "unstable")]
     ClaudeCode,
 
-    /// Cline (https://cline.bot).
+    /// Cline (<https://cline.bot>).
     #[cfg(feature = "unstable")]
     Cline,
 
-    /// .env (https://github.com/motdotla/dotenv).
+    /// .env (<https://github.com/motdotla/dotenv>).
     Dotenv,
 
-    /// Goose (https://goose-docs.ai).
+    /// Goose (<https://goose-docs.ai>).
     Goose,
 
-    /// LangChain (https://langchain.com).
+    /// LangChain (<https://langchain.com>).
     Langchain,
 
-    /// LiteLLM (https://litellm.ai).
+    /// LiteLLM (<https://litellm.ai>).
     Litellm,
 
-    /// LlamaIndex (https://llamaindex.ai).
+    /// LlamaIndex (<https://llamaindex.ai>).
     Llamaindex,
 
-    /// OpenCode (https://opencode.ai).
+    /// OpenCode (<https://opencode.ai>).
     Opencode,
 
-    /// OpenHands, fka OpenDevin (https://openhands.dev).
+    /// OpenHands, fka OpenDevin (<https://openhands.dev>).
     Openhands,
 
-    /// Pi (https://pi.dev).
+    /// Pi (<https://pi.dev>).
     Pi,
 
-    /// PowerShell (https://microsoft.com/powershell).
+    /// PowerShell (<https://microsoft.com/powershell>).
     Powershell,
 
-    /// Zed (https://zed.dev).
+    /// Zed (<https://zed.dev>).
     Zed,
 
-    /// Zsh (https://zsh.sourceforge.io).
+    /// Zsh (<https://zsh.sourceforge.io>).
     Zsh,
 }
 
