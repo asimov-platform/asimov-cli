@@ -35,12 +35,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: CLI behavior and process lifecycle
 
-- [ ] Collect external help only when requested (`src/main.rs:128-132`,
-  `after_long_help`). Constructing the parser eagerly runs `Help.execute()`;
-  even `asimov --version` invokes every discovered external command with
-  `--help` (reproduced). Make ordinary dispatch and short informational paths
-  avoid those subprocesses; test startup with a side-effecting fake command.
-
 - [ ] Bound and correctly reap help subprocesses
   (`src/commands/{help,help_cmd}.rs`). Collection waits for exit before draining
   pipes, uses one deadline for the entire parallel batch, busy-polls, and kills

@@ -115,12 +115,11 @@ pub async fn main() -> SysexitsError {
     let use_color = color.to_bool();
 
     // Parse command-line options:
-    let matches = Options::command()
+    let parser = Options::command()
         .color(color)
         .help_template(help_template(use_color))
-        .after_help(after_help(use_color))
-        .after_long_help(after_long_help(use_color))
-        .try_get_matches_from(&args);
+        .after_help(after_help(use_color));
+    let matches = parser.clone().try_get_matches_from(&args);
     let mut matches = match matches {
         Ok(matches) => matches,
 
@@ -154,6 +153,16 @@ pub async fn main() -> SysexitsError {
                 || err.kind()
                     == clap::error::ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand =>
         {
+            // External summaries require subprocesses; collect them only for
+            // root long help, after Clap has confirmed this is a help request.
+            if err.kind() == clap::error::ErrorKind::DisplayHelp
+                && root_long_help_requested(&args)
+                && let Err(help) = parser
+                    .after_long_help(after_long_help(use_color))
+                    .try_get_matches_from(&args)
+            {
+                help.exit();
+            }
             err.exit()
         },
 
@@ -400,6 +409,23 @@ fn aliases_help() -> String {
     }
 
     help
+}
+
+fn root_long_help_requested(args: &[OsString]) -> bool {
+    let mut args = args.iter().skip(1);
+    while let Some(arg) = args.next() {
+        match arg.to_str() {
+            Some("--" | "-h") => return false,
+            Some("--color") => {
+                args.next();
+            },
+            Some("--help") => return true,
+            Some("help") => return args.next().is_none(),
+            Some(arg) if arg.starts_with('-') => {},
+            _ => return false,
+        }
+    }
+    false
 }
 
 fn after_long_help(color: bool) -> String {
