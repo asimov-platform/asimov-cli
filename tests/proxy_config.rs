@@ -6,6 +6,35 @@ use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
 #[test]
+fn windows_assignment_formats_use_distinct_syntax() -> Result<(), Box<dyn core::error::Error>> {
+    let root = temp_dir::TempDir::new()?;
+    for (format, expected) in [
+        (
+            "set",
+            "set \"OPENAI_API_BASE=http://127.0.0.1:1920/v1\"\nset \"OPENAI_API_KEY=powershell\"\n",
+        ),
+        (
+            "setx",
+            "setx OPENAI_API_BASE \"http://127.0.0.1:1920/v1\"\nsetx OPENAI_API_KEY \"powershell\"\n",
+        ),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+            .args(["proxy", "config", "powershell", "--format", format])
+            .env("ASIMOV_ROOT", root.path())
+            .current_dir(root.path())
+            .stdin(Stdio::null())
+            .output()?;
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(String::from_utf8(output.stdout)?, expected);
+    }
+    Ok(())
+}
+
+#[test]
 fn config_formats_are_validated_for_each_target() -> Result<(), Box<dyn core::error::Error>> {
     let root = temp_dir::TempDir::new()?;
     for (target, format, success) in [

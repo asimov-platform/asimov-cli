@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Generate correct, distinct Windows `set` and `setx` commands
 - Reject unsupported proxy configuration formats instead of producing no output
 - Identify proxy model output as a static example and reject invalid formats
 - Require URLs for source fetch, list, and read operations

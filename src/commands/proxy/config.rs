@@ -65,9 +65,13 @@ pub async fn config(
         // See: <https://aider.chat/docs/llms/openai-compat.html>
         Aider => match format.as_deref() {
             None => {
-                let export = if cfg!(windows) { "setx" } else { "export" };
-                println!("{export} {}={}", "OPENAI_API_BASE", base_url);
-                println!("{export} {}={}", "OPENAI_API_KEY", "aider");
+                if cfg!(windows) {
+                    println!("setx OPENAI_API_BASE \"{base_url}\"");
+                    println!("setx OPENAI_API_KEY \"aider\"");
+                } else {
+                    println!("export OPENAI_API_BASE={base_url}");
+                    println!("export OPENAI_API_KEY=aider");
+                }
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -189,9 +193,13 @@ pub async fn config(
                     "OPENAI_API_KEY", "powershell"
                 );
             },
-            Some("set") | Some("setx") => {
-                println!("setx {}={}", "OPENAI_API_BASE", base_url);
-                println!("setx {}={}", "OPENAI_API_KEY", "powershell");
+            Some("set") => {
+                println!("set \"OPENAI_API_BASE={base_url}\"");
+                println!("set \"OPENAI_API_KEY=powershell\"");
+            },
+            Some("setx") => {
+                println!("setx OPENAI_API_BASE \"{base_url}\"");
+                println!("setx OPENAI_API_KEY \"powershell\"");
             },
             Some(format) => return unsupported_format(app, format),
         },
