@@ -198,7 +198,7 @@ pub fn filter_jev_batch(
             write!(out, r#""inputs":["#)?;
             for (i, input) in moved_inputs.iter().enumerate() {
                 if i > 0 {
-                    out.write(b",")?;
+                    out.write_all(b",")?;
                 }
                 out.write_all(input.trim_ascii())?;
             }
@@ -207,7 +207,7 @@ pub fn filter_jev_batch(
             write!(out, r#""questions":{{"#)?;
             for i in 0..moved_inputs.len() {
                 if i > 0 {
-                    out.write(b",")?;
+                    out.write_all(b",")?;
                 }
                 write!(out, r#""q{i}":{{"type":"noul","instructions":"Does `rubric` describe `inputs[{i}]`?"}}"#)?;
             }

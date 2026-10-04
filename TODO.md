@@ -276,10 +276,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   arguments, config values, and secrets never enter serialized events.
 
 - [ ] Establish warning-clean lint and rustdoc baselines
-  (`src/shared.rs`, `src/commands/`, public library APIs). Start with ignored
-  write counts in Jev JSON generation, then address the remaining strict Clippy
-  findings and feature-specific dead imports/functions. Document public
-  error/output contracts.
+  (`src/shared.rs`, `src/commands/`, public library APIs). Address the remaining
+  strict Clippy findings and feature-specific dead imports/functions. Document
+  public error/output contracts.
 
 - [ ] Match parsed URL components when ranking module links
   (`src/lib.rs::sort_links`, `src/commands/module/browse.rs`). Preference uses
