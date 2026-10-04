@@ -66,10 +66,19 @@ pub async fn inspect(
                 })
                 .collect();
 
+            let mut redacted = installed.clone();
+            if let Some(config) = &mut redacted.manifest.config {
+                for var in &mut config.variables {
+                    if var.secret {
+                        var.default_value = None;
+                    }
+                }
+            }
+
             println!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!({
-                    "manifest": serde_json::to_value(&installed)?,
+                    "manifest": serde_json::to_value(&redacted)?,
                     "enabled": is_enabled,
                     "config": config,
                 }))?

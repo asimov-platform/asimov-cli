@@ -315,6 +315,40 @@ fn inspect_reports_unmet_configuration_through_its_exit_status() -> Result {
 }
 
 #[test]
+fn inspect_redacts_secret_defaults_in_every_output_format() -> Result {
+    let mut manifest: serde_json::Value = serde_json::from_str(MANIFEST)?;
+    manifest["config"]["variables"][0]["default_value"] = "secret-default-value".into();
+    let sandbox = Sandbox::with_manifest(&serde_json::to_string(&manifest)?)?;
+
+    for format in ["human", "json"] {
+        let run = sandbox.module(&["inspect", "demo", "--output", format])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert!(
+            !run.stdout.contains("secret-default-value"),
+            "{format} inspection disclosed a secret: {}",
+            run.stdout
+        );
+        assert!(run.stdout.contains("default.example"));
+        assert!(run.stdout.contains("api-key"));
+
+        if format == "json" {
+            let report: serde_json::Value = serde_json::from_str(&run.stdout)?;
+            assert!(report["config"][0]["default"].is_null());
+            assert_eq!(report["config"][0]["set"], true);
+            assert_eq!(report["config"][0]["required"], false);
+            assert!(report["manifest"].is_object());
+        }
+    }
+
+    let stored: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(
+        sandbox.root().join("modules/installed/demo/manifest.json"),
+    )?)?;
+    assert_eq!(stored, manifest, "inspection must not modify the manifest");
+
+    Ok(())
+}
+
+#[test]
 fn setup_without_a_terminal_fails_rather_than_waiting() -> Result {
     let sandbox = Sandbox::new()?;
 

@@ -38,12 +38,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Validate IDs/counts, answer types, and score ranges before emitting records;
   cover reordered, missing, duplicate, malformed, and out-of-range IDs.
 
-- [ ] Redact secret defaults throughout JSON inspection
-  (`src/commands/module/inspect.rs:52-75`). The summary masks
-  `config[].default`, but the embedded manifest exposes the same secret default
-  (reproduced). Serialize a redacted manifest/report and assert that secrets
-  occur nowhere in either human-readable or JSON inspection output.
-
 - [ ] Create private config files atomically, including on failure
   (`src/commands/module/config/{set,setup}.rs`). New files use default creation
   modes until the final permission repair. A valid first assignment followed by
