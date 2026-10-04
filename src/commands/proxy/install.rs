@@ -29,15 +29,7 @@ pub async fn install(
     use ProxyInstallTarget::*;
     let home_path = dirs::home_dir().expect("HOME should be set");
     if apps.is_empty() {
-        apps.extend_from_slice(&[
-            #[cfg(feature = "unstable")]
-            Cursor,
-            #[cfg(feature = "unstable")]
-            Obsidian,
-            #[cfg(feature = "unstable")]
-            VSCode,
-            Zed,
-        ]);
+        apps.push(Zed);
     }
     for app in apps {
         install_app(app, &home_path, flags).await?;
@@ -53,19 +45,9 @@ pub async fn install_app(
     use ProxyInstallTarget::*;
     match app {
         #[cfg(feature = "unstable")]
-        Cursor => {
-            // See: https://www.jackyoustra.com/blog/cursor-settings-location
-            todo!() // TODO
-        },
-
-        #[cfg(feature = "unstable")]
-        Obsidian => {
-            todo!() // TODO
-        },
-
-        #[cfg(feature = "unstable")]
-        VSCode => {
-            todo!() // TODO
+        Cursor | Obsidian | VSCode => {
+            eprintln!("error: proxy installation for {app:?} is not supported yet");
+            return Err(crate::SysexitsError::EX_UNAVAILABLE.into());
         },
 
         Zed => {
@@ -122,6 +104,31 @@ fn patch_jsonc_file_with_edikt(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "unstable")]
+    #[tokio::test]
+    async fn unfinished_targets_return_unavailable() {
+        #[derive(clap::Parser)]
+        struct Args {
+            #[command(flatten)]
+            flags: StandardOptions,
+        }
+        let flags = <Args as clap::Parser>::parse_from(["test"]).flags;
+        let root = temp_dir::TempDir::new().unwrap();
+        for target in [
+            ProxyInstallTarget::Cursor,
+            ProxyInstallTarget::Obsidian,
+            ProxyInstallTarget::VSCode,
+        ] {
+            let error = install_app(target, &root.path().to_path_buf(), &flags)
+                .await
+                .unwrap_err();
+            assert_eq!(
+                error.downcast_ref::<crate::SysexitsError>(),
+                Some(&crate::SysexitsError::EX_UNAVAILABLE)
+            );
+        }
+    }
 
     #[test]
     fn invalid_configs_are_not_overwritten() -> Result<(), BoxError> {

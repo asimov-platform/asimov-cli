@@ -193,12 +193,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   arguments; the `set` format also emits `setx`. Render each shell's actual
   syntax and validate quoting and persistence behavior on Windows.
 
-- [ ] Keep unfinished proxy commands from panicking under `--all-features`
-  (`src/commands/proxy/{config,install,models}.rs`). Claude Code/Cline config
-  and Cursor/Obsidian/VSCode installation use `todo!`; default installation in
-  an unstable build selects these targets automatically. Hide unfinished targets
-  or return explicit unsupported errors, and mark the static model list as a
-  placeholder until provider discovery is implemented.
+- [ ] Mark the static proxy model list as a placeholder until provider
+  discovery is implemented (`src/commands/proxy/models.rs`).
 
 ## P2: Verification and delivery
 

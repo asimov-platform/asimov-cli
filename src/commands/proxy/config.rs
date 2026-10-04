@@ -81,11 +81,10 @@ pub async fn config(
         },
 
         #[cfg(feature = "unstable")]
-        ClaudeCode => todo!(), // TODO
-
-        // See: <https://docs.cline.bot/running-models-locally/overview>
-        #[cfg(feature = "unstable")]
-        Cline => todo!(), // TODO: no support for arbitrary endpoints?
+        ClaudeCode | Cline => {
+            eprintln!("error: proxy configuration for {app:?} is not supported yet");
+            return Err(crate::SysexitsError::EX_UNAVAILABLE.into());
+        },
 
         Dotenv => match format.as_deref() {
             Some("env") | None => {
@@ -247,4 +246,26 @@ pub(crate) fn zed_asimov_provider() -> jsonc_parser::cst::CstInputValue {
         "api_url": "http://127.0.0.1:1920/v1", // TODO: ASIMOV_PROXY_{BIND,PORT}
         "available_models": [], // TODO: https://github.com/asimov-datasets/openrouter.ai
     })
+}
+
+#[cfg(all(test, feature = "unstable"))]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn unfinished_targets_return_unavailable() {
+        #[derive(clap::Parser)]
+        struct Args {
+            #[command(flatten)]
+            flags: StandardOptions,
+        }
+        let flags = <Args as clap::Parser>::parse_from(["test"]).flags;
+        for target in [ProxyConfigTarget::ClaudeCode, ProxyConfigTarget::Cline] {
+            let error = config(target, None, &flags).await.unwrap_err();
+            assert_eq!(
+                error.downcast_ref::<crate::SysexitsError>(),
+                Some(&crate::SysexitsError::EX_UNAVAILABLE)
+            );
+        }
+    }
 }

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Report unsupported experimental proxy targets instead of panicking
 - Reject unsupported module output formats during argument parsing
 - Install and upgrade to the exact module version resolved by the CLI
 - Handle incomplete writes when generating Jev requests
