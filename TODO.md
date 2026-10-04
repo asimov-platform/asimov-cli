@@ -259,12 +259,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   strict Clippy findings and feature-specific dead imports/functions. Document
   public error/output contracts.
 
-- [ ] Match parsed URL components when ranking module links
-  (`src/lib.rs::sort_links`, `src/commands/module/browse.rs`). Preference uses
-  a substring of the complete URL, and host preference uses unconstrained
-  suffixes such as `ends_with("github.com")`. Compare exact hosts/domain
-  boundaries and path segments, with table-driven tests for query-string
-  lookalikes, unrelated suffix hosts, malformed URLs, and usable browse targets.
+- [ ] Reject unusable browser targets when all manifest links are malformed,
+  hostless, or use non-web schemes (`src/commands/module/browse.rs`). Cover
+  empty and invalid-only manifests without launching a browser.
 
 - [ ] Repair generated command examples and reference snippets
   (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
