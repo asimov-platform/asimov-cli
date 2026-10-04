@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Validate proxy API credentials at startup without panics or secret disclosure
 - Decode percent-encoded HTTP and SOCKS proxy credentials
 - Reject unsafe and colliding variable names in config, inspect, and install
 - Open only valid HTTP or HTTPS module links in the browser

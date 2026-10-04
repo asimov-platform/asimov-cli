@@ -48,11 +48,11 @@ pub struct ProxyServeArgs {
 struct ProxyState {
     client: UpstreamClient,
     logger: Option<BodyLogger>,
+    authorization: HeaderValue,
 }
 
 pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
-    let _openrouter_api_key =
-        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
+    let authorization = authorization_header(std::env::var("OPENROUTER_API_KEY").ok().as_deref())?;
 
     // The TLS configuration, shared between connections to the target and to
     // any `https://` proxy:
@@ -81,6 +81,7 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
     let state = ProxyState {
         client,
         logger: BodyLogger::from_env()?, // reads ASIMOV_PROXY_LOG_FILE
+        authorization,
     };
 
     let router = Router::new()
@@ -115,9 +116,6 @@ async fn proxy_handler(
     State(state): State<ProxyState>,
     req: Request,
 ) -> Result<Response, StatusCode> {
-    let openrouter_api_key =
-        std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY should be set");
-
     let request_path = req.uri().path();
     let request_query = req
         .uri()
@@ -157,10 +155,8 @@ async fn proxy_handler(
     // Modify request headers:
     head.headers.remove("host"); // don't send "Host: 127.0.0.1"
     head.headers.remove("content-length"); // patching may change the length; hyper recomputes it
-    head.headers.insert(
-        "Authorization",
-        HeaderValue::from_str(&format!("Bearer {}", openrouter_api_key)).unwrap(),
-    );
+    head.headers
+        .insert("Authorization", state.authorization.clone());
 
     // See: https://openrouter.ai/docs/app-attribution
     insert_attribution_headers(&mut head.headers);
@@ -209,6 +205,19 @@ fn patch_request_body(body: Bytes) -> Result<Bytes, StatusCode> {
     Ok(body)
 }
 
+fn authorization_header(api_key: Option<&str>) -> Result<HeaderValue, crate::SysexitsError> {
+    let Some(api_key) = api_key.filter(|key| !key.trim().is_empty()) else {
+        eprintln!("error: OPENROUTER_API_KEY must be set and nonempty");
+        return Err(crate::SysexitsError::EX_CONFIG);
+    };
+    let mut header = HeaderValue::from_str(&format!("Bearer {api_key}")).map_err(|_| {
+        eprintln!("error: OPENROUTER_API_KEY contains invalid HTTP header bytes");
+        crate::SysexitsError::EX_CONFIG
+    })?;
+    header.set_sensitive(true);
+    Ok(header)
+}
+
 fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
     // See: https://openrouter.ai/docs/app-attribution
     headers.insert(
@@ -220,4 +229,29 @@ fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
         "X-OpenRouter-Categories",
         HeaderValue::from_static("cli-agent,personal-agent"),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn authorization_is_validated_and_marked_sensitive() {
+        let header = authorization_header(Some("test-key")).unwrap();
+        assert_eq!(header, "Bearer test-key");
+        assert!(header.is_sensitive());
+        assert!(!format!("{header:?}").contains("test-key"));
+        for key in [
+            None,
+            Some(""),
+            Some("   "),
+            Some("secret\nvalue"),
+            Some("secret\rvalue"),
+        ] {
+            assert_eq!(
+                authorization_header(key).unwrap_err(),
+                crate::SysexitsError::EX_CONFIG
+            );
+        }
+    }
 }

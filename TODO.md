@@ -115,11 +115,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Proxy reliability and interoperability
 
-- [ ] Replace proxy startup/request panics with validated state and errors
-  (`src/commands/proxy/serve.rs`). Missing API keys, invalid authorization
-  header values, bind failures, and serve errors use
-  `expect`/`unwrap`. Validate credentials once, keep the header in shared state,
-  and return contextual sysexits. Add graceful shutdown so in-flight responses,
+- [ ] Replace proxy listener panics with contextual errors
+  (`src/commands/proxy/serve.rs`). Bind failures and serve errors use `unwrap`.
+  Add graceful shutdown so in-flight responses,
   logs, and command telemetry can finish on termination.
 
 - [ ] Share endpoint configuration across serving, reporting, and templates
