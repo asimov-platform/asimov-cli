@@ -164,9 +164,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Cover conventional upstream-proxy addressing and authentication
   (`src/commands/proxy/serve/{proxy_config,proxy_connector}.rs`).
-  URL credentials lack percent-decoding, bracketed IPv6 hosts feed socket
-  resolution, and local SOCKS DNS uses only the first address. Add tests for
-  encoded credentials, IPv6, multiple addresses, and port-aware NO_PROXY rules.
+  URL credentials lack percent-decoding, and local SOCKS DNS uses only the
+  first address. Add tests for encoded credentials, IPv6, multiple addresses,
+  and port-aware NO_PROXY rules.
   Test CONNECT framing/status handling and both SOCKS DNS modes against local
   servers rather than relying solely on parser tests.
 

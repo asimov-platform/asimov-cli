@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Resolve IPv6 upstream proxy addresses without URL brackets
 - Generate correct, distinct Windows `set` and `setx` commands
 - Reject unsupported proxy configuration formats instead of producing no output
 - Identify proxy model output as a static example and reject invalid formats

@@ -103,10 +103,12 @@ impl ProxyConfig {
         }
         .map_err(|err| format!("invalid proxy URL: {err}"))?;
 
-        let host = url
-            .host_str()
-            .ok_or("proxy URL is missing a host")?
-            .to_string();
+        // Socket address tuples and TLS server names need an unbracketed IP.
+        let host = match url.host().ok_or("proxy URL is missing a host")? {
+            url::Host::Domain(host) => host.to_string(),
+            url::Host::Ipv4(ip) => ip.to_string(),
+            url::Host::Ipv6(ip) => ip.to_string(),
+        };
 
         let username = url.username();
         let password = url.password();
@@ -182,6 +184,32 @@ fn no_proxy_list_matches(no_proxy: &str, host: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ipv6_proxy_hosts_resolve_without_url_brackets() {
+        use std::net::ToSocketAddrs;
+
+        for input in [
+            "http://[::1]:8080",
+            "https://[::1]:8080",
+            "socks5://[::1]:8080",
+            "socks5h://[::1]:8080",
+            "[::1]:8080",
+        ] {
+            let config = ProxyConfig::parse(input).unwrap();
+            let (host, port) = match config {
+                ProxyConfig::HttpConnect { host, port, .. }
+                | ProxyConfig::Socks5 { host, port, .. } => (host, port),
+                ProxyConfig::Direct => panic!("expected a proxy"),
+            };
+            assert_eq!(host, "::1", "{input}");
+            let addresses: Vec<_> = (host.as_str(), port).to_socket_addrs().unwrap().collect();
+            assert_eq!(
+                addresses,
+                ["[::1]:8080".parse::<std::net::SocketAddr>().unwrap()]
+            );
+        }
+    }
 
     #[test]
     fn diagnostics_redact_proxy_credentials() {
