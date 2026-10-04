@@ -6,10 +6,17 @@ pub mod options {}
 pub mod registry;
 pub mod shared;
 
-#[cfg(feature = "source-snap")]
+#[cfg(all(feature = "source", feature = "source-snap"))]
 pub(crate) mod timestamps;
 
-use clientele::{StandardOptions, SysexitsError};
+#[cfg(any(
+    feature = "module",
+    feature = "proxy",
+    feature = "source",
+    feature = "unstable"
+))]
+use clientele::StandardOptions;
+use clientele::SysexitsError;
 
 pub type BoxError = Box<dyn core::error::Error + Send + Sync>;
 
@@ -18,6 +25,7 @@ pub type Result<T = SysexitsError, E = SysexitsError> = std::result::Result<T, E
 /// Sorts links from a module's manifest in the order that we'd like to display
 /// them for the command `link` and for choosing the URL to open for the command
 /// `browse`.
+#[cfg(any(feature = "module", test))]
 pub(crate) fn sort_links(module_name: &str, links: &mut [impl AsRef<str>]) {
     use core::cmp::Reverse;
 

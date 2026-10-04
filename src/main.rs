@@ -2,9 +2,24 @@
 
 #![deny(unsafe_code)]
 
+#[cfg(any(
+    test,
+    feature = "module",
+    feature = "proxy",
+    feature = "source",
+    feature = "telemetry"
+))]
+use asimov_cli::BoxError;
+#[cfg(any(
+    feature = "module",
+    feature = "proxy",
+    feature = "source",
+    feature = "telemetry",
+    feature = "unstable"
+))]
+use asimov_cli::commands;
 use asimov_cli::{
-    BoxError,
-    commands::{self, ExternalSubcommand, Help, HelpCmd},
+    commands::{ExternalSubcommand, Help, HelpCmd},
     shared::telemetry::{self, CommandMetadata},
 };
 use asimov_keyring::{Keyring, KeyringError};
@@ -507,6 +522,13 @@ pub fn after_help(color: bool) -> String {
 
 // `From<Box<dyn Error>> for SysexitsError` discards the original code,
 // mapping everything to EX_SOFTWARE; recover it by downcasting instead.
+#[cfg(any(
+    test,
+    feature = "module",
+    feature = "proxy",
+    feature = "source",
+    feature = "telemetry"
+))]
 fn sysexits(err: BoxError) -> SysexitsError {
     if let Some(code) = err.downcast_ref::<SysexitsError>() {
         return *code;

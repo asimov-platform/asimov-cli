@@ -27,6 +27,12 @@ fn external_summaries_are_collected_only_for_root_long_help()
         (vec!["module", "--help"], false),
         (vec!["--help"], true),
         (vec!["--color", "never", "--help"], true),
+        #[cfg(any(
+            feature = "module",
+            feature = "proxy",
+            feature = "source",
+            feature = "telemetry"
+        ))]
         (vec!["help"], true),
     ] {
         if marker.exists() {
@@ -55,6 +61,12 @@ fn external_summaries_are_collected_only_for_root_long_help()
 }
 
 #[test]
+#[cfg(any(
+    feature = "module",
+    feature = "proxy",
+    feature = "source",
+    feature = "telemetry"
+))]
 fn nested_external_help_places_the_help_flag_after_subcommands()
 -> Result<(), Box<dyn core::error::Error>> {
     let root = temp_dir::TempDir::new()?;

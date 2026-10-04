@@ -201,8 +201,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Establish warning-clean lint and rustdoc baselines
   (`src/shared.rs`, `src/commands/`, public library APIs). Address the remaining
-  strict Clippy findings and feature-specific dead imports/functions. Document
-  public error/output contracts.
+  strict Clippy findings and document public error/output contracts. Keep the
+  supported reduced-feature builds warning-free as commands evolve.
 
 - [ ] Repair generated command examples and reference snippets
   (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
