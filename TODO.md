@@ -25,12 +25,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P1: Data integrity and confidentiality
 
-- [ ] Preserve every result produced by jq filters (`src/shared.rs::filter_jq`).
-  Calling `filter_json` once per input silently drops additional outputs:
-  `.[]` over `[1,2]` yields only `1` (reproduced). Use an iterator-capable jq
-  interface and test multiple results, empty output, and errors after a result
-  through both `source fetch` and `source list`.
-
 - [ ] Preserve and validate Jev question IDs (`src/shared.rs::JevAnswers` and
   `filter_jev_batch`). Deserialization sorts IDs but then discards them; a lone
   `q1` becomes vector element zero (reproduced). Missing answers consequently

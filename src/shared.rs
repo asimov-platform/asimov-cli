@@ -335,40 +335,58 @@ pub struct JevUsage {
     pub output_tokens: u32,
 }
 
-pub fn compile_jq(expression: Option<&str>) -> Result<Option<jq::JsonFilter>> {
+/// A compiled jq expression that can produce zero or more results per input.
+pub struct JqFilter(jaq_core::Filter<jaq_core::Native<jaq_json::Val>>);
+
+pub fn compile_jq(expression: Option<&str>) -> Result<Option<JqFilter>> {
     expression
         .map(|expression| {
-            expression.parse::<jq::JsonFilter>().map_err(|e| {
-                ceprintln!("<s,r>error:</> invalid jq expression: {e}");
-                EX_DATAERR
-            })
+            let loader = jaq_core::load::Loader::new(jaq_std::defs().chain(jaq_json::defs()));
+            let arena = jaq_core::load::Arena::default();
+            let modules = loader
+                .load(
+                    &arena,
+                    jaq_core::load::File {
+                        code: expression,
+                        path: (),
+                    },
+                )
+                .map_err(|e| {
+                    ceprintln!("<s,r>error:</> invalid jq expression: {e:?}");
+                    EX_DATAERR
+                })?;
+            jaq_core::Compiler::default()
+                .with_funs(jaq_std::funs().chain(jaq_json::funs()))
+                .compile(modules)
+                .map(JqFilter)
+                .map_err(|e| {
+                    ceprintln!("<s,r>error:</> invalid jq expression: {e:?}");
+                    EX_DATAERR
+                })
         })
         .transpose()
 }
 
+/// Collects every jq result in input order, failing on any JSON or jq error.
 pub fn filter_jq(
-    filter: &jq::JsonFilter,
+    filter: &JqFilter,
     input: impl AsRef<[u8]>,
 ) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
-    serde_json::Deserializer::from_slice(input.as_ref())
-        .into_iter::<serde_json::Value>()
-        .filter_map(|value| {
-            let value = match value {
-                Ok(value) => value,
-                Err(e) => return Some(Err(e.into())),
-            };
-
-            match filter.filter_json(value) {
-                Ok(value) => Some(Ok(value)),
-                Err(jq::JsonFilterError::NoOutput) => None,
-                Err(e) => Some(Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    e.to_string(),
-                )
-                .into())),
-            }
-        })
-        .collect()
+    let mut values = Vec::new();
+    for input in
+        serde_json::Deserializer::from_slice(input.as_ref()).into_iter::<serde_json::Value>()
+    {
+        let inputs = jaq_core::RcIter::new(core::iter::empty());
+        let outputs = filter
+            .0
+            .run((jaq_core::Ctx::new([], &inputs), input?.into()));
+        for output in outputs {
+            let value = output
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
+            values.push(value.into());
+        }
+    }
+    Ok(values)
 }
 
 #[cfg(test)]
@@ -377,7 +395,7 @@ mod tests {
 
     #[test]
     fn filters_json_values() {
-        let filter = ".name".parse::<jq::JsonFilter>().unwrap();
+        let filter = compile_jq(Some(".name")).unwrap().unwrap();
         let values = filter_jq(
             &filter,
             br#"{"name":"first"}
@@ -393,7 +411,7 @@ mod tests {
 
     #[test]
     fn suppresses_values_without_jq_output() {
-        let filter = "select(.keep)".parse::<jq::JsonFilter>().unwrap();
+        let filter = compile_jq(Some("select(.keep)")).unwrap().unwrap();
         let values = filter_jq(
             &filter,
             br#"{"name":"first","keep":true}
@@ -402,5 +420,30 @@ mod tests {
         .unwrap();
 
         assert_eq!(values, [serde_json::json!({"name": "first", "keep": true})]);
+    }
+
+    #[test]
+    fn preserves_every_jq_result_in_order() {
+        let filter = compile_jq(Some(".[]")).unwrap().unwrap();
+        let values = filter_jq(&filter, b"[1,2]\n[]\n[3,4]").unwrap();
+        assert_eq!(values, vec![1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn reports_jq_errors_after_a_result() {
+        let filter = compile_jq(Some(r#".[], error("late failure")"#))
+            .unwrap()
+            .unwrap();
+        let error = filter_jq(&filter, b"[1,2]").unwrap_err();
+        assert!(error.to_string().contains("late failure"));
+    }
+
+    #[test]
+    fn rejects_invalid_jq_and_json() {
+        assert!(compile_jq(Some(".[")).is_err());
+        assert!(compile_jq(Some("undefined_function")).is_err());
+        assert!(compile_jq(None).unwrap().is_none());
+        let filter = compile_jq(Some(".")).unwrap().unwrap();
+        assert!(filter_jq(&filter, b"1\n{invalid}").is_err());
     }
 }

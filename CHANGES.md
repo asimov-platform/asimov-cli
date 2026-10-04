@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Fixed
 - Hide secret defaults in JSON module inspection output
+- Preserve all jq results and report later filter errors in source commands
 
 ## 25.6.1 - 2026-10-02
 ### Added
