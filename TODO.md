@@ -70,12 +70,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   cleanup on early return. Add fake-runner tests for delayed output, post-output
   failures, ordering, debug/cache/deadline forwarding, and inherited reader I/O.
 
-- [ ] Bound shared HTTP requests and improve Jev transport errors
-  (`src/shared.rs::{http_client,post_typesafe,filter_jev_batch}`). The shared
-  client configures no connect/read/overall timeout, so Jev filtering can stall
-  indefinitely despite a lister deadline. Expose useful, credential-safe
-  status/body-generation errors. Test slow responses, HTTP failures, and upload
-  cancellation against an injectable local endpoint.
+- [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). Expose
+  useful, credential-safe status/body-generation errors, and test HTTP failures
+  and upload cancellation against an injectable local endpoint.
 
 ## P2: Proxy reliability and interoperability
 

@@ -30,13 +30,27 @@ pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
 /// Returns a lazily initialized HTTP client with a shared connection pool.
 ///
 /// Clones are cheap and reuse the same underlying client and connection pool.
+/// Requests have a 10-second connect, 30-second read, and 120-second total limit.
 pub fn http_client() -> reqwest::Client {
-    // let http_client = reqwest::Client::builder()
-    //     .connect_timeout(std::time::Duration::from_secs(10))
-    //     .timeout(std::time::Duration::from_secs(120))
-    //     .build()?;
-    static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+    static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
+        http_client_builder(
+            std::time::Duration::from_secs(30),
+            std::time::Duration::from_secs(120),
+        )
+        .build()
+        .expect("failed to initialize HTTP client")
+    });
     CLIENT.clone()
+}
+
+fn http_client_builder(
+    read_timeout: std::time::Duration,
+    timeout: std::time::Duration,
+) -> reqwest::ClientBuilder {
+    reqwest::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .read_timeout(read_timeout)
+        .timeout(timeout)
 }
 
 /// Locates the given subcommand or prints an error.
@@ -443,6 +457,52 @@ pub fn filter_jq(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn http_deadlines_bound_stalled_headers_and_bodies() {
+        use std::time::Duration;
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for headers in [false, true] {
+            for (read_timeout, total_timeout) in [
+                (Duration::from_millis(50), Duration::from_secs(5)),
+                (Duration::from_secs(5), Duration::from_millis(50)),
+            ] {
+                let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+                let address = listener.local_addr().unwrap();
+                let server = tokio::spawn(async move {
+                    let (mut socket, _) = listener.accept().await.unwrap();
+                    let mut request = [0; 4096];
+                    socket.read(&mut request).await.unwrap();
+                    if headers {
+                        socket
+                            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\n")
+                            .await
+                            .unwrap();
+                    }
+                    core::future::pending::<()>().await;
+                });
+                let client = http_client_builder(read_timeout, total_timeout)
+                    .no_proxy()
+                    .build()
+                    .unwrap();
+                let result = tokio::time::timeout(Duration::from_secs(2), async {
+                    client
+                        .get(format!("http://{address}/"))
+                        .send()
+                        .await?
+                        .bytes()
+                        .await
+                })
+                .await;
+                server.abort();
+                let _ = server.await;
+                let error = result
+                    .expect("the configured deadline must fire")
+                    .unwrap_err();
+                assert!(error.is_timeout(), "{error}");
+            }
+        }
+    }
 
     #[test]
     fn jev_input_validation_preserves_original_records() {
