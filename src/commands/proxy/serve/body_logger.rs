@@ -28,8 +28,16 @@ impl BodyLogger {
         }
     }
 
+    /// Appends to a log, creating new files with mode 0600 on Unix.
     pub fn open(path: &Path) -> io::Result<Self> {
-        let file = OpenOptions::new().create(true).append(true).open(path)?;
+        let mut options = OpenOptions::new();
+        options.create(true).append(true);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            options.mode(0o600);
+        }
+        let file = options.open(path)?;
         Ok(Self {
             file: Arc::new(Mutex::new(file)),
         })
@@ -62,5 +70,37 @@ impl BodyLogger {
         );
         let _ = file.write_all(data);
         let _ = writeln!(file);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn new_logs_are_private_before_the_first_write() -> io::Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+        let root = temp_dir::TempDir::new()?;
+        let path = root.child("bodies.log");
+        let _logger = BodyLogger::open(&path)?;
+        assert_eq!(
+            std::fs::metadata(&path)?.permissions().mode() & 0o777,
+            0o600
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn reopening_a_log_preserves_existing_entries() -> io::Result<()> {
+        let root = temp_dir::TempDir::new()?;
+        let path = root.child("bodies.log");
+        BodyLogger::open(&path)?.log_request_body(b"first request");
+        let first = std::fs::read(&path)?;
+        BodyLogger::open(&path)?.log_response_chunk(b"second response");
+        let combined = std::fs::read(&path)?;
+        assert!(combined.starts_with(&first));
+        assert!(combined.ends_with(b"second response\n"));
+        Ok(())
     }
 }

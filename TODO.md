@@ -172,10 +172,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Move body logging off the response polling path
   (`src/commands/proxy/serve/body_logger.rs`). Each frame locks a shared mutex
   and performs synchronous disk writes; write failures are discarded, concurrent
-  exchanges lack correlation IDs, and new logs use default file permissions.
-  Use a bounded writer queue with explicit failure/backpressure behavior,
-  request IDs, private file creation, and shutdown flushing. Test slow/full
-  sinks without losing response-stream correctness.
+  exchanges lack correlation IDs. Use a bounded writer queue with explicit
+  failure/backpressure behavior, request IDs, and shutdown flushing. Test
+  slow/full sinks without losing response-stream correctness.
 
 - [ ] Execute generated proxy shell templates on Windows to validate quoting,
   current-session `set` behavior, and persistent `setx` assignments
