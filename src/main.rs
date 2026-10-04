@@ -106,17 +106,6 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    // Ensure (since 25.4.1) that we have a public key for this host/user:
-    if let Err(error) = Keyring::my_public_key() {
-        ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
-        return match error {
-            KeyringError::IoError(_) => EX_IOERR,
-            KeyringError::KeyError(_) => EX_DATAERR,
-            KeyringError::KeyringError(_) => EX_UNAVAILABLE,
-            KeyringError::UserNotFound => EX_NOUSER,
-        };
-    }
-
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
     asimov_cli::aliases::resolve(&mut args);
 
@@ -281,6 +270,17 @@ pub async fn main() -> SysexitsError {
             .ok();
         return EX_USAGE;
     };
+
+    // Operational commands require identity; help/version/license do not.
+    if let Err(error) = Keyring::my_public_key() {
+        ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
+        return match error {
+            KeyringError::IoError(_) => EX_IOERR,
+            KeyringError::KeyError(_) => EX_DATAERR,
+            KeyringError::KeyringError(_) => EX_UNAVAILABLE,
+            KeyringError::UserNotFound => EX_NOUSER,
+        };
+    }
 
     match command {
         // Starting up could flush the very events this command is about to discard.

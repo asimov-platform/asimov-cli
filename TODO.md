@@ -48,12 +48,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
 
-- [ ] Defer identity and filesystem initialization to the commands needing it
-  (`src/main.rs:108-117,292-311`). Help/version/license require a working OS
-  keyring, while unrelated commands create module and snapshot directories.
+- [ ] Defer filesystem initialization to the commands needing it
+  (`src/main.rs`). Unrelated commands create module and snapshot directories.
   Snapshot-directory failure can even prevent telemetry opt-out. Preserve
-  identity initialization for actual operations, but test informational commands
-  with an unavailable keyring and independent commands with unwritable storage.
+  identity initialization for actual operations, and test independent commands
+  with unwritable storage.
 
 - [ ] Make external help and aliases respect the parsed command position
   (`src/main.rs:178-211`, `src/commands/help_cmd.rs`, `src/aliases.rs`).
