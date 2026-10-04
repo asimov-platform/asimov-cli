@@ -165,13 +165,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   ignored `--ticket` values, observing subscriber task errors, bounded peer
   waits, and guaranteed node termination on errors.
 
-- [ ] Add deterministic snapshot lifecycle and timestamp coverage
+- [ ] Add deterministic snapshot lifecycle coverage
   (`src/commands/source/snap/`, `src/timestamps.rs`). Exercise save/list/log/
   compact with temporary storage, normalized URLs, corruption, and failures.
-  Replace wall-clock-dependent timestamp tests and global tracing initialization
-  with fixed instants; include month ends, leap years, DST, and future times.
-  Avoid panics from relative-time formatting and consolidate the unused parallel
-  `create` implementation with the dispatched `save` path.
+  Cover multi-day DST differences and fallible timestamp errors. Consolidate
+  the unused parallel `create` implementation with the dispatched `save` path.
 
 - [ ] Test telemetry's metadata and lifecycle contracts
   (`src/shared/telemetry{,_disabled}.rs`, `src/commands/configure.rs`,

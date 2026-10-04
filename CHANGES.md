@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Avoid panics when formatting current or future snapshot timestamps
 - Strip connection-specific headers from proxy requests and streamed responses
 - Drain in-flight proxy responses on Ctrl-C or SIGTERM before exiting
 - Return HTTP 504 after the proxy upstream timeout (`--upstream-timeout`)

@@ -4,7 +4,10 @@ use jiff::{Unit, Zoned};
 
 #[tracing::instrument]
 pub fn format_ts_diff(a: &Zoned, b: &Zoned) -> Result<String, jiff::Error> {
-    let span = a - b;
+    if a.timestamp() <= b.timestamp() {
+        return Ok("just now".into());
+    }
+    let span = a.since(b)?;
 
     tracing::trace!(?span);
 
@@ -72,12 +75,10 @@ mod tests {
 
     #[test]
     fn test_format_ts_diff() {
-        tracing_subscriber::fmt::init();
-
-        let now = jiff::Zoned::now();
-
-        // There is a decent chance that the days>=1 tests are flaky.
-        // Could try adding extra buffer if something starts failing.
+        let now = "2026-10-04T12:00:00Z"
+            .parse::<jiff::Timestamp>()
+            .unwrap()
+            .to_zoned(jiff::tz::TimeZone::UTC);
         let cases = [
             (3.years(), "3 years ago"),
             (1.year(), "one year ago"),
@@ -103,6 +104,47 @@ mod tests {
                 case.1,
                 "input: {}",
                 case.0
+            );
+        }
+    }
+
+    #[test]
+    fn fixed_calendar_boundaries_and_future_times() {
+        for (now, then, expected) in [
+            (
+                "2024-03-31T12:00:00Z",
+                "2024-02-29T12:00:00Z",
+                "one month ago",
+            ),
+            ("2024-03-01T12:00:00Z", "2024-02-28T12:00:00Z", "2 days ago"),
+            (
+                "2024-03-10T03:30:00-04:00",
+                "2024-03-10T01:30:00-05:00",
+                "one hour ago",
+            ),
+            (
+                "2024-11-03T01:30:00-05:00",
+                "2024-11-03T01:30:00-04:00",
+                "one hour ago",
+            ),
+            ("2026-10-04T12:00:00Z", "2026-10-04T12:00:00Z", "just now"),
+            ("2026-10-04T12:00:00Z", "2026-10-04T12:01:00Z", "just now"),
+        ] {
+            // Explicit rules avoid relying on a system time-zone database.
+            let zone = if now.ends_with('Z') {
+                jiff::tz::TimeZone::UTC
+            } else {
+                jiff::tz::TimeZone::posix("EST5EDT,M3.2.0,M11.1.0").unwrap()
+            };
+            let now = now
+                .parse::<jiff::Timestamp>()
+                .unwrap()
+                .to_zoned(zone.clone());
+            let then = then.parse::<jiff::Timestamp>().unwrap().to_zoned(zone);
+            assert_eq!(
+                format_ts_diff(&now, &then).unwrap(),
+                expected,
+                "{now} / {then}"
             );
         }
     }
