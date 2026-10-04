@@ -444,6 +444,61 @@ fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
 }
 
 #[test]
+fn config_show_reports_read_errors_instead_of_unset_values() -> Result {
+    for directory in [false, true] {
+        let sandbox = Sandbox::new()?;
+        std::fs::create_dir_all(sandbox.root().join("configs/default/demo"))?;
+        if directory {
+            std::fs::create_dir(sandbox.value_file("host"))?;
+        } else {
+            std::fs::write(sandbox.value_file("host"), b"\xff")?;
+        }
+        for format in ["cli", "json"] {
+            let run = sandbox.config(&["show", "demo", "--output", format])?;
+            assert_eq!(run.code, EX_IOERR as i32, "{}", run.stderr);
+            assert!(run.stdout.is_empty());
+            assert!(run.stderr.contains("host"));
+        }
+        let run = sandbox.config_env(
+            &["show", "demo", "--output", "json"],
+            &[(HOST_ENV, "override")],
+        )?;
+        assert_eq!(run.code, EX_OK as i32, "{}", run.stderr);
+        let rows: serde_json::Value = serde_json::from_str(&run.stdout)?;
+        assert_eq!(rows[1]["source"], "environment");
+        assert_eq!(rows[1]["value"], "override");
+    }
+    Ok(())
+}
+
+#[test]
+fn config_show_keeps_provenance_and_values_consistent() -> Result {
+    let sandbox = Sandbox::new()?;
+    let run = sandbox.config(&["show", "demo", "--output", "json"])?;
+    assert_eq!(run.code, EX_OK as i32);
+    let rows: serde_json::Value = serde_json::from_str(&run.stdout)?;
+    assert_eq!(rows[0]["source"], "unset");
+    assert!(rows[0]["value"].is_null());
+    assert_eq!(rows[1]["source"], "default");
+    assert_eq!(rows[1]["value"], "default.example");
+    assert_eq!(
+        sandbox
+            .config(&["set", "demo", "host=  stored  ", "api-key=private-secret"])?
+            .code,
+        EX_OK as i32
+    );
+    let run = sandbox.config(&["show", "demo", "--output", "json"])?;
+    assert_eq!(run.code, EX_OK as i32);
+    assert!(!run.stdout.contains("private-secret"));
+    let rows: serde_json::Value = serde_json::from_str(&run.stdout)?;
+    assert_eq!(rows[0]["source"], "stored");
+    assert!(rows[0]["value"].is_null());
+    assert_eq!(rows[1]["source"], "stored");
+    assert_eq!(rows[1]["value"], "  stored  ");
+    Ok(())
+}
+
+#[test]
 fn effective_config_retrieval_preserves_whitespace_and_precedence() -> Result {
     for value in ["  spaced  ", "one\ntwo\n", "one\r\ntwo\r\n", ""] {
         let mut manifest: serde_json::Value = serde_json::from_str(MANIFEST)?;

@@ -223,24 +223,40 @@ impl Module {
         self.conf_dir.join(key)
     }
 
-    /// Where the effective value of a variable comes from, in the same
-    /// precedence the SDK resolves them: environment, then stored, then default.
-    pub async fn source(&self, var: &ConfigurationVariable) -> Source {
-        if let Some(env_name) = var.environment.as_deref()
-            && std::env::var(env_name).is_ok()
-        {
-            return Source::Environment;
+    /// Resolves a value and its provenance in one pass, using SDK precedence.
+    pub async fn resolve(
+        &self,
+        var: &ConfigurationVariable,
+    ) -> Result<(Source, Option<String>), BoxError> {
+        if let Some(env_name) = var.environment.as_deref() {
+            match std::env::var(env_name) {
+                Ok(value) => return Ok((Source::Environment, Some(value))),
+                Err(std::env::VarError::NotPresent) => {},
+                Err(std::env::VarError::NotUnicode(_)) => {
+                    ceprintln!(
+                        "<s,r>error:</> environment variable `{env_name}` is not valid UTF-8"
+                    );
+                    return Err(EX_CONFIG.into());
+                },
+            }
         }
-        if tokio::fs::try_exists(self.var_file(&var.name))
-            .await
-            .unwrap_or(false)
-        {
-            return Source::Stored;
+        match tokio::fs::read_to_string(self.var_file(&var.name)).await {
+            Ok(value) => Ok((Source::Stored, Some(value))),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                Ok(match &var.default_value {
+                    Some(value) => (Source::Default, Some(value.clone())),
+                    None => (Source::Unset, None),
+                })
+            },
+            Err(error) => {
+                ceprintln!(
+                    "<s,r>error:</> failed to read variable `{}` for module `{}`: {error}",
+                    var.name,
+                    self.name
+                );
+                Err(EX_IOERR.into())
+            },
         }
-        if var.default_value.is_some() {
-            return Source::Default;
-        }
-        Source::Unset
     }
 
     pub async fn create_conf_dir(&self) -> tokio::io::Result<()> {

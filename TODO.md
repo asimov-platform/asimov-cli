@@ -81,12 +81,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
-- [ ] Distinguish unset configuration from unreadable configuration
-  (`src/commands/module/config.rs::Module::source`, config show, and inspect).
-  `try_exists(...).unwrap_or(false)` and `.variable(...).ok()` suppress I/O and
-  decoding errors; inspection reduces read failures to an unset status. Resolve
-  value and provenance together, preserve errors, and test directories in place
-  of values, invalid UTF-8, and permissions failures with defaults present.
+- [ ] Propagate configuration read failures during module inspection
+  (`src/commands/module/inspect.rs`). Inspection reduces read failures to an
+  unset status. Cover directories in place of values, invalid UTF-8, and
+  permissions failures with defaults present.
 
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).

@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{MASK, Source, open};
+use super::{MASK, open};
 use crate::BoxError;
 use asimov_module::ModuleName;
 use clientele::StandardOptions;
@@ -18,14 +18,7 @@ pub async fn show(
 
     let mut rows = Vec::with_capacity(variables.len());
     for var in variables {
-        let source = module.source(var).await;
-        let value = match source {
-            Source::Unset => None,
-            _ => module
-                .manifest
-                .variable(&var.name, Some(module.profile))
-                .ok(),
-        };
+        let (source, value) = module.resolve(var).await?;
         rows.push((var, source, value));
     }
 
