@@ -8,7 +8,7 @@ use color_print::ceprintln;
 
 /// Prints the effective value of a configuration variable, resolved the same
 /// way modules resolve it: environment, then stored value, then default.
-/// With `stored`, preserves the exact file contents and appends one newline.
+/// Preserves the exact value and appends one newline.
 pub async fn get(
     module_name: &ModuleName,
     key: &str,
@@ -38,7 +38,7 @@ pub async fn get(
 
     match module.manifest.variable(key, Some(module.profile)) {
         Ok(value) => {
-            println!("{}", value.trim());
+            println!("{value}");
             Ok(())
         },
         Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {

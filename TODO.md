@@ -81,11 +81,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
-- [ ] Preserve whitespace on effective config retrieval
-  (`src/commands/module/config/get.rs` and SDK resolution). Define whitespace
-  handling consistently across environment, stored values, and defaults, and
-  cover precedence and exact output for `get` without `--stored`.
-
 - [ ] Distinguish unset configuration from unreadable configuration
   (`src/commands/module/config.rs::Module::source`, config show, and inspect).
   `try_exists(...).unwrap_or(false)` and `.variable(...).ok()` suppress I/O and

@@ -444,6 +444,31 @@ fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
 }
 
 #[test]
+fn effective_config_retrieval_preserves_whitespace_and_precedence() -> Result {
+    for value in ["  spaced  ", "one\ntwo\n", "one\r\ntwo\r\n", ""] {
+        let mut manifest: serde_json::Value = serde_json::from_str(MANIFEST)?;
+        manifest["config"]["variables"][1]["default_value"] = value.into();
+        let sandbox = Sandbox::with_manifest(&manifest.to_string())?;
+        let default = sandbox.config(&["get", "demo", "host"])?;
+        assert_eq!(default.code, EX_OK as i32);
+        assert_eq!(default.stdout, format!("{value}\n"));
+        let stored = format!("stored {value} ");
+        let assignment = format!("host={stored}");
+        assert_eq!(
+            sandbox.config(&["set", "demo", &assignment])?.code,
+            EX_OK as i32
+        );
+        let run = sandbox.config(&["get", "demo", "host"])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert_eq!(run.stdout, format!("{stored}\n"));
+        let run = sandbox.config_env(&["get", "demo", "host"], &[(HOST_ENV, value)])?;
+        assert_eq!(run.code, EX_OK as i32);
+        assert_eq!(run.stdout, format!("{value}\n"));
+    }
+    Ok(())
+}
+
+#[test]
 fn stored_config_retrieval_preserves_value_whitespace() -> Result {
     let sandbox = Sandbox::new()?;
     for value in [
