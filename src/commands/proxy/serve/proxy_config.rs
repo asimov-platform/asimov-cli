@@ -18,7 +18,7 @@ use crate::BoxError;
 use base64::Engine as _;
 
 /// How to reach the upstream server.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum ProxyConfig {
     /// Connect directly to the target.
     Direct,
@@ -47,6 +47,38 @@ pub enum ProxyConfig {
     // `AsyncWrite`, so it slots into `ProxyStream::new()` directly).
 }
 
+impl core::fmt::Debug for ProxyConfig {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Direct => f.write_str("Direct"),
+            Self::HttpConnect {
+                host,
+                port,
+                tls,
+                basic_auth,
+            } => f
+                .debug_struct("HttpConnect")
+                .field("host", host)
+                .field("port", port)
+                .field("tls", tls)
+                .field("basic_auth", &basic_auth.as_ref().map(|_| "[REDACTED]"))
+                .finish(),
+            Self::Socks5 {
+                host,
+                port,
+                auth,
+                remote_dns,
+            } => f
+                .debug_struct("Socks5")
+                .field("host", host)
+                .field("port", port)
+                .field("auth", &auth.as_ref().map(|_| "[REDACTED]"))
+                .field("remote_dns", remote_dns)
+                .finish(),
+        }
+    }
+}
+
 impl ProxyConfig {
     /// Determines the proxy configuration for `target_host` from the
     /// conventional environment variables.
@@ -69,11 +101,11 @@ impl ProxyConfig {
         } else {
             url::Url::parse(&format!("http://{}", input))
         }
-        .map_err(|err| format!("invalid proxy URL `{}`: {}", input, err))?;
+        .map_err(|err| format!("invalid proxy URL: {err}"))?;
 
         let host = url
             .host_str()
-            .ok_or_else(|| format!("proxy URL `{}` is missing a host", input))?
+            .ok_or("proxy URL is missing a host")?
             .to_string();
 
         let username = url.username();
@@ -150,6 +182,30 @@ fn no_proxy_list_matches(no_proxy: &str, host: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn diagnostics_redact_proxy_credentials() {
+        let encoded = base64::engine::general_purpose::STANDARD.encode("private-user:private-pass");
+        for scheme in ["http", "https", "socks5", "socks5h"] {
+            let config = ProxyConfig::parse(&format!(
+                "{scheme}://private-user:private-pass@proxy.example:8080"
+            ))
+            .unwrap();
+            let debug = format!("{config:?}");
+            assert!(debug.contains("proxy.example"));
+            assert!(debug.contains("REDACTED"));
+            for secret in ["private-user", "private-pass", &encoded] {
+                assert!(!debug.contains(secret));
+            }
+            let error = ProxyConfig::parse(&format!(
+                "{scheme}://private-user:private-pass@proxy.example:invalid"
+            ))
+            .unwrap_err()
+            .to_string();
+            assert!(!error.contains("private-user"));
+            assert!(!error.contains("private-pass"));
+        }
+    }
 
     #[test]
     fn parse_http_proxy() {

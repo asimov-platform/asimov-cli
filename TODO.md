@@ -41,12 +41,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Define and enforce symlink handling for directories and files, including
   replacement races, and test that external targets remain untouched.
 
-- [ ] Redact upstream proxy credentials from diagnostics
-  (`src/commands/proxy/serve.rs:68-70` and its `ProxyConfig`). Derived `Debug`
-  prints SOCKS passwords and recoverable HTTP Basic credentials under `-v`;
-  URL parse errors also embed the complete input. Implement redacted formatting
-  and credential-safe errors, with assertions covering both proxy kinds.
-
 - [ ] Make application-config patching fail safely
   (`src/commands/proxy/install.rs::patch_jsonc_file_with_edikt`). Every read
   error becomes `{}`, so an existing non-UTF-8 config can be overwritten by a
