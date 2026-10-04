@@ -91,10 +91,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Share endpoint configuration across serving, reporting, and templates
   (`src/commands/proxy/` and its `config/` templates).
-  IPv6 reporting emits invalid `http://::1:1920/v1` (reproduced); generated and
-  installed configs hardcode port 1920 despite environment overrides. Centralize
-  validation and URL rendering, reject malformed environment values, and test
-  custom ports, IPv4/IPv6, and wildcard-bind versus client-address semantics.
+  Generated and installed configs hardcode port 1920 despite environment
+  overrides. Centralize validation and URL rendering, reject malformed
+  environment values, and test custom ports, IPv4/IPv6, and wildcard-bind
+  versus client-address semantics.
 
 - [ ] Bound proxy request buffering and network waits
   (`src/commands/proxy/serve.rs:138-142` and its `ProxyConnector`). Bodies are

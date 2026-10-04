@@ -6,6 +6,35 @@ use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
 #[test]
+fn proxy_urls_bracket_ipv6_addresses() -> Result<(), Box<dyn core::error::Error>> {
+    let root = temp_dir::TempDir::new()?;
+    for (host, port, expected) in [
+        ("127.0.0.1", "1920", "http://127.0.0.1:1920/v1\n"),
+        ("::1", "2020", "http://[::1]:2020/v1\n"),
+        ("2001:db8::1", "8080", "http://[2001:db8::1]:8080/v1\n"),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+            .args(["proxy", "url"])
+            .env("ASIMOV_ROOT", root.path())
+            .env("ASIMOV_PROXY_BIND", host)
+            .env("ASIMOV_PROXY_PORT", port)
+            .current_dir(root.path())
+            .stdin(Stdio::null())
+            .output()?;
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let rendered = String::from_utf8(output.stdout)?;
+        assert_eq!(rendered, expected);
+        let parsed = url::Url::parse(rendered.trim())?;
+        assert_eq!(parsed.port(), Some(port.parse()?));
+    }
+    Ok(())
+}
+
+#[test]
 fn windows_assignment_formats_use_distinct_syntax() -> Result<(), Box<dyn core::error::Error>> {
     let root = temp_dir::TempDir::new()?;
     for (format, expected) in [
