@@ -85,6 +85,8 @@ impl ProxyCommand {
 mod config;
 pub use config::*;
 
+mod endpoint;
+
 mod host;
 pub use host::*;
 

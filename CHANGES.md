@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Validate proxy bind settings consistently in serving and reporting commands
 - Honor `--color` and redirected output in module listings
 - Forward external command arguments without requiring UTF-8
 - Resolve external help commands after leading global options

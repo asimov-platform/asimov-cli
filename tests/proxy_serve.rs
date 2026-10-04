@@ -22,6 +22,8 @@ fn occupied_proxy_ports_return_a_contextual_error() -> Result<(), Box<dyn core::
         .env("ASIMOV_ROOT", root.path())
         .current_dir(root.path())
         .env("OPENROUTER_API_KEY", "test-key")
+        .env("ASIMOV_PROXY_BIND", "invalid-but-overridden")
+        .env("ASIMOV_PROXY_PORT", "invalid-but-overridden")
         .env("no_proxy", "*")
         .env("NO_PROXY", "*")
         .env_remove("ASIMOV_PROXY_LOG_FILE")

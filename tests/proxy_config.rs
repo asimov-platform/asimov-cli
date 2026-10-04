@@ -6,6 +6,33 @@ use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
 #[test]
+fn proxy_reporting_rejects_invalid_endpoint_environment() -> Result<(), Box<dyn core::error::Error>>
+{
+    let root = temp_dir::TempDir::new()?;
+    for (name, value) in [
+        ("ASIMOV_PROXY_BIND", "bad-address"),
+        ("ASIMOV_PROXY_PORT", "65536"),
+        ("ASIMOV_PROXY_PORT", ""),
+    ] {
+        for command in ["host", "port", "url"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+                .args(["proxy", command])
+                .env("ASIMOV_ROOT", root.path())
+                .env_remove("ASIMOV_PROXY_BIND")
+                .env_remove("ASIMOV_PROXY_PORT")
+                .env(name, value)
+                .current_dir(root.path())
+                .stdin(Stdio::null())
+                .output()?;
+            assert_eq!(output.status.code(), Some(EX_CONFIG as i32));
+            assert!(output.stdout.is_empty());
+            assert!(String::from_utf8_lossy(&output.stderr).contains(name));
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn proxy_urls_bracket_ipv6_addresses() -> Result<(), Box<dyn core::error::Error>> {
     let root = temp_dir::TempDir::new()?;
     for (host, port, expected) in [

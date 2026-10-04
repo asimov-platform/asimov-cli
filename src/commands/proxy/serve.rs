@@ -19,10 +19,7 @@ use clientele::crates::clap::Args;
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::{ConfigBuilderExt as _, HttpsConnector};
 use hyper_util::{client::legacy::Client, rt::TokioExecutor};
-use std::{
-    net::{IpAddr, SocketAddr},
-    sync::Arc,
-};
+use std::{net::IpAddr, sync::Arc};
 use tokio::net::TcpListener;
 
 const UPSTREAM_BASE_URL: &str = "https://openrouter.ai/api";
@@ -60,6 +57,7 @@ struct ProxyState {
 
 pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     let authorization = authorization_header(std::env::var("OPENROUTER_API_KEY").ok().as_deref())?;
+    let addr = super::endpoint::bind_address(args.bind, args.port)?;
 
     // The TLS configuration, shared between connections to the target and to
     // any `https://` proxy:
@@ -97,19 +95,6 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
         .route("/{*path}", any(proxy_handler))
         .with_state(state);
 
-    let bind: IpAddr = args.bind.unwrap_or_else(|| {
-        std::env::var("ASIMOV_PROXY_BIND")
-            .ok()
-            .and_then(|input| input.parse::<IpAddr>().ok())
-            .unwrap_or(IpAddr::from([127, 0, 0, 1]))
-    });
-    let port = args.port.unwrap_or_else(|| {
-        std::env::var("ASIMOV_PROXY_PORT")
-            .ok()
-            .and_then(|input| input.parse::<u16>().ok())
-            .unwrap_or(1920)
-    });
-    let addr = SocketAddr::from((bind, port));
     let listener = TcpListener::bind(addr).await.map_err(|error| {
         eprintln!("error: failed to bind proxy listener at {addr}: {error}");
         crate::SysexitsError::EX_UNAVAILABLE

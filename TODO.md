@@ -82,12 +82,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Add graceful proxy shutdown so in-flight responses, logs, and command
   telemetry can finish on termination (`src/commands/proxy/serve.rs`).
 
-- [ ] Share endpoint configuration across serving, reporting, and templates
-  (`src/commands/proxy/` and its `config/` templates).
-  Generated and installed configs hardcode port 1920 despite environment
-  overrides. Centralize validation and URL rendering, reject malformed
-  environment values, and test custom ports, IPv4/IPv6, and wildcard-bind
-  versus client-address semantics.
+- [ ] Use the validated proxy endpoint in generated and installed templates
+  (`src/commands/proxy/config/`). Templates hardcode port 1920 despite
+  environment overrides. Define wildcard-bind versus client-address semantics
+  and test custom ports and IPv4/IPv6 client URLs.
 
 - [ ] Bound proxy network waits and concurrency (`src/commands/proxy/serve.rs`
   and its `ProxyConnector`). Connection, CONNECT, SOCKS, TLS, and upstream-header
