@@ -170,12 +170,12 @@ pub const JEV_BATCH_SIZE: usize = 20;
 
 pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 
-/// Filters a Jev group, yielding passing lines in completion order.
+/// Filters a Jev group, yielding passing lines in input order.
 ///
 /// Pass at most `JEV_BATCH_SIZE` lines and drain the stream before submitting
-/// the next group. Currently each line is sent as an individual HTTP request;
-/// upstream batch support can replace that implementation behind this API.
-/// Dropping the stream aborts any outstanding requests in the group.
+/// the next group. Each group is sent in one request, and all answer IDs,
+/// types, and scores are validated before any line is emitted.
+/// Dropping the stream cancels the outstanding request.
 pub fn filter_jev_batch(
     filter: impl AsRef<str>,
     inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
@@ -216,10 +216,8 @@ pub fn filter_jev_batch(
             Ok(())
         }).await?;
         let output: JevResponse = response.json().await?;
-        for (i, answer) in output.answers.0.into_iter().enumerate() {
-            if answer.noul > JEV_MATCH_THRESHOLD {
-                yield Ok(inputs[i].clone());
-            }
+        for i in output.answers.matching_indices(inputs.len())? {
+            yield Ok(inputs[i].clone());
         }
     }))
 }
@@ -295,30 +293,74 @@ pub struct JevResponse {
 }
 
 #[derive(Debug)]
-pub struct JevAnswers(pub Vec<JevOutput>);
+pub struct JevAnswers(pub std::collections::BTreeMap<usize, JevOutput>);
+
+impl JevAnswers {
+    /// Validates the entire batch before selecting any input indices.
+    fn matching_indices(&self, input_count: usize) -> std::io::Result<Vec<usize>> {
+        let invalid = |message| std::io::Error::new(std::io::ErrorKind::InvalidData, message);
+        if self.0.len() != input_count {
+            return Err(invalid("Jev answer count does not match input count"));
+        }
+        let mut matches = Vec::new();
+        for (expected, (&id, answer)) in self.0.iter().enumerate() {
+            if id != expected {
+                return Err(invalid(
+                    "Jev answer IDs must match q0 through qN for the inputs",
+                ));
+            }
+            if answer.r#type != "noul" {
+                return Err(invalid("Jev answer type must be noul"));
+            }
+            if !answer.noul.is_finite() || !(0.0..=1.0).contains(&answer.noul) {
+                return Err(invalid(
+                    "Jev answer score must be finite and between 0 and 1",
+                ));
+            }
+            if answer.noul > JEV_MATCH_THRESHOLD {
+                matches.push(id);
+            }
+        }
+        Ok(matches)
+    }
+}
 
 impl<'de> serde::Deserialize<'de> for JevAnswers {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
     {
-        // 1. Parse JSON map into a BTreeMap
-        let map = std::collections::BTreeMap::<String, JevOutput>::deserialize(deserializer)?;
+        struct AnswersVisitor;
 
-        // 2. Filter keys starting with "q", extract integer index
-        let mut entries: Vec<(usize, JevOutput)> = map
-            .into_iter()
-            .filter_map(|(key, val)| {
-                key.strip_prefix('q')
-                    .and_then(|idx_str| idx_str.parse::<usize>().ok())
-                    .map(|idx| (idx, val))
-            })
-            .collect();
+        impl<'de> serde::de::Visitor<'de> for AnswersVisitor {
+            type Value = JevAnswers;
 
-        // 3. Sort numerically by index (ensuring q2 comes before q10)
-        entries.sort_by_key(|(idx, _)| *idx);
+            fn expecting(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                formatter.write_str("a map of unique Jev question IDs to answers")
+            }
 
-        Ok(Self(entries.into_iter().map(|(_, val)| val).collect()))
+            fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+            where
+                M: serde::de::MapAccess<'de>,
+            {
+                use serde::de::Error;
+
+                let mut answers = std::collections::BTreeMap::new();
+                while let Some((key, answer)) = map.next_entry::<String, JevOutput>()? {
+                    let id = key
+                        .strip_prefix('q')
+                        .and_then(|digits| digits.parse::<usize>().ok())
+                        .filter(|id| key == format!("q{id}"))
+                        .ok_or_else(|| M::Error::custom("invalid Jev question ID"))?;
+                    if answers.insert(id, answer).is_some() {
+                        return Err(M::Error::custom("duplicate Jev question ID"));
+                    }
+                }
+                Ok(JevAnswers(answers))
+            }
+        }
+
+        deserializer.deserialize_map(AnswersVisitor)
     }
 }
 
@@ -367,6 +409,124 @@ pub fn filter_jq(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jev_answers_select_inputs_by_numeric_id() {
+        let answers = (0..12)
+            .rev()
+            .map(|id| {
+                let score = if id == 2 || id == 10 { 1 } else { 0 };
+                format!(r#""q{id}":{{"type":"noul","noul":{score}}}"#)
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        let answers: JevAnswers = serde_json::from_str(&format!("{{{answers}}}")).unwrap();
+        assert_eq!(answers.matching_indices(12).unwrap(), [2, 10]);
+    }
+
+    #[test]
+    fn jev_answers_reject_missing_and_extra_ids() {
+        for (json, count) in [
+            (r#"{}"#, 1),
+            (r#"{"q1":{"type":"noul","noul":1}}"#, 2),
+            (r#"{"q1":{"type":"noul","noul":1}}"#, 1),
+            (r#"{"q0":{"type":"noul","noul":1}}"#, 0),
+            (
+                r#"{"q0":{"type":"noul","noul":1},"q2":{"type":"noul","noul":1}}"#,
+                2,
+            ),
+            (
+                r#"{"q0":{"type":"noul","noul":1},"q1":{"type":"noul","noul":1}}"#,
+                1,
+            ),
+        ] {
+            let answers: JevAnswers = serde_json::from_str(json).unwrap();
+            assert!(
+                answers.matching_indices(count).is_err(),
+                "{json}, count={count}"
+            );
+        }
+    }
+
+    #[test]
+    fn jev_answers_reject_duplicate_and_malformed_ids() {
+        assert!(
+            serde_json::from_str::<JevAnswers>(
+                r#"{"q0":{"type":"noul","noul":0},"q0":{"type":"noul","noul":1}}"#
+            )
+            .is_err()
+        );
+        for id in [
+            "",
+            "q",
+            "Q0",
+            "q-1",
+            "q+1",
+            "q01",
+            "q 1",
+            "other",
+            "q184467440737095516160",
+        ] {
+            let json = serde_json::json!({id: {"type": "noul", "noul": 1}});
+            assert!(serde_json::from_value::<JevAnswers>(json).is_err(), "{id}");
+        }
+    }
+
+    #[test]
+    fn jev_answers_validate_all_types_and_scores_before_selecting() {
+        for invalid in [
+            serde_json::json!({"type": "other", "noul": 1}),
+            serde_json::json!({"type": "noul", "noul": -0.1}),
+            serde_json::json!({"type": "noul", "noul": 1.1}),
+        ] {
+            let answers: JevAnswers = serde_json::from_value(serde_json::json!({
+                "q0": {"type": "noul", "noul": 1},
+                "q1": invalid,
+            }))
+            .unwrap();
+            assert!(answers.matching_indices(2).is_err());
+        }
+        for score in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            let answers = JevAnswers(
+                [(
+                    0,
+                    JevOutput {
+                        r#type: "noul".into(),
+                        noul: score,
+                    },
+                )]
+                .into(),
+            );
+            assert!(answers.matching_indices(1).is_err());
+        }
+        for invalid in [
+            serde_json::json!({"noul": 1}),
+            serde_json::json!({"type": "noul"}),
+            serde_json::json!({"type": "noul", "noul": "1"}),
+            serde_json::json!({"type": "noul", "noul": null}),
+            serde_json::json!({"type": "noul", "noul": true}),
+        ] {
+            assert!(
+                serde_json::from_value::<JevAnswers>(serde_json::json!({"q0": invalid})).is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn jev_answers_preserve_the_strict_match_threshold() {
+        let answers: JevAnswers = serde_json::from_str(
+            r#"{
+            "q0": {"type":"noul","noul":0},
+            "q1": {"type":"noul","noul":0.8},
+            "q2": {"type":"noul","noul":0.81},
+            "q3": {"type":"noul","noul":1}
+        }"#,
+        )
+        .unwrap();
+        assert_eq!(answers.matching_indices(4).unwrap(), [2, 3]);
+        let empty: JevAnswers = serde_json::from_str("{}").unwrap();
+        assert!(empty.matching_indices(0).unwrap().is_empty());
+    }
 
     #[test]
     fn filters_json_values() {

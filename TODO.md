@@ -25,13 +25,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P1: Data integrity and confidentiality
 
-- [ ] Preserve and validate Jev question IDs (`src/shared.rs::JevAnswers` and
-  `filter_jev_batch`). Deserialization sorts IDs but then discards them; a lone
-  `q1` becomes vector element zero (reproduced). Missing answers consequently
-  select the wrong input, and extra passing answers can index beyond `inputs`.
-  Validate IDs/counts, answer types, and score ranges before emitting records;
-  cover reordered, missing, duplicate, malformed, and out-of-range IDs.
-
 - [ ] Create private config files atomically, including on failure
   (`src/commands/module/config/{set,setup}.rs`). New files use default creation
   modes until the final permission repair. A valid first assignment followed by
@@ -303,9 +296,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/shared.rs`, `src/commands/`, public library APIs). Start with ignored
   write counts in Jev JSON generation, then address the remaining strict Clippy
   findings and feature-specific dead imports/functions. Fix the 14 bare-URL
-  rustdoc warnings and document public error/output contracts. Update Jev docs
-  that still describe per-line requests/completion order although the code now
-  sends one request per batch and iterates answers in numeric order.
+  rustdoc warnings and document public error/output contracts.
 
 - [ ] Match parsed URL components when ranking module links
   (`src/lib.rs::sort_links`, `src/commands/module/browse.rs`). Preference uses
