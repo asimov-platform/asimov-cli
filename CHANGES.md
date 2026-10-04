@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Reject invalid Jev input JSON before uploading a batch
 - Rank module links by actual URL hosts and path segments
 - Resolve IPv6 upstream proxy addresses without URL brackets
 - Generate correct, distinct Windows `set` and `setx` commands

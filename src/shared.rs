@@ -175,19 +175,18 @@ pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 /// Pass at most `JEV_BATCH_SIZE` lines and drain the stream before submitting
 /// the next group. Each group is sent in one request, and all answer IDs,
 /// types, and scores are validated before any line is emitted.
+/// Every input must contain one complete JSON value; invalid inputs fail
+/// before a request is created.
 /// Dropping the stream cancels the outstanding request.
 pub fn filter_jev_batch(
     filter: impl AsRef<str>,
     inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
 ) -> Result<Pin<Box<impl futures_lite::Stream<Item = Result<Vec<u8>, BoxError>>>>, BoxError> {
+    let inputs = collect_jev_inputs(inputs)?;
     let Ok(api_token) = std::env::var("TYPESAFE_API_TOKEN") else {
         return Err(EX_CONFIG)?;
     };
     let filter: String = json_escape::escape_str(filter.as_ref()).collect();
-    let inputs: Vec<Vec<u8>> = inputs
-        .into_iter()
-        .map(|input| input.as_ref().to_vec())
-        .collect();
     let moved_inputs = inputs.clone();
     Ok(Box::pin(async_stream::stream! {
         let response = post_typesafe(&api_token, move |out| {
@@ -220,6 +219,25 @@ pub fn filter_jev_batch(
             yield Ok(inputs[i].clone());
         }
     }))
+}
+
+fn collect_jev_inputs(
+    inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
+) -> Result<Vec<Vec<u8>>, BoxError> {
+    inputs
+        .into_iter()
+        .enumerate()
+        .map(|(index, input)| {
+            let input = input.as_ref();
+            serde_json::from_slice::<serde_json::Value>(input).map_err(|error| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("invalid JSON in Jev input {}: {error}", index + 1),
+                )
+            })?;
+            Ok(input.to_vec())
+        })
+        .collect()
 }
 
 /// Posts caller-written JSON to TypeSafe's API without buffering the entire body.
@@ -409,6 +427,42 @@ pub fn filter_jq(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn jev_input_validation_preserves_original_records() {
+        let inputs = [
+            " {\"text\":\"hello\"}\r\n",
+            "[1,2]",
+            "null",
+            "true",
+            "42",
+            "\"value\"",
+        ];
+        let collected = collect_jev_inputs(inputs).unwrap();
+        for (actual, expected) in collected.iter().zip(inputs) {
+            assert_eq!(actual, expected.as_bytes());
+        }
+    }
+
+    #[test]
+    fn invalid_jev_batches_fail_before_creating_a_stream() {
+        for input in [
+            b"".as_slice(),
+            b"{broken}",
+            b"1 2",
+            b"null, false",
+            b"\xff",
+            b"\"\xff\"",
+            b"[1,",
+        ] {
+            let Err(error) = filter_jev_batch("anything", [b"{}".as_slice(), input]) else {
+                panic!("invalid JSON must fail before creating the request stream");
+            };
+            let error = error.downcast_ref::<std::io::Error>().unwrap();
+            assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+            assert!(error.to_string().contains("Jev input 2"));
+        }
+    }
 
     #[test]
     fn jev_answers_select_inputs_by_numeric_id() {
