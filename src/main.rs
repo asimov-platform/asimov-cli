@@ -108,7 +108,7 @@ enum Command {
     Unstable(commands::unstable::UnstableCommand),
 
     #[clap(external_subcommand)]
-    External(Vec<String>),
+    External(Vec<OsString>),
 }
 
 #[tokio::main]
@@ -375,7 +375,11 @@ pub async fn main() -> SysexitsError {
                     is_debug: flags.debug,
                     pipe_output: false,
                 };
-                cmd.execute(&args[0], &args[1..]).map(|result| result.code)
+                let Some(name) = args.first().and_then(|name| name.to_str()) else {
+                    eprintln!("asimov: external command name must be valid UTF-8");
+                    return EX_USAGE;
+                };
+                cmd.execute_os(name, &args[1..]).map(|result| result.code)
             },
         };
 

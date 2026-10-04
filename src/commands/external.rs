@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use clientele::SysexitsError::{self, *};
+use std::ffi::OsString;
 use std::process::Stdio;
 
 use crate::{Result, shared::locate_subcommand};
@@ -24,6 +25,14 @@ pub struct ExternalSubcommand {
 
 impl ExternalSubcommand {
     pub fn execute(&self, cmd: &str, args: impl AsRef<[String]>) -> Result<ExternalResult> {
+        self.execute_os(
+            cmd,
+            args.as_ref().iter().map(OsString::from).collect::<Vec<_>>(),
+        )
+    }
+
+    /// Executes an external command without requiring UTF-8 argument values.
+    pub fn execute_os(&self, cmd: &str, args: impl AsRef<[OsString]>) -> Result<ExternalResult> {
         // Locate the given subcommand:
         let cmd = locate_subcommand(cmd)?;
 

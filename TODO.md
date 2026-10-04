@@ -42,12 +42,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
 
-- [ ] Preserve external command arguments and exit statuses
+- [ ] Preserve external command exit statuses
   (`src/main.rs::Command::External`, `src/commands/external.rs`). An external
   exit status of 42 becomes `EX_SOFTWARE` (reproduced), and signal statuses are
   similarly forced into `SysexitsError`. Carry raw process exit status across
-  this boundary and retain `OsString` arguments for non-UTF-8 paths. Test normal
-  failures, Unix signals, and byte-preserving argument forwarding.
+  this boundary. Test normal failures and Unix signals.
 
 - [ ] Handle broken pipes deliberately in command output paths. `println!` on
   a closed pipe panics with exit 101 (reproduced). Introduce fallible output
