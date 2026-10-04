@@ -79,7 +79,7 @@ pub async fn set(
     module.set_permissions().await?;
 
     for (key, value) in &pairs {
-        tokio::fs::write(module.var_file(key), value).await?;
+        module.write_value(key, value)?;
     }
 
     module.set_permissions().await?;

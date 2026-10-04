@@ -234,14 +234,22 @@ impl Module {
     }
 
     pub async fn create_conf_dir(&self) -> tokio::io::Result<()> {
-        tokio::fs::create_dir_all(&self.conf_dir)
-            .await
-            .inspect_err(|e| {
-                tracing::error!(
-                    "failed to create configuration directory for module `{}`: {e}",
-                    self.name
-                )
-            })
+        let mut builder = tokio::fs::DirBuilder::new();
+        builder.recursive(true);
+        #[cfg(unix)]
+        builder.mode(0o700);
+        builder.create(&self.conf_dir).await.inspect_err(|e| {
+            tracing::error!(
+                "failed to create configuration directory for module `{}`: {e}",
+                self.name
+            )
+        })
+    }
+
+    /// Replaces one value without exposing a partially written secret file.
+    pub fn write_value(&self, key: &str, value: &str) -> std::io::Result<()> {
+        use std::io::Write;
+        crate::shared::atomic_write(&self.var_file(key), |file| file.write_all(value.as_bytes()))
     }
 
     #[cfg(not(unix))]

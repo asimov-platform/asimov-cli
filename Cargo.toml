@@ -35,7 +35,7 @@ unstable = [
 ]
 
 # Stable commands:
-module = ["dep:dialoguer"]
+module = ["dep:dialoguer", "dep:tempfile"]
 proxy = [
   "dep:axum",
   "dep:base64",
@@ -122,6 +122,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
+tempfile = { version = "3", optional = true }
 asimov-module-kit = { version = "25.6.1", optional = true }
 asimov-protocol = { version = "25.6.1", optional = true }
 asimov-proxy = { version = "25.6.1", optional = true }

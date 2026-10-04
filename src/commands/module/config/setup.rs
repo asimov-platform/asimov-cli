@@ -85,7 +85,7 @@ pub async fn setup(module_name: &ModuleName, _flags: &StandardOptions) -> Result
                 continue;
             }
 
-            tokio::fs::write(&var_file, value).await?;
+            module.write_value(&var.name, value)?;
         }
 
         let mut stdout = std::io::stdout().lock();

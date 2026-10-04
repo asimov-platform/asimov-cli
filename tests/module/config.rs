@@ -220,6 +220,29 @@ fn stored_values_are_private_to_the_user() -> Result {
 
 #[cfg(unix)]
 #[test]
+fn partial_config_batches_leave_new_values_private() -> Result {
+    use std::os::unix::fs::PermissionsExt;
+    let sandbox = Sandbox::new()?;
+    std::fs::create_dir_all(sandbox.value_file("host"))?;
+    let run = sandbox.config(&["set", "demo", "api-key=first-secret", "host=second-value"])?;
+    assert_ne!(run.code, EX_OK as i32);
+    assert_eq!(
+        std::fs::read_to_string(sandbox.value_file("api-key"))?,
+        "first-secret"
+    );
+    assert_eq!(
+        std::fs::metadata(sandbox.value_file("api-key"))?
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+    assert!(sandbox.value_file("host").is_dir());
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
 fn a_failed_write_still_repairs_existing_configuration_permissions() -> Result {
     use std::os::unix::fs::PermissionsExt;
 

@@ -25,19 +25,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P1: Data integrity and confidentiality
 
-- [ ] Create private config files atomically, including on failure
-  (`src/commands/module/config/{set,setup}.rs`). New files use default creation
-  modes until the final permission repair. A valid first assignment followed by
-  an I/O failure leaves the first secret file at 0644 under a 022 umask
-  (reproduced); setup can also return before repair. Use 0600 temporary files
-  and atomic replacement inside a 0700 directory. Test interrupted writes,
-  partial batches, and preservation of an existing value on write failure.
-
 - [ ] Constrain config reads/writes to the intended directory
   (`src/commands/module/config.rs::set_permissions` and
   `src/commands/module/config/{get,set,setup}.rs`). Permission repair skips
-  symlinks, while value access follows them. Setting a symlinked variable
-  overwrites its target outside the config tree (reproduced).
+  symlinks, while reads follow them and symlinked config directories can redirect
+  writes outside the config tree.
   Define and enforce symlink handling for directories and files, including
   replacement races, and test that external targets remain untouched.
 
