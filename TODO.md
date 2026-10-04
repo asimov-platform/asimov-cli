@@ -122,8 +122,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   then test that no declared name can alias another value or escape its module.
 
 - [ ] Test module installation/upgrade against changing release metadata using
-  an injectable installer. Propagate registry state-check errors instead of
-  treating them as "not installed/enabled" (`src/commands/module/install.rs`).
+  an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
 - [ ] Bound source subprocess concurrency and make cancellation explicit
   (`src/commands/source/{fetch,list}.rs`). All URL tasks are spawned at once and

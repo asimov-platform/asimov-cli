@@ -32,7 +32,10 @@ pub async fn install(
         if !registry
             .is_module_installed(&module_name)
             .await
-            .unwrap_or(false)
+            .map_err(|e| {
+                tracing::error!("failed to check installation state of `{module_name}`: {e}");
+                EX_IOERR
+            })?
         {
             let target_version = if let Some(ref want) = version {
                 want.clone()
@@ -80,7 +83,10 @@ pub async fn install(
         if registry
             .is_module_enabled(&module_name)
             .await
-            .unwrap_or(false)
+            .map_err(|e| {
+                tracing::error!("failed to check enabled state of `{module_name}`: {e}");
+                EX_IOERR
+            })?
         {
             continue;
         }
