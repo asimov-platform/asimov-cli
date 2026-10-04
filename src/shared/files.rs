@@ -55,4 +55,16 @@ mod tests {
         );
         Ok(())
     }
+
+    #[test]
+    fn failed_replacement_cleans_up_without_modifying_the_destination() -> io::Result<()> {
+        let root = temp_dir::TempDir::new()?;
+        let destination = root.child("directory");
+        std::fs::create_dir(&destination)?;
+        std::fs::write(destination.join("keep"), b"old")?;
+        assert!(atomic_write(&destination, |file| file.write_all(b"new")).is_err());
+        assert_eq!(std::fs::read(destination.join("keep"))?, b"old");
+        assert_eq!(std::fs::read_dir(root.path())?.count(), 1);
+        Ok(())
+    }
 }

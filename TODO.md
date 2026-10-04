@@ -33,10 +33,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Define and enforce symlink handling for directories and files, including
   replacement races, and test that external targets remain untouched.
 
-- [ ] Replace successfully patched application configs atomically
-  (`src/commands/proxy/install.rs::patch_jsonc_file_with_edikt`). Cover
-  interrupted writes and preservation of the previous config on write failure.
-
 ## P2: CLI behavior and process lifecycle
 
 - [ ] Collect external help only when requested (`src/main.rs:128-132`,

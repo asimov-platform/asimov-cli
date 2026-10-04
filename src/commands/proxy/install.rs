@@ -79,8 +79,11 @@ fn patch_jsonc_file_with_edikt(
     patch: &str,
 ) -> Result<(), BoxError> {
     use edikt_core::{Document, Step};
-    let file_path = file_path.as_ref();
-    let input = std::fs::read_to_string(file_path)?;
+    use std::io::Write;
+    // Preserve symlinked settings files by replacing their resolved target.
+    let file_path = std::fs::canonicalize(file_path)?;
+    let permissions = std::fs::metadata(&file_path)?.permissions();
+    let input = std::fs::read_to_string(&file_path)?;
     // The editing parser recovers from malformed syntax; reject it first.
     let parsed = jsonc_parser::parse_to_value(&input, &Default::default())?;
     if !matches!(parsed, Some(jsonc_parser::JsonValue::Object(_))) {
@@ -97,7 +100,10 @@ fn patch_jsonc_file_with_edikt(
         &edikt_jsonc::parse(patch)?.to_value(),
     )?;
     let output = cst.to_source();
-    std::fs::write(&file_path, output)?;
+    crate::shared::atomic_write(&file_path, |file| {
+        file.write_all(output.as_bytes())?;
+        file.set_permissions(permissions)
+    })?;
     Ok(())
 }
 
@@ -160,6 +166,27 @@ mod tests {
             assert!(output.contains("\"font_size\": 14"));
             assert_eq!(output.matches("ASIMOV").count(), 1);
         }
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn atomic_patching_preserves_symlinks_and_permissions() -> Result<(), BoxError> {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let root = temp_dir::TempDir::new()?;
+        let target = root.child("target.json");
+        let link = root.child("settings.json");
+        std::fs::write(&target, "{}")?;
+        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o640))?;
+        symlink(&target, &link)?;
+        patch_jsonc_file_with_edikt(&link, &["provider"], r#"{"name":"ASIMOV"}"#)?;
+        assert!(std::fs::symlink_metadata(&link)?.is_symlink());
+        assert!(std::fs::read_to_string(&target)?.contains("ASIMOV"));
+        assert_eq!(
+            std::fs::metadata(&target)?.permissions().mode() & 0o777,
+            0o640
+        );
+        assert_eq!(std::fs::read_dir(root.path())?.count(), 2);
         Ok(())
     }
 }

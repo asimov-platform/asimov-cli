@@ -51,6 +51,7 @@ proxy = [
   "dep:tokio-rustls",
   "dep:tokio-socks",
   "dep:tower-service",
+  "dep:tempfile",
 ]
 source = ["source-snap", "dep:infer"]
 source-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]

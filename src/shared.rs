@@ -11,9 +11,9 @@ use std::{rc::Rc, sync::LazyLock};
 #[cfg_attr(not(feature = "telemetry"), path = "shared/telemetry_disabled.rs")]
 pub mod telemetry;
 
-#[cfg(feature = "module")]
+#[cfg(any(feature = "module", feature = "proxy"))]
 mod files;
-#[cfg(feature = "module")]
+#[cfg(any(feature = "module", feature = "proxy"))]
 pub(crate) use files::atomic_write;
 
 /// Returns a lazily initialized HTTP client with a shared connection pool.

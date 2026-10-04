@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Replace patched application settings atomically while preserving permissions
 - Write module configuration values atomically with private permissions
 - Create proxy body logs with private permissions on Unix
 - Reject invalid Jev input JSON before uploading a batch
