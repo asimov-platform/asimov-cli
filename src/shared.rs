@@ -16,6 +16,17 @@ mod files;
 #[cfg(any(feature = "module", feature = "proxy"))]
 pub(crate) use files::atomic_write;
 
+/// Resolves the standard color option for stdout, including redirected output.
+#[cfg(feature = "module")]
+pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
+    use std::io::IsTerminal;
+    match flags.color {
+        clap::ColorChoice::Always => true,
+        clap::ColorChoice::Never => false,
+        clap::ColorChoice::Auto => std::io::stdout().is_terminal(),
+    }
+}
+
 /// Returns a lazily initialized HTTP client with a shared connection pool.
 ///
 /// Clones are cheap and reuse the same underlying client and connection pool.

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Honor `--color` and redirected output in module listings
 - Forward external command arguments without requiring UTF-8
 - Resolve external help commands after leading global options
 - Limit proxy request bodies to 16 MiB by default (`--max-body-bytes` overrides)

@@ -53,11 +53,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   handling, preserving existing explicit sysexits, and add operation/path
   context to filesystem errors at their origin.
 
-- [ ] Apply standard color and verbosity options to handler output
-  (`src/commands/module/`, `src/commands/source/snap/`). Listing still emits
-  ANSI escapes with `--color never` (reproduced). Share color-aware rendering
-  across stdout/stderr, honor quiet/verbose modes, and test redirected output
-  as well as help output.
+- [ ] Apply standard color and verbosity options to remaining module and
+  snapshot handlers (`src/commands/module/`, `src/commands/source/snap/`).
+  Reuse shared color-aware rendering across stdout/stderr and test redirected
+  output as well as help output.
 
 ## P2: Module configuration and source execution
 

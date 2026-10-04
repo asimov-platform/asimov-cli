@@ -424,6 +424,35 @@ fn inspect_redacts_secret_defaults_in_every_output_format() -> Result {
 }
 
 #[test]
+fn module_list_respects_color_and_redirected_output() -> Result {
+    let sandbox = Sandbox::new()?;
+    for (color, format, colored) in [
+        ("never", "cli", false),
+        ("auto", "cli", false),
+        ("always", "cli", true),
+        ("always", "jsonl", false),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+            .args(["--color", color, "module", "list", "--output", format])
+            .env("ASIMOV_ROOT", sandbox.root())
+            .current_dir(sandbox.root())
+            .stdin(Stdio::null())
+            .output()?;
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8(output.stdout)?;
+        assert_eq!(stdout.contains('\u{1b}'), colored, "{color}/{format}");
+        if format == "cli" {
+            assert_eq!(clientele::strip_ansi(&stdout), "✗ demo\n");
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn module_list_emits_valid_jsonl_for_special_characters() -> Result {
     let mut manifest: serde_json::Value = serde_json::from_str(MANIFEST)?;
     let label = "quoted \"label\"\nwith\\slashes\r\t";

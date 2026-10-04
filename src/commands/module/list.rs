@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{BoxError, StandardOptions, SysexitsError::*};
-use color_print::cprintln;
+use color_print::cformat;
 
 #[derive(serde::Serialize)]
 struct ModuleRecord<'a> {
@@ -15,7 +15,8 @@ struct ModuleRecord<'a> {
     version: &'a str,
 }
 
-pub async fn list(output: String, _flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn list(output: String, flags: &StandardOptions) -> Result<(), BoxError> {
+    let color = crate::shared::stdout_color(flags);
     let registry = asimov_registry::Registry::default();
     let modules = registry.installed_modules().await.map_err(|e| {
         tracing::error!("failed to read installed modules: {e}");
@@ -42,11 +43,19 @@ pub async fn list(output: String, _flags: &StandardOptions) -> Result<(), BoxErr
                 println!("{}", serde_json::to_string(&record)?);
             },
             _ => {
-                if is_enabled {
-                    cprintln!("<s,g>✓</> {}", name);
+                let line = if is_enabled {
+                    cformat!("<s,g>✓</> {}", name)
                 } else {
-                    cprintln!("<s,r>✗</> {}", name);
-                }
+                    cformat!("<s,r>✗</> {}", name)
+                };
+                println!(
+                    "{}",
+                    if color {
+                        line
+                    } else {
+                        clientele::strip_ansi(&line)
+                    }
+                );
             },
         }
     }
