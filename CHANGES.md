@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Limit proxy request bodies to 16 MiB by default (`--max-body-bytes` overrides)
 - Format reported IPv6 proxy URLs with address brackets
 - Initialize module and snapshot storage only for commands that use it
 - Run external help discovery only when root long help is requested

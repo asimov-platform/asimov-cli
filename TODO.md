@@ -96,12 +96,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   environment values, and test custom ports, IPv4/IPv6, and wildcard-bind
   versus client-address semantics.
 
-- [ ] Bound proxy request buffering and network waits
-  (`src/commands/proxy/serve.rs:138-142` and its `ProxyConnector`). Bodies are
-  collected without a size limit, and connection, CONNECT, SOCKS, TLS, and
-  upstream-header waits have no explicit deadlines. Add configurable limits,
-  appropriate 413/504 responses, and bounded concurrency while preserving
-  streaming responses. Test slow uploads/upstreams and client disconnection.
+- [ ] Bound proxy network waits and concurrency (`src/commands/proxy/serve.rs`
+  and its `ProxyConnector`). Connection, CONNECT, SOCKS, TLS, and upstream-header
+  waits have no explicit deadlines. Add configurable deadlines and appropriate
+  504 responses while preserving streaming. Test slow uploads/upstreams and
+  client disconnection.
 
 - [ ] Strip hop-by-hop headers in both proxy directions
   (`src/commands/proxy/serve.rs::proxy_handler`). Forwarding currently removes

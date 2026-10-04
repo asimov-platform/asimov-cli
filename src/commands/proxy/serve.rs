@@ -27,6 +27,7 @@ use tokio::net::TcpListener;
 
 const UPSTREAM_BASE_URL: &str = "https://openrouter.ai/api";
 const UPSTREAM_HOST: &str = "openrouter.ai";
+const DEFAULT_MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
 
 /// The upstream HTTP client: a hyper client speaking rustls-based TLS to the
 /// target, over a connection that is either direct or tunneled through a
@@ -42,6 +43,10 @@ pub struct ProxyServeArgs {
     /// The port to bind to [default: $ASIMOV_PROXY_PORT or 1920]
     #[clap(long)]
     pub port: Option<u16>,
+
+    /// Maximum buffered request body size in bytes [default: 16777216]
+    #[clap(long)]
+    pub max_body_bytes: Option<usize>,
 }
 
 #[derive(Clone)]
@@ -50,6 +55,7 @@ struct ProxyState {
     logger: Option<BodyLogger>,
     authorization: HeaderValue,
     verbose: bool,
+    max_body_bytes: usize,
 }
 
 pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), BoxError> {
@@ -84,6 +90,7 @@ pub async fn serve(args: ProxyServeArgs, flags: &StandardOptions) -> Result<(), 
         logger: BodyLogger::from_env()?, // reads ASIMOV_PROXY_LOG_FILE
         authorization,
         verbose: flags.verbose > 0,
+        max_body_bytes: args.max_body_bytes.unwrap_or(DEFAULT_MAX_BODY_BYTES),
     };
 
     let router = Router::new()
@@ -140,11 +147,7 @@ async fn proxy_handler(
 
     let (mut head, body) = req.into_parts();
 
-    let body_bytes = body
-        .collect()
-        .await
-        .map_err(|_| StatusCode::BAD_REQUEST)?
-        .to_bytes();
+    let body_bytes = read_request_body(body, state.max_body_bytes).await?;
 
     // Patch the request body before forwarding it upstream:
     let upstream_request_body = patch_request_body(body_bytes)?;
@@ -194,6 +197,20 @@ async fn proxy_handler(
     Ok(response)
 }
 
+async fn read_request_body(body: Body, limit: usize) -> Result<Bytes, StatusCode> {
+    use core::error::Error;
+    axum::body::to_bytes(body, limit).await.map_err(|error| {
+        if error
+            .source()
+            .is_some_and(|cause| cause.is::<http_body_util::LengthLimitError>())
+        {
+            StatusCode::PAYLOAD_TOO_LARGE
+        } else {
+            StatusCode::BAD_REQUEST
+        }
+    })
+}
+
 /// Patches the upstream request body before it is forwarded.
 ///
 /// TODO: Rewrite the `model` property using `jsonc_parser`'s CST API, which
@@ -241,6 +258,58 @@ fn insert_attribution_headers(headers: &mut HeaderMap<HeaderValue>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn request_body_limits_apply_to_buffered_and_streamed_bodies() {
+        assert_eq!(
+            read_request_body(Body::from("1234"), 4).await.unwrap(),
+            "1234"
+        );
+        assert_eq!(
+            read_request_body(Body::from("12345"), 4).await.unwrap_err(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
+        let chunks = [
+            Ok::<_, std::io::Error>(Bytes::from_static(b"12")),
+            Ok(Bytes::from_static(b"345")),
+        ];
+        let body = Body::from_stream(futures_lite::stream::iter(chunks));
+        assert_eq!(
+            read_request_body(body, 4).await.unwrap_err(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
+        assert!(
+            read_request_body(Body::empty(), 0)
+                .await
+                .unwrap()
+                .is_empty()
+        );
+        let body = Body::from_stream(futures_lite::stream::iter([Err::<Bytes, _>(
+            std::io::Error::other("interrupted upload"),
+        )]));
+        assert_eq!(
+            read_request_body(body, 4).await.unwrap_err(),
+            StatusCode::BAD_REQUEST
+        );
+    }
+
+    #[test]
+    fn request_body_limit_is_configurable() {
+        #[derive(clap::Parser)]
+        struct Args {
+            #[command(flatten)]
+            args: ProxyServeArgs,
+        }
+        use clap::Parser;
+        assert_eq!(
+            Args::try_parse_from(["test", "--max-body-bytes", "1024"])
+                .unwrap()
+                .args
+                .max_body_bytes,
+            Some(1024)
+        );
+        assert!(Args::try_parse_from(["test", "--max-body-bytes", "invalid"]).is_err());
+    }
 
     #[test]
     fn authorization_is_validated_and_marked_sensitive() {
