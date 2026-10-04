@@ -94,12 +94,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   logging is unconditional. Share color-aware rendering across stdout/stderr,
   honor quiet/verbose modes, and test redirected output as well as help output.
 
-- [ ] Validate proxy formats and required source operands in Clap
-  (`src/commands/{source,proxy}.rs`, `src/commands/proxy/config.rs`).
+- [ ] Validate proxy formats (`src/commands/proxy.rs`,
+  `src/commands/proxy/config.rs`).
   Unsupported proxy formats silently succeed with empty output (reproduced).
-  Use per-command/target value parsers and reject missing operands where no
-  default operation is defined.
-  Keep deliberate defaults such as upgrading/compacting all entries explicit.
+  Use per-command/target value parsers.
 
 ## P2: Module configuration and source execution
 

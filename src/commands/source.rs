@@ -18,6 +18,7 @@ pub enum SourceCommand {
     #[clap(aliases = ["dir", "ls"])]
     List {
         /// The collection URL(s) to examine.
+        #[arg(required = true)]
         urls: Vec<String>,
 
         #[clap(flatten)]
@@ -55,6 +56,7 @@ pub enum SourceCommand {
         #[clap(long, short = 'M')]
         module: Option<ModuleName>,
 
+        #[arg(required = true)]
         urls: Vec<String>,
     },
 
@@ -137,6 +139,21 @@ mod tests {
     struct Command {
         #[command(subcommand)]
         command: SourceCommand,
+    }
+
+    #[test]
+    fn source_operations_require_urls() {
+        for operation in ["fetch", "get", "list", "ls", "read"] {
+            let error = Command::try_parse_from(["source", operation])
+                .err()
+                .expect("URL is required");
+            assert_eq!(
+                error.kind(),
+                clap::error::ErrorKind::MissingRequiredArgument
+            );
+            assert!(Command::try_parse_from(["source", operation, "https://example.com"]).is_ok());
+        }
+        assert!(Command::try_parse_from(["source", "snap", "compact"]).is_ok());
     }
 
     #[test]

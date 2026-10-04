@@ -79,6 +79,7 @@ enum Command {
 
     /// Manage data sources, fetching/listing/snapshotting them
     #[cfg(feature = "source")]
+    #[clap(subcommand_negates_reqs = true)]
     Source {
         #[clap(subcommand)]
         command: Option<SourceCommand>,

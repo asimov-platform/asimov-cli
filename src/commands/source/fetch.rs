@@ -33,6 +33,7 @@ pub struct SourceFetchArgs {
     #[clap(flatten)]
     timing: TimingOptions,
 
+    #[arg(required = true)]
     urls: Vec<String>,
 }
 
@@ -182,12 +183,21 @@ mod tests {
 
     #[test]
     fn forwards_only_explicit_options() {
-        let args = Command::try_parse_from(["test"]).unwrap().args;
-        assert_eq!(args.cache.max_age_option(), None);
-        assert_eq!(args.timing.deadline_option(), None);
-        let args = Command::try_parse_from(["test", "--max-age", "1h", "--deadline", "30s"])
+        let args = Command::try_parse_from(["test", "https://example.com"])
             .unwrap()
             .args;
+        assert_eq!(args.cache.max_age_option(), None);
+        assert_eq!(args.timing.deadline_option(), None);
+        let args = Command::try_parse_from([
+            "test",
+            "--max-age",
+            "1h",
+            "--deadline",
+            "30s",
+            "https://example.com",
+        ])
+        .unwrap()
+        .args;
         assert_eq!(args.cache.max_age_option().as_deref(), Some("--max-age=1h"));
         assert_eq!(
             args.timing.deadline_option().as_deref(),
