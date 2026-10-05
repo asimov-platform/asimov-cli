@@ -4,8 +4,8 @@ use crate::{BoxError, Result};
 use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
+use core::pin::Pin;
 use std::io::Write;
-use std::pin::Pin;
 use std::{rc::Rc, sync::LazyLock};
 
 #[cfg_attr(not(feature = "telemetry"), path = "shared/telemetry_disabled.rs")]
@@ -203,6 +203,9 @@ pub const JEV_BATCH_SIZE: usize = 20;
 
 pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 
+/// An original JSON record selected by Jev, or a filtering error.
+pub type JevLine = Result<Vec<u8>, BoxError>;
+
 /// Filters a Jev group, yielding passing lines in input order.
 ///
 /// Pass at most `JEV_BATCH_SIZE` lines and drain the stream before submitting
@@ -214,7 +217,7 @@ pub const JEV_MATCH_THRESHOLD: f64 = 0.80;
 pub fn filter_jev_batch(
     filter: impl AsRef<str>,
     inputs: impl IntoIterator<Item = impl AsRef<[u8]>>,
-) -> Result<Pin<Box<impl futures_lite::Stream<Item = Result<Vec<u8>, BoxError>>>>, BoxError> {
+) -> Result<Pin<Box<impl futures_lite::Stream<Item = JevLine>>>, BoxError> {
     let inputs = collect_jev_inputs(inputs)?;
     let Ok(api_token) = std::env::var("TYPESAFE_API_TOKEN") else {
         return Err(EX_CONFIG)?;

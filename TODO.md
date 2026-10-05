@@ -11,7 +11,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.98.1 on aarch64 macOS.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked`: 44 tests pass; one doctest is ignored.
+- `cargo test --locked`: 109 tests pass; one doctest is ignored.
+- `cargo test --locked --all-features`: 112 tests pass; one doctest is ignored.
 - `cargo +1.97.1 check --locked`: pass on the declared minimum toolchain.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: pass with warnings. Individual
@@ -19,9 +20,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   also pass; several report unused imports/functions.
 - `cargo test --locked --no-default-features`: 13 module integration tests fail.
 - `cargo clippy --locked --all-targets --all-features -- -D warnings`: fails
-  with 35 diagnostics, including two default-deny `unused_io_amount` findings.
-- `cargo doc --locked --no-deps`: succeeds with 14 `rustdoc::bare_urls`
-  warnings.
+  on source-list argument count and an unnecessary path allocation in a proxy
+  install test. Allowing those lints reveals root-command enum size and an
+  unnecessary help-string borrow in `src/main.rs`.
+- `cargo doc --locked --no-deps`: passes without warnings, including with
+  `--all-features`.
 
 ## P1: Data integrity and confidentiality
 
@@ -182,6 +185,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/shared.rs`, `src/commands/`, public library APIs). Address the remaining
   strict Clippy findings and document public error/output contracts. Keep the
   supported reduced-feature builds warning-free as commands evolve.
+  Remaining strict findings: group source-list arguments, review root-command
+  enum sizing, pass `root.path()` directly to `install_app` in its experimental
+  test, and remove the needless borrow of `aliases_help()` in `src/main.rs`.
 
 - [ ] Repair generated command examples and reference snippets
   (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
