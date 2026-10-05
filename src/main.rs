@@ -403,7 +403,7 @@ fn help_template(color: bool) -> String {
     let aliases = if color {
         aliases_help()
     } else {
-        strip_ansi(&aliases_help())
+        strip_ansi(aliases_help())
     };
     let commands_heading = color_print::cstr!("<y>Commands:</y>");
     let options_heading = color_print::cstr!("<y>Options:</y>");

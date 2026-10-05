@@ -21,7 +21,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - `cargo test --locked --no-default-features`: 13 module integration tests fail.
 - `cargo clippy --locked --all-targets --all-features -- -D warnings`: fails
   on source-list argument count. Allowing that lint reveals root-command enum
-  size and an unnecessary help-string borrow in `src/main.rs`.
+  size in `src/main.rs`.
 - `cargo doc --locked --no-deps`: passes without warnings, including with
   `--all-features`.
 
@@ -184,9 +184,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/shared.rs`, `src/commands/`, public library APIs). Address the remaining
   strict Clippy findings and document public error/output contracts. Keep the
   supported reduced-feature builds warning-free as commands evolve.
-  Remaining strict findings: group source-list arguments, review root-command
-  enum sizing, and remove the needless borrow of `aliases_help()` in
-  `src/main.rs`.
+  Remaining strict findings: group source-list arguments and review root-command
+  enum sizing.
 
 - [ ] Repair generated command examples and reference snippets
   (`.config/readmer/README.md.liquid`, `Rakefile`, `etc/readmer/`, `Makefile`).
