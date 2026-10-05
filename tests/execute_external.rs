@@ -8,8 +8,10 @@ use shared::{Result, TEST_FILES, TEST_PREFIX};
 
 #[test]
 pub fn test_execute_external() -> Result<()> {
-    let _dir = shared::init()?;
+    shared::run_isolated("test_execute_external", check_execute_external)
+}
 
+fn check_execute_external(_dir: &std::path::Path) -> Result<()> {
     for file in TEST_FILES.iter() {
         println!("{}: ", file.name);
 

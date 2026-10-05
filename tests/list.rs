@@ -7,7 +7,10 @@ use shared::{Result, TEST_FILES, TEST_PREFIX};
 
 #[test]
 pub fn test_list() -> Result<()> {
-    let dir = shared::init()?;
+    shared::run_isolated("test_list", check_list)
+}
+
+fn check_list(dir: &std::path::Path) -> Result<()> {
     let cmds = SubcommandsProvider::collect(TEST_PREFIX, 1);
 
     for file in TEST_FILES {
@@ -15,7 +18,7 @@ pub fn test_list() -> Result<()> {
 
         let cd_name = file.name.trim_start_matches(TEST_PREFIX);
         let cmd = cmds.iter().find(|cmd| cmd.name == cd_name);
-        let path = dir.child(file.full_name());
+        let path = dir.join(file.full_name());
 
         assert_eq!(cmd.is_some(), file.should_be_listed);
 

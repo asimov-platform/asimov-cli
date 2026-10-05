@@ -8,8 +8,10 @@ use shared::{Result, TEST_FILES, TEST_PREFIX};
 
 #[test]
 pub fn test_execute_help_cmd() -> Result<()> {
-    let _dir = shared::init()?;
+    shared::run_isolated("test_execute_help_cmd", check_execute_help_cmd)
+}
 
+fn check_execute_help_cmd(_dir: &std::path::Path) -> Result<()> {
     for file in TEST_FILES.iter() {
         println!("{}: ", file.name);
 

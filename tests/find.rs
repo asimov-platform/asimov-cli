@@ -7,14 +7,16 @@ use shared::{Result, TEST_FILES, TEST_PREFIX};
 
 #[test]
 pub fn test_find() -> Result<()> {
-    let dir = shared::init()?;
+    shared::run_isolated("test_find", check_find)
+}
 
+fn check_find(dir: &std::path::Path) -> Result<()> {
     for file in TEST_FILES {
         println!("{}: ", file.name);
 
         let cd_name = file.name.trim_start_matches(TEST_PREFIX);
         let cmd = SubcommandsProvider::find(TEST_PREFIX, cd_name);
-        let path = dir.child(file.full_name());
+        let path = dir.join(file.full_name());
 
         // Direct lookup supports nested names omitted from the root listing.
         assert_eq!(

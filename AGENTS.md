@@ -92,8 +92,8 @@
   `cargo test --locked --test module` (`tests/module/main.rs`).
 - CLI test fixtures use `env!("CARGO_BIN_EXE_asimov")` and temporary
   `ASIMOV_ROOT` directories. Startup loads `.env`; operational CLI tests require
-  a working OS keyring. `tests/shared.rs` creates
-  fake executables and mutates `PATH`; serialize tests sharing that state.
+  a working OS keyring. `tests/shared.rs` creates fake executables and reruns
+  PATH-dependent library checks in children with private environments.
 
 # Baseline alignment to review
 - `Cargo.toml` and CI/release workflows currently pin Rust 1.97.1; the baseline

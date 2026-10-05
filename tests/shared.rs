@@ -60,10 +60,38 @@ pub static TEST_FILES: &[TestFile] = &[
     },
 ];
 
-pub fn init() -> Result<TempDir> {
-    let dir = TempDir::new()?;
+/// Runs PATH-dependent library checks in a child with a private environment.
+pub fn run_isolated(
+    test_name: &str,
+    check: impl FnOnce(&std::path::Path) -> Result<()>,
+) -> Result<()> {
+    if std::env::var("ASIMOV_TEST_CASE").as_deref() == Ok(test_name) {
+        let root = std::env::var_os("ASIMOV_TEST_ROOT").expect("fixture root");
+        return check(std::path::Path::new(&root));
+    }
 
-    unsafe { std::env::set_var("PATH", dir.path()) };
+    let dir = init()?;
+    let output = std::process::Command::new(std::env::current_exe()?)
+        .args(["--exact", test_name, "--nocapture"])
+        .env("ASIMOV_TEST_CASE", test_name)
+        .env("ASIMOV_TEST_ROOT", dir.path())
+        .env("ASIMOV_ROOT", dir.path())
+        .env("PATH", dir.path())
+        .current_dir(dir.path())
+        .stdin(std::process::Stdio::null())
+        .output()?;
+    assert!(
+        output.status.success(),
+        "{test_name}: {}\nstdout:\n{}\nstderr:\n{}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    Ok(())
+}
+
+fn init() -> Result<TempDir> {
+    let dir = TempDir::new()?;
 
     #[cfg(unix)]
     for file in TEST_FILES {

@@ -113,12 +113,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.
 
-- [ ] Strengthen and isolate CLI fixtures (`tests/shared.rs`, external-command
-  tests, and `tests/module/`). Commented presence/success
-  assertions let several tests pass when every lookup/execution fails. Assert
-  expected success and failure paths, include stderr in failures, and verify
-  setup commands' statuses. Prefer per-child PATH/environment configuration over
-  unsafe global mutation; isolate cwd, dotenv, telemetry, and keyring state.
+- [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
+  operational CLI tests). Include stderr in failures and verify setup commands'
+  statuses. Isolate cwd, dotenv, telemetry, and keyring state.
 
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
