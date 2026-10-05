@@ -37,21 +37,11 @@ unstable = [
 # Stable commands:
 module = ["dep:dialoguer", "dep:tempfile"]
 proxy = [
-  "dep:axum",
-  "dep:base64",
+  "dep:asimov-proxy",
   "dep:dirs",
   "dep:edikt-core",
   "dep:edikt-jsonc",
-  "dep:http-body-util",
-  "dep:hyper",
-  "dep:hyper-rustls",
-  "dep:hyper-util",
   "dep:jsonc-parser",
-  "dep:percent-encoding",
-  "dep:rustls",
-  "dep:tokio-rustls",
-  "dep:tokio-socks",
-  "dep:tower-service",
   "dep:tempfile",
 ]
 source = ["source-snap", "dep:infer"]
@@ -124,11 +114,13 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 url = "2.5"
 
 # Optional dependencies:
-percent-encoding = { version = "2", optional = true }
 tempfile = { version = "3", optional = true }
 asimov-module-kit = { version = "25.6.1", optional = true }
 asimov-protocol = { version = "25.6.1", optional = true }
-asimov-proxy = { version = "25.6.1", optional = true }
+asimov-proxy = { version = "25.6.1", default-features = false, features = [
+  "std",
+  "tracing",
+], optional = true }
 asimov-snapshot = { version = "25.6.1", optional = true }
 asimov-telemetry = { version = "25.6.1", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
@@ -152,46 +144,15 @@ distrib = { version = "0.0.4", default-features = false, features = [
   "std",
 ], optional = true }
 
-# `asimov proxy` server
-axum = { version = "0.8", default-features = true, optional = true }
-base64 = { version = "0.23", default-features = false, features = [
-  "std",
-], optional = true }
+# `asimov proxy` application configuration
 dirs = { version = "6", default-features = false, optional = true }
 edikt-core = { version = "0.5.0", optional = true }
 edikt-jsonc = { version = "0.4.0", optional = true }
-http-body-util = { version = "0.1", default-features = false, optional = true }
-hyper = { version = "1", default-features = false, optional = true }
-hyper-rustls = { version = "0.27", default-features = false, features = [
-  "http1",
-  "logging",
-  "native-tokio",
-  "ring",
-  "tls12",
-], optional = true }
-hyper-util = { version = "0.1", default-features = false, features = [
-  "client-legacy",
-  "http1",
-  "tokio",
-], optional = true }
 iroh-base = { version = "1.2", default-features = false, features = ["key"] }
 jsonc-parser = { version = "0.33", default-features = false, features = [
   "cst",
 ], optional = true }
-rustls = { version = "0.23", default-features = false, features = [
-  "logging",
-  "ring",
-  "std",
-  "tls12",
-], optional = true }
 secrecy = "0.10"
-tokio-rustls = { version = "0.26", default-features = false, features = [
-  "logging",
-  "ring",
-  "tls12",
-], optional = true }
-tokio-socks = { version = "0.5", optional = true }
-tower-service = { version = "0.3", optional = true }
 whoami = "2.1"
 
 [profile.release]
@@ -251,3 +212,5 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-runner = { path = "../asimov-sdk/rust/lib/asimov-runner" }
 #asimov-snapshot = { path = "../asimov-sdk/rust/lib/asimov-snapshot" }
 #asimov-telemetry = { path = "../asimov-sdk/rust/lib/asimov-telemetry" }
+
+asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

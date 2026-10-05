@@ -84,26 +84,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   environment overrides. Define wildcard-bind versus client-address semantics
   and test custom ports and IPv4/IPv6 client URLs.
 
-- [ ] Bound proxy network waits and concurrency (`src/commands/proxy/serve.rs`
-  and its `ProxyConnector`). Add per-stage deadlines inside connection,
-  CONNECT, SOCKS, and TLS setup, plus upload limits and bounded concurrency.
-  Test cancellation of connection attempts and client disconnection while
-  preserving streamed responses.
-
-- [ ] Cover conventional upstream-proxy addressing and authentication
-  (`src/commands/proxy/serve/{proxy_config,proxy_connector}.rs`).
-  Local SOCKS DNS uses only the first address. Add network tests for encoded
-  credentials, IPv6, multiple addresses, and port-aware NO_PROXY rules.
-  Test CONNECT framing/status handling and both SOCKS DNS modes against local
-  servers rather than relying solely on parser tests.
-
-- [ ] Move body logging off the response polling path
-  (`src/commands/proxy/serve/body_logger.rs`). Each frame locks a shared mutex
-  and performs synchronous disk writes; write failures are discarded, concurrent
-  exchanges lack correlation IDs. Use a bounded writer queue with explicit
-  failure/backpressure behavior, request IDs, and shutdown flushing. Test
-  slow/full sinks without losing response-stream correctness.
-
 - [ ] Execute generated proxy shell templates on Windows to validate quoting,
   current-session `set` behavior, and persistent `setx` assignments
   (`src/commands/proxy/config.rs`).
@@ -141,10 +121,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Reduce unused and unnecessarily unconditional dependencies
   (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`, `whoami`,
-  optional `asimov-proxy`/`mime`, and generated shadow metadata, which have no
-  corresponding source consumers. Gate experimental SDK dependencies and narrow
-  broad Tokio/default features where practical. Measure clean-build time and
-  binary size, checking feature unification before removing dependencies.
+  optional `mime`, and generated shadow metadata, which have no corresponding
+  source consumers. Gate experimental SDK dependencies and narrow broad
+  Tokio/default features where practical. Measure clean-build time and binary
+  size, checking feature unification before removing dependencies.
 
 - [ ] Retire or explicitly deprecate the legacy registry API
   (`src/registry.rs`, `src/registry/`). Public `fetch_modules` always returns an
