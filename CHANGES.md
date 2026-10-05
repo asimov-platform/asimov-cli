@@ -7,57 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Bump the SDK to 25.7.0 for identity-preserving keyring repair and safer file access
-### Fixed
-- Avoid panics when formatting current or future snapshot timestamps
-- Strip connection-specific headers from proxy requests and streamed responses
-- Drain in-flight proxy responses on Ctrl-C or SIGTERM before exiting
-- Return HTTP 504 after the proxy upstream timeout (`--upstream-timeout`)
-- Bound Jev HTTP connection, read, and total request waits
-- Validate proxy bind settings consistently in serving and reporting commands
-- Honor `--color` and redirected output in module listings
-- Forward external command arguments without requiring UTF-8
-- Resolve external help commands after leading global options
 - Limit proxy request bodies to 16 MiB by default (`--max-body-bytes` overrides)
-- Format reported IPv6 proxy URLs with address brackets
-- Initialize module and snapshot storage only for commands that use it
-- Run external help discovery only when root long help is requested
-- Forward nested external help requests to the intended subcommand
-- Expand and advertise aliases only for commands enabled in the build
-- Stop module inspection on configuration read errors before emitting a report
-- Report unreadable configuration values instead of displaying them as unset
-- Preserve whitespace in effective configuration values from every source
-- Report unclassified command errors and return specific I/O failure codes
-- Allow help, version, and license output without initializing local identity
-- Log proxy request URLs only in verbose mode
-- Report proxy bind and server failures without panicking
-- Validate proxy API credentials at startup without panics or secret disclosure
-- Decode percent-encoded HTTP and SOCKS proxy credentials
-- Reject unsafe and colliding variable names in config, inspect, and install
-- Open only valid HTTP or HTTPS module links in the browser
-- Replace patched application settings atomically while preserving permissions
-- Write module configuration values atomically with private permissions
-- Create proxy body logs with private permissions on Unix
-- Reject invalid Jev input JSON before uploading a batch
-- Rank module links by actual URL hosts and path segments
-- Resolve IPv6 upstream proxy addresses without URL brackets
-- Generate correct, distinct Windows `set` and `setx` commands
-- Reject unsupported proxy configuration formats instead of producing no output
-- Identify proxy model output as a static example and reject invalid formats
-- Require URLs for source fetch, list, and read operations
-- Require module names for install, uninstall, enable, and disable
-- Report registry state errors before attempting module installation
-- Preserve value whitespace in `module config get --stored`
-- Report unsupported experimental proxy targets instead of panicking
-- Reject unsupported module output formats during argument parsing
-- Install and upgrade to the exact module version resolved by the CLI
-- Handle incomplete writes when generating Jev requests
-- Preserve unreadable or invalid application configs during proxy installation
+- Return HTTP 504 if the proxy upstream does not start responding within
+  120 seconds (`--upstream-timeout` overrides)
+### Fixed
+- Protect secrets in module inspection and proxy diagnostics, and make new
+  module configuration files and proxy body logs private on Unix
+- Preserve local identity when repairing keyring state
+- Prevent configuration loss when saving module settings or installing proxy
+  integrations, and reject unsafe module configuration names
+- Install and upgrade to the exact module version selected by the CLI
+- Preserve all `--jq` results and report filter errors in source commands
+- Reject invalid `--jev` inputs and responses, and time out stalled requests
+- Preserve whitespace in module configuration values and report unreadable
+  settings instead of treating them as unset
+- Allow help, version, and license output without accessing the system keyring
+- Let active proxy responses finish before exiting on Ctrl-C or SIGTERM
+- Avoid crashes when displaying current or future snapshot timestamps
+- Fix proxy connections using IPv6 addresses or URL-encoded credentials
+- Fix external command help routing and support non-UTF-8 arguments
 - Escape special characters in module JSONL output
-- Redact upstream proxy credentials from diagnostics
-- Hide secret defaults in JSON module inspection output
-- Preserve all jq results and report later filter errors in source commands
-- Reject invalid Jev answers before selecting source records
+- Fix Windows proxy environment setup commands
 
 ## 25.6.1 - 2026-10-02
 ### Added
