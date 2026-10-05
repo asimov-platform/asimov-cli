@@ -7,11 +7,7 @@ pub async fn tree(_flags: &StandardOptions) -> Result<(), BoxError> {
     let tree = Tree::from_dir(".")?;
     let tree = prune(&tree, &|input| match input {
         Tree::Leaf(lines) => lines.iter().any(|line| line.ends_with("~")),
-        Tree::Node(label, _) => match label.as_str() {
-            ".git" => true,
-            "target" => true,
-            _ => false,
-        },
+        Tree::Node(label, _) => matches!(label.as_str(), ".git" | "target"),
     })
     .unwrap_or(tree);
 
@@ -32,7 +28,7 @@ where
                 Some(Tree::Node(
                     label.clone(),
                     children
-                        .into_iter()
+                        .iter()
                         .filter_map(|child| prune(child, predicate))
                         .collect(),
                 ))
