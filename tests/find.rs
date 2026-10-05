@@ -16,12 +16,20 @@ pub fn test_find() -> Result<()> {
         let cmd = SubcommandsProvider::find(TEST_PREFIX, cd_name);
         let path = dir.child(file.full_name());
 
-        // assert_eq!(cmd.is_some(), file.should_be_listed);
+        // Direct lookup supports nested names omitted from the root listing.
+        assert_eq!(
+            cmd.is_some(),
+            file.name.starts_with(TEST_PREFIX),
+            "unexpected lookup result for {}",
+            file.name
+        );
 
         if let Some(cmd) = cmd {
             assert_eq!(cmd.path, path);
         }
     }
+
+    assert!(SubcommandsProvider::find(TEST_PREFIX, "missing-command").is_none());
 
     Ok(())
 }
