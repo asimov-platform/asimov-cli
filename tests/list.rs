@@ -11,7 +11,26 @@ pub fn test_list() -> Result<()> {
 }
 
 fn check_list(dir: &std::path::Path) -> Result<()> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let path = dir.join("asimov-disabled");
+        std::fs::write(&path, "#!/bin/sh\nexit 0\n")?;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o644))?;
+    }
     let cmds = SubcommandsProvider::collect(TEST_PREFIX, 1);
+    let mut actual: Vec<_> = cmds.iter().map(|cmd| cmd.name.as_str()).collect();
+    actual.sort_unstable();
+    let mut expected: Vec<_> = TEST_FILES
+        .iter()
+        .filter(|file| file.should_be_listed)
+        .map(|file| file.name.trim_start_matches(TEST_PREFIX))
+        .collect();
+    expected.sort_unstable();
+    assert_eq!(
+        actual, expected,
+        "root commands must be executable and unique"
+    );
 
     for file in TEST_FILES {
         println!("{}: ", file.name);
