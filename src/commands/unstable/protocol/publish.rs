@@ -6,7 +6,7 @@ use color_print::ceprintln;
 
 pub async fn publish(
     topic: &Topic,
-    message: &String,
+    message: &str,
     ticket: &Option<String>,
     _flags: &StandardOptions,
 ) -> Result<(), BoxError> {
@@ -25,7 +25,7 @@ pub async fn publish(
     ceprintln!("<s,g>✓</> Topic=<s>{:?}</>", topic_subscription);
 
     // Publish the given message to the topic:
-    topic_subscription.publish(message.clone()).await?;
+    topic_subscription.publish(message.to_owned()).await?;
 
     // Wait until the user presses Ctrl-C to terminate the program:
     tokio::signal::ctrl_c().await?;
