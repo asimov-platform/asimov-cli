@@ -78,8 +78,8 @@ pub async fn config(
 
         Bash | Zsh => match format.as_deref() {
             Some("export") | None => {
-                println!("export {}={}", "OPENAI_API_BASE", base_url);
-                println!("export {}={}", "OPENAI_API_KEY", "sh");
+                println!("export OPENAI_API_BASE={base_url}");
+                println!("export OPENAI_API_KEY=sh");
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -92,8 +92,8 @@ pub async fn config(
 
         Dotenv => match format.as_deref() {
             Some("env") | None => {
-                println!("{}={}", "OPENAI_API_BASE", base_url);
-                println!("{}={}", "OPENAI_API_KEY", "dotenv");
+                println!("OPENAI_API_BASE={base_url}");
+                println!("OPENAI_API_KEY=dotenv");
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -107,8 +107,7 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// {}\n{}",
-                    "~/.config/goose/custom_providers/asimov.json",
+                    "// ~/.config/goose/custom_providers/asimov.json\n{}",
                     include_str!("config/goose.json")
                 );
             },
@@ -134,8 +133,7 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// {}\n{}",
-                    "litellm/llms/openai_like/providers.json",
+                    "// litellm/llms/openai_like/providers.json\n{}",
                     include_str!("config/litellm.json")
                 );
             },
@@ -157,8 +155,7 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// {}\n{}",
-                    "~/.config/opencode/opencode.json",
+                    "// ~/.config/opencode/opencode.json\n{}",
                     include_str!("config/opencode.json")
                 );
             },
@@ -169,14 +166,14 @@ pub async fn config(
         // See: <https://docs.openhands.dev/openhands/usage/v0/advanced/V0_configuration-options#llm-configuration>
         Openhands => match format.as_deref() {
             Some("env") => {
-                println!("{}={}", "LLM_BASE_URL", base_url);
-                println!("{}={}", "LLM_API_KEY", "openhands");
-                println!("{}={}", "LLM_MODEL", default_model);
+                println!("LLM_BASE_URL={base_url}");
+                println!("LLM_API_KEY=openhands");
+                println!("LLM_MODEL={default_model}");
             },
             Some("toml") | None => {
                 println!("[llm.asimov]");
                 println!("base_url = \"{}\"", base_url);
-                println!("api_key = \"{}\"", "openhands");
+                println!("api_key = \"openhands\"");
                 println!("model = \"{}\"", default_model);
             },
             Some(format) => return unsupported_format(app, format),
@@ -185,12 +182,10 @@ pub async fn config(
         Powershell => match format.as_deref() {
             Some("dotnet") | None => {
                 println!(
-                    r#"[Environment]::SetEnvironmentVariable("{}", "{}", "User")"#,
-                    "OPENAI_API_BASE", base_url
+                    r#"[Environment]::SetEnvironmentVariable("OPENAI_API_BASE", "{base_url}", "User")"#
                 );
                 println!(
-                    r#"[Environment]::SetEnvironmentVariable("{}", "{}", "User")"#,
-                    "OPENAI_API_KEY", "powershell"
+                    r#"[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "powershell", "User")"#
                 );
             },
             Some("set") => {
@@ -212,8 +207,7 @@ pub async fn config(
             },
             Some("jsonc") | None => {
                 print!(
-                    "// {}\n{}",
-                    "~/.pi/agent/models.json",
+                    "// ~/.pi/agent/models.json\n{}",
                     include_str!("config/pi.json")
                 );
             },
@@ -226,11 +220,7 @@ pub async fn config(
                 println!("{}", zed_asimov_config()?);
             },
             Some("jsonc") | None => {
-                println!(
-                    "// {}\n{}",
-                    "~/.config/zed/settings.json",
-                    zed_asimov_config()?
-                );
+                println!("// ~/.config/zed/settings.json\n{}", zed_asimov_config()?);
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -245,7 +235,7 @@ fn unsupported_format(app: ProxyConfigTarget, format: &str) -> Result<(), BoxErr
 
 pub(crate) fn zed_asimov_config() -> Result<String, jsonc_parser::errors::ParseError> {
     use jsonc_parser::{ParseOptions, cst::CstRootNode};
-    let cst = CstRootNode::parse(&"{}", &ParseOptions::default())?;
+    let cst = CstRootNode::parse("{}", &ParseOptions::default())?;
     let root = cst.object_value_or_set();
     root.object_value_or_set("language_models")
         .object_value_or_set("openai_compatible")
