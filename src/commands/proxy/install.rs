@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions};
 use clap::ValueEnum;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum ProxyInstallTarget {
@@ -39,7 +39,7 @@ pub async fn install(
 
 pub async fn install_app(
     app: ProxyInstallTarget,
-    home_path: &PathBuf,
+    home_path: &Path,
     flags: &StandardOptions,
 ) -> Result<(), BoxError> {
     use ProxyInstallTarget::*;
@@ -92,7 +92,7 @@ fn patch_jsonc_file_with_edikt(
     let mut cst = edikt_jsonc::parse(&input)?;
     cst.set(
         json_path
-            .into_iter()
+            .iter()
             .map(ToString::to_string)
             .map(Step::Field)
             .collect::<Vec<Step>>()
