@@ -376,14 +376,13 @@ mod tests {
 
     #[tokio::test]
     async fn sanitized_chunked_responses_remain_streaming() {
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::AsyncWriteExt;
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let (release, released) = tokio::sync::oneshot::channel();
         let server = tokio::spawn(async move {
             let (mut socket, _) = listener.accept().await.unwrap();
-            let mut request = [0; 4096];
-            socket.read(&mut request).await.unwrap();
+            crate::shared::test_http::read_request_headers(&mut socket).await;
             socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: keep-alive, x-private\r\nX-Private: secret\r\nProxy-Authenticate: Basic\r\nTransfer-Encoding: chunked\r\n\r\nd\r\ndata: first\n\n\r\n").await.unwrap();
             released.await.unwrap();
             socket
@@ -484,14 +483,13 @@ mod tests {
 
     #[tokio::test]
     async fn upstream_deadline_bounds_headers_without_buffering_the_body() {
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::AsyncWriteExt;
         for send_headers in [false, true] {
             let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
             let address = listener.local_addr().unwrap();
             let server = tokio::spawn(async move {
                 let (mut socket, _) = listener.accept().await.unwrap();
-                let mut request = [0; 4096];
-                socket.read(&mut request).await.unwrap();
+                crate::shared::test_http::read_request_headers(&mut socket).await;
                 if send_headers {
                     socket
                         .write_all(b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
