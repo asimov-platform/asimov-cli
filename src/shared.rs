@@ -16,6 +16,9 @@ mod files;
 #[cfg(any(feature = "module", feature = "proxy"))]
 pub(crate) use files::atomic_write;
 
+#[cfg(test)]
+pub(crate) mod test_http;
+
 /// Resolves the standard color option for stdout, including redirected output.
 #[cfg(feature = "module")]
 pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
@@ -461,7 +464,7 @@ mod tests {
     #[tokio::test]
     async fn http_deadlines_bound_stalled_headers_and_bodies() {
         use std::time::Duration;
-        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::io::AsyncWriteExt;
         for headers in [false, true] {
             for (read_timeout, total_timeout) in [
                 (Duration::from_millis(50), Duration::from_secs(5)),
@@ -471,8 +474,7 @@ mod tests {
                 let address = listener.local_addr().unwrap();
                 let server = tokio::spawn(async move {
                     let (mut socket, _) = listener.accept().await.unwrap();
-                    let mut request = [0; 4096];
-                    socket.read(&mut request).await.unwrap();
+                    test_http::read_request_headers(&mut socket).await;
                     if headers {
                         socket
                             .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\n")
