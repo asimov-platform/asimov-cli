@@ -100,7 +100,7 @@ enum Command {
         command: Option<SourceCommand>,
 
         #[clap(flatten)]
-        args: commands::source::SourceFetchArgs,
+        args: Box<commands::source::SourceFetchArgs>,
     },
 
     #[cfg(feature = "unstable")]
@@ -364,7 +364,7 @@ pub async fn main() -> SysexitsError {
 
             #[cfg(feature = "source")]
             Source { command, args } => command
-                .unwrap_or(SourceCommand::Fetch { args })
+                .unwrap_or(SourceCommand::Fetch { args: *args })
                 .run(flags)
                 .await
                 .map_err(sysexits)
