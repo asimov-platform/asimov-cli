@@ -126,9 +126,7 @@ mod tests {
             ProxyInstallTarget::Obsidian,
             ProxyInstallTarget::VSCode,
         ] {
-            let error = install_app(target, &root.path().to_path_buf(), &flags)
-                .await
-                .unwrap_err();
+            let error = install_app(target, root.path(), &flags).await.unwrap_err();
             assert_eq!(
                 error.downcast_ref::<crate::SysexitsError>(),
                 Some(&crate::SysexitsError::EX_UNAVAILABLE)
