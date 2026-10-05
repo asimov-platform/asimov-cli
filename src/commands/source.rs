@@ -2,8 +2,7 @@
 
 use crate::BoxError;
 use asimov_module::ModuleName;
-use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
-use clientele::{StandardOptions, crates::clap::Subcommand, options::sort::SortKeys};
+use clientele::{StandardOptions, crates::clap::Subcommand};
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommand {
@@ -17,38 +16,8 @@ pub enum SourceCommand {
     /// List resources from a collection URL, utilizing enabled modules.
     #[clap(aliases = ["dir", "ls"])]
     List {
-        /// The collection URL(s) to examine.
-        #[arg(required = true)]
-        urls: Vec<String>,
-
         #[clap(flatten)]
-        cache: CachingOptions,
-
-        #[clap(flatten)]
-        timing: TimingOptions,
-
-        /// The specific module to use.
-        #[clap(long, short = 'M')]
-        module: Option<ModuleName>,
-
-        /// Sort resources by the specified keys. (Prefix a key with `-` for descending order.)
-        #[clap(long, aliases = ["sort-by", "order", "order-by"], value_name = "[+|-]KEY,...", allow_hyphen_values = true)]
-        sort: Option<SortKeys>,
-
-        /// The index offset of the first output.
-        #[clap(value_name = "INDEX", long, default_value = "0")]
-        offset: Option<usize>,
-
-        /// The maximum count of outputs [default: none].
-        #[arg(value_name = "COUNT", short = 'n', long)]
-        limit: Option<usize>,
-
-        /// The output format.
-        #[arg(value_name = "FORMAT", short = 'o', long)]
-        output: Option<String>, // TODO: OutputFormat, default_value = "jsonl"
-
-        #[clap(flatten)]
-        filtering: FilteringOptions,
+        args: SourceListArgs,
     },
 
     /// Read a resource specified by a URL, utilizing enabled modules
@@ -85,22 +54,7 @@ impl SourceCommand {
         match self {
             Fetch { args } => fetch(args, flags).await,
 
-            List {
-                urls,
-                module,
-                sort,
-                offset,
-                limit,
-                output,
-                filtering,
-                cache,
-                timing,
-            } => {
-                list(
-                    urls, module, sort, offset, limit, output, filtering, cache, timing, flags,
-                )
-                .await
-            },
+            List { args } => list(args, flags).await,
 
             Read { module, urls } => read(urls, module, flags).await,
 
@@ -122,7 +76,7 @@ mod fetch;
 pub use fetch::*;
 
 mod list;
-pub use list::list;
+pub use list::{SourceListArgs, list};
 
 mod read;
 pub use read::*;
@@ -161,11 +115,14 @@ mod tests {
         let Command {
             command:
                 SourceCommand::List {
-                    cache,
-                    timing,
-                    filtering,
-                    urls,
-                    ..
+                    args:
+                        SourceListArgs {
+                            cache,
+                            timing,
+                            filtering,
+                            urls,
+                            ..
+                        },
                 },
         } = Command::try_parse_from([
             "test",

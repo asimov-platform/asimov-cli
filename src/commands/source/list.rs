@@ -10,19 +10,55 @@ use color_print::ceprintln;
 use miette::Result;
 use std::io::Write;
 
+#[derive(Clone, Debug, Default, clap::Args)]
+pub struct SourceListArgs {
+    /// The collection URL(s) to examine.
+    #[arg(required = true)]
+    pub urls: Vec<String>,
+
+    #[clap(flatten)]
+    pub cache: CachingOptions,
+
+    #[clap(flatten)]
+    pub timing: TimingOptions,
+
+    /// The specific module to use.
+    #[clap(long, short = 'M')]
+    pub module: Option<ModuleName>,
+
+    /// Sort resources by the specified keys. (Prefix a key with `-` for descending order.)
+    #[clap(long, aliases = ["sort-by", "order", "order-by"], value_name = "[+|-]KEY,...", allow_hyphen_values = true)]
+    pub sort: Option<SortKeys>,
+
+    /// The index offset of the first output.
+    #[clap(value_name = "INDEX", long, default_value = "0")]
+    pub offset: Option<usize>,
+
+    /// The maximum count of outputs [default: none].
+    #[arg(value_name = "COUNT", short = 'n', long)]
+    pub limit: Option<usize>,
+
+    /// The output format.
+    #[arg(value_name = "FORMAT", short = 'o', long)]
+    pub output: Option<String>, // TODO: OutputFormat, default_value = "jsonl"
+
+    #[clap(flatten)]
+    pub filtering: FilteringOptions,
+}
+
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
-pub async fn list(
-    input_urls: Vec<String>,
-    module: Option<ModuleName>,
-    sort: Option<SortKeys>,
-    offset: Option<usize>,
-    limit: Option<usize>,
-    output: Option<String>,
-    filtering: FilteringOptions,
-    cache: CachingOptions,
-    timing: TimingOptions,
-    flags: &StandardOptions,
-) -> Result<(), BoxError> {
+pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+    let SourceListArgs {
+        urls: input_urls,
+        module,
+        sort,
+        offset,
+        limit,
+        output,
+        filtering,
+        cache,
+        timing,
+    } = args;
     let FilteringOptions { jev, jq } = filtering;
     if jev.is_some() && std::env::var("TYPESAFE_API_TOKEN").is_err() {
         ceprintln!("<s,r>error:</> --jev requires TYPESAFE_API_TOKEN to be set");
