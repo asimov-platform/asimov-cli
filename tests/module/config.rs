@@ -72,6 +72,17 @@ impl Sandbox {
         self.config_env(args, &[])
     }
 
+    /// Requires a setup command to succeed before checking its effects.
+    fn config_ok(&self, args: &[&str]) -> Result {
+        let run = self.config(args)?;
+        assert_eq!(
+            run.code, EX_OK as i32,
+            "config {args:?}\nstdout:\n{}\nstderr:\n{}",
+            run.stdout, run.stderr
+        );
+        Ok(())
+    }
+
     fn config_env(&self, args: &[&str], env: &[(&str, &str)]) -> Result<Run> {
         let mut all = vec!["config"];
         all.extend_from_slice(args);
@@ -201,7 +212,7 @@ fn configuration_readers_reject_unsafe_and_colliding_names() -> Result {
 #[test]
 fn secret_values_are_shown_only_when_read_by_name() -> Result {
     let sandbox = Sandbox::new()?;
-    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
+    sandbox.config_ok(&["set", "demo", "api-key=s3cret-value"])?;
 
     let shown = sandbox.config(&["show", "demo"])?;
     assert!(
@@ -220,7 +231,7 @@ fn secret_values_are_shown_only_when_read_by_name() -> Result {
 #[test]
 fn a_rejected_batch_changes_nothing() -> Result {
     let sandbox = Sandbox::new()?;
-    sandbox.config(&["set", "demo", "host=first"])?;
+    sandbox.config_ok(&["set", "demo", "host=first"])?;
 
     let run = sandbox.config(&["set", "demo", "host=second", "nonexistent=value"])?;
     assert_eq!(run.code, EX_USAGE as i32);
@@ -237,7 +248,7 @@ fn stored_values_are_private_to_the_user() -> Result {
     use std::os::unix::fs::PermissionsExt;
 
     let sandbox = Sandbox::new()?;
-    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
+    sandbox.config_ok(&["set", "demo", "api-key=s3cret-value"])?;
 
     let mode =
         |path: &Path| -> Result<u32> { Ok(std::fs::metadata(path)?.permissions().mode() & 0o777) };
@@ -325,7 +336,7 @@ fn setting_a_value_repairs_only_that_modules_configuration_permissions() -> Resu
         std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o644))?;
     }
 
-    sandbox.config(&["set", "demo", "host=example.test"])?;
+    sandbox.config_ok(&["set", "demo", "host=example.test"])?;
 
     let mode = |path: &Path| -> Result<u32> {
         Ok(std::fs::symlink_metadata(path)?.permissions().mode() & 0o777)
@@ -349,7 +360,7 @@ fn get_resolves_the_environment_then_the_stored_value_then_the_default() -> Resu
     let run = sandbox.config(&["get", "demo", "host"])?;
     assert_eq!(run.stdout.trim(), "default.example");
 
-    sandbox.config(&["set", "demo", "host=stored.example"])?;
+    sandbox.config_ok(&["set", "demo", "host=stored.example"])?;
     let run = sandbox.config(&["get", "demo", "host"])?;
     assert_eq!(run.stdout.trim(), "stored.example");
 
@@ -377,12 +388,12 @@ fn inspect_reports_unmet_configuration_through_its_exit_status() -> Result {
     // `host` is unset too, but its default satisfies it
     assert!(run.stdout.contains("host"));
 
-    sandbox.config(&["set", "demo", "api-key=s3cret-value"])?;
+    sandbox.config_ok(&["set", "demo", "api-key=s3cret-value"])?;
     let run = sandbox.module(&["inspect", "demo"])?;
     assert_eq!(run.code, EX_OK as i32);
 
     // a value from the environment counts just as much as a stored one
-    sandbox.config(&["unset", "demo", "api-key"])?;
+    sandbox.config_ok(&["unset", "demo", "api-key"])?;
     let run = sandbox.module_env(&["inspect", "demo"], &[(KEY_ENV, "from-env")])?;
     assert_eq!(run.code, EX_OK as i32);
 
