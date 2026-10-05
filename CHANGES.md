@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Bump the SDK for identity-preserving keyring repair and safer file access
+- Bump the SDK to 25.7.0 for identity-preserving keyring repair and safer file access
 ### Fixed
 - Avoid panics when formatting current or future snapshot timestamps
 - Strip connection-specific headers from proxy requests and streamed responses
