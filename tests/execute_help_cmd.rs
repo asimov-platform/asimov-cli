@@ -17,16 +17,20 @@ pub fn test_execute_help_cmd() -> Result<()> {
 
         let cd_name = file.name.trim_start_matches(TEST_PREFIX);
         let result = external_cmd.execute(cd_name, &[]);
-        // assert_eq!(result.is_ok(), file.should_be_listed);
-
-        if let Ok(result) = result {
-            assert_eq!(result.code, EX_OK);
-
-            assert_eq!(
-                std::str::from_utf8(&result.output).unwrap().trim(),
-                file.help
-            );
+        if !file.name.starts_with(TEST_PREFIX) {
+            assert!(matches!(result, Err(EX_UNAVAILABLE)), "{}", file.name);
+            continue;
         }
+
+        let result = result.unwrap_or_else(|error| panic!("{}: {error}", file.name));
+        assert!(
+            result.success,
+            "{}: {}",
+            file.name,
+            String::from_utf8_lossy(&result.output)
+        );
+        assert_eq!(result.code, EX_OK, "{}", file.name);
+        assert_eq!(std::str::from_utf8(&result.output)?.trim(), file.help);
     }
 
     Ok(())
