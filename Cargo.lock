@@ -281,7 +281,7 @@ dependencies = [
 [[package]]
 name = "asimov-config"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
 ]
@@ -289,7 +289,7 @@ dependencies = [
 [[package]]
 name = "asimov-core"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -301,7 +301,7 @@ dependencies = [
 [[package]]
 name = "asimov-directory"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -317,7 +317,7 @@ dependencies = [
 [[package]]
 name = "asimov-env"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "cap-directories",
@@ -328,7 +328,7 @@ dependencies = [
 [[package]]
 name = "asimov-flow"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "async-flow",
@@ -342,7 +342,7 @@ dependencies = [
 [[package]]
 name = "asimov-huggingface"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "hf-hub",
@@ -353,7 +353,7 @@ dependencies = [
 [[package]]
 name = "asimov-id"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -369,7 +369,7 @@ dependencies = [
 [[package]]
 name = "asimov-installer"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -398,7 +398,7 @@ dependencies = [
 [[package]]
 name = "asimov-kb"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -410,12 +410,13 @@ dependencies = [
 [[package]]
 name = "asimov-keyring"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "apple-native-keyring-store",
  "asimov-core",
  "asimov-directory",
  "asimov-id",
+ "cap-tempfile",
  "derive_more",
  "iroh-base",
  "keyring-core",
@@ -429,7 +430,7 @@ dependencies = [
 [[package]]
 name = "asimov-module"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -452,7 +453,7 @@ dependencies = [
 [[package]]
 name = "asimov-module-kit"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "anyhow",
  "asimov-core",
@@ -473,7 +474,7 @@ dependencies = [
 [[package]]
 name = "asimov-patterns"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -487,7 +488,7 @@ dependencies = [
 [[package]]
 name = "asimov-prompt"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "bon",
@@ -498,7 +499,7 @@ dependencies = [
 [[package]]
 name = "asimov-protocol"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-id",
@@ -526,7 +527,7 @@ dependencies = [
 [[package]]
 name = "asimov-proxy"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -548,7 +549,7 @@ dependencies = [
 [[package]]
 name = "asimov-registry"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -571,7 +572,7 @@ dependencies = [
 [[package]]
 name = "asimov-runner"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -594,7 +595,7 @@ dependencies = [
 [[package]]
 name = "asimov-snapshot"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -615,7 +616,7 @@ dependencies = [
 [[package]]
 name = "asimov-telemetry"
 version = "25.6.1"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#82c75ae56ab1f8e773fa7e10c54ddd4b24911d83"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#713cff00e8758f353826590c653f36d57f4a92a7"
 dependencies = [
  "agent-detector",
  "bs58",
@@ -7963,9 +7964,9 @@ checksum = "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971"
 
 [[package]]
 name = "unicase"
-version = "2.9.0"
+version = "2.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbc4bc3a9f746d862c45cb89d705aa10f187bb96c76001afab07a0d35ce60142"
+checksum = "357cc3acc6a036009fd6c973ed009037c732d60d0b4f6c673e9041497482a28f"
 
 [[package]]
 name = "unicode-bom"

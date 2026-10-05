@@ -295,10 +295,12 @@ pub async fn main() -> SysexitsError {
     if let Err(error) = Keyring::my_public_key() {
         ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
         return match error {
-            KeyringError::IoError(_) => EX_IOERR,
-            KeyringError::KeyError(_) => EX_DATAERR,
+            KeyringError::IoError(_) | KeyringError::RekeyRollbackFailed { .. } => EX_IOERR,
+            KeyringError::KeyError(_) | KeyringError::CorruptSecret { .. } => EX_DATAERR,
             KeyringError::KeyringError(_) => EX_UNAVAILABLE,
             KeyringError::UserNotFound => EX_NOUSER,
+            KeyringError::InvalidUser(_) => EX_CONFIG,
+            KeyringError::LockPoisoned => EX_SOFTWARE,
         };
     }
 

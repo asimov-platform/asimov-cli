@@ -32,6 +32,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   writes outside the config tree.
   Define and enforce symlink handling for directories and files, including
   replacement races, and test that external targets remain untouched.
+  SDK HEAD `713cff00` confines manifest/config reads, but CLI-local stored reads,
+  provenance resolution, and writes still bypass that confinement. Align these
+  paths with the SDK's directory-relative access policy.
 
 ## P2: CLI behavior and process lifecycle
 
@@ -96,6 +99,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
   operational CLI tests). Include stderr in remaining status assertions.
   Isolate cwd, dotenv, telemetry, and keyring state.
+  SDK HEAD `713cff00` checks the secret backend even with a cached public key;
+  `cargo test --locked` now stops in `external_arguments` when macOS keychain
+  access is canceled. Provide an injectable test identity/backend so these
+  fixtures do not depend on interactive keychain access.
 
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable

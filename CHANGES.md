@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Bump the SDK for identity-preserving keyring repair and safer file access
 ### Fixed
 - Avoid panics when formatting current or future snapshot timestamps
 - Strip connection-specific headers from proxy requests and streamed responses
