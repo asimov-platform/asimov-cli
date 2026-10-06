@@ -75,6 +75,8 @@ pub mod describe;
 mod fetch;
 pub use fetch::*;
 
+mod filter;
+
 mod list;
 pub use list::{SourceListArgs, list};
 

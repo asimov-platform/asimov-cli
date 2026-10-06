@@ -419,8 +419,6 @@ dependencies = [
 [[package]]
 name = "asimov-keyring"
 version = "25.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35f51c2b5b0ce6ae3de9fdea7bc66316c469c8ddfa2ed60c7da5946b674406fd"
 dependencies = [
  "apple-native-keyring-store",
  "asimov-core",

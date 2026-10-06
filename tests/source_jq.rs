@@ -2,6 +2,9 @@
 
 #![cfg(all(unix, feature = "source"))]
 
+extern crate alloc;
+
+use alloc::{format, string::String};
 use clientele::SysexitsError::*;
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
@@ -48,16 +51,90 @@ impl Sandbox {
     }
 
     fn run_options(&self, command: &str, options: &[&str]) -> Result<Output> {
-        Ok(Command::new(env!("CARGO_BIN_EXE_asimov"))
+        Ok(self.command(command, options).output()?)
+    }
+
+    fn command(&self, command: &str, options: &[&str]) -> Command {
+        let mut process = Command::new(env!("CARGO_BIN_EXE_asimov"));
+        process
             .args(["source", command])
             .args(options)
             .arg("https://jq.example/data")
             .env("ASIMOV_ROOT", self.0.path())
+            .env("HOME", self.0.path())
+            .env("ASIMOV_KEYRING_BACKEND", "file")
+            .env("DO_NOT_TRACK", "1")
+            .env_remove("TYPESAFE_API_TOKEN")
             .env("PATH", self.0.child("bin"))
             .current_dir(self.0.path())
-            .stdin(Stdio::null())
-            .output()?)
+            .stdin(Stdio::null());
+        process
     }
+}
+
+#[test]
+fn source_commands_require_jev_credentials_and_validate_input_before_http() -> Result {
+    let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' 'not JSON'\n")?;
+    for command in ["fetch", "list"] {
+        let output = sandbox.run_options(command, &["--jev", "The name is Ukrainian"])?;
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(EX_CONFIG as i32),
+            "{command}: {stderr}"
+        );
+        assert!(
+            stderr.contains("--jev requires TYPESAFE_API_TOKEN"),
+            "{stderr}"
+        );
+        assert!(output.stdout.is_empty());
+
+        let output = sandbox
+            .command(command, &["--jev", "The name is Ukrainian"])
+            .env("TYPESAFE_API_TOKEN", "fixture-token")
+            .output()?;
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(
+            output.status.code(),
+            Some(EX_DATAERR as i32),
+            "{command}: {stderr}"
+        );
+        assert!(stderr.contains("invalid JSON in Jev input"), "{stderr}");
+        assert!(output.stdout.is_empty());
+    }
+    Ok(())
+}
+
+#[test]
+fn list_forwards_cursor_bounds_and_explicit_offsets_to_the_module() -> Result {
+    let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' \"$@\"\n")?;
+    for (options, expected) in [
+        (vec!["--after=urn:entry:a"], "--after=urn:entry:a\n"),
+        (
+            vec!["--before=HTTPS://Example.COM/a%2fb?x=a=b#end"],
+            "--before=HTTPS://Example.COM/a%2fb?x=a=b#end\n",
+        ),
+        (
+            vec![
+                "--sort=-name",
+                "--before=urn:entry:z",
+                "--after=urn:entry:a",
+                "--limit=10",
+            ],
+            "--sort=-name\n--before=urn:entry:z\n--after=urn:entry:a\n--limit=10\n",
+        ),
+        (vec!["--offset=0", "--limit=10"], "--offset=0\n--limit=10\n"),
+        (vec![], ""),
+    ] {
+        let output = sandbox.run_options("list", &options)?;
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(output.status.success(), "{options:?}: {stderr}");
+        assert_eq!(
+            output.stdout,
+            format!("{expected}https://jq.example/data\n").as_bytes()
+        );
+    }
+    Ok(())
 }
 
 #[test]

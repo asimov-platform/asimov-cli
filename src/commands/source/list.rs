@@ -1,14 +1,19 @@
 // This is free and unencumbered software released into the public domain.
 
+use super::filter::OutputFilter;
 use crate::shared::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
+use alloc::{
+    format,
+    string::{String, ToString},
+    vec::Vec,
+};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
-use std::io::Write;
 
 #[derive(Clone, Debug, Default, clap::Args)]
 pub struct SourceListArgs {
@@ -30,9 +35,17 @@ pub struct SourceListArgs {
     #[clap(long, aliases = ["sort-by", "order", "order-by"], value_name = "[+|-]KEY,...", allow_hyphen_values = true)]
     pub sort: Option<SortKeys>,
 
-    /// The index offset of the first output.
-    #[clap(value_name = "INDEX", long, default_value = "0")]
+    /// The index offset of the first output (default: 0).
+    #[clap(value_name = "INDEX", long, conflicts_with_all = ["before", "after"])]
     pub offset: Option<usize>,
+
+    /// Select entries before this entry URI, exclusively in the selected order.
+    #[arg(long, value_name = "URI", value_parser = parse_cursor)]
+    pub before: Option<String>,
+
+    /// Select entries after this entry URI, exclusively in the selected order.
+    #[arg(long, value_name = "URI", value_parser = parse_cursor)]
+    pub after: Option<String>,
 
     /// The maximum count of outputs [default: none].
     #[arg(value_name = "COUNT", short = 'n', long)]
@@ -46,6 +59,17 @@ pub struct SourceListArgs {
     pub filtering: FilteringOptions,
 }
 
+// Preserve the spelling of entry IDs: validation must not normalize cursors.
+fn parse_cursor(value: &str) -> core::result::Result<String, &'static str> {
+    if value.is_empty()
+        || value.chars().any(|c| c.is_whitespace() || c.is_control())
+        || url::Url::parse(value).is_err()
+    {
+        return Err("expected an absolute entry URI (JSON-LD @id)");
+    }
+    Ok(value.to_string())
+}
+
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
 pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     let SourceListArgs {
@@ -53,18 +77,15 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         module,
         sort,
         offset,
+        before,
+        after,
         limit,
         output,
         filtering,
         cache,
         timing,
     } = args;
-    let FilteringOptions { jev, jq } = filtering;
-    if jev.is_some() && std::env::var("TYPESAFE_API_TOKEN").is_err() {
-        ceprintln!("<s,r>error:</> --jev requires TYPESAFE_API_TOKEN to be set");
-        return Err(EX_CONFIG.into());
-    }
-    let jq = shared::compile_jq(jq.as_deref())?;
+    let filter = OutputFilter::new(filtering)?;
 
     let registry = asimov_registry::Registry::default();
     let installed_modules = shared::installed_modules(&registry, Some("lister")).await?;
@@ -101,6 +122,8 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
             ListerOptions::builder()
                 .maybe_sort(sort.clone())
                 .maybe_offset(offset)
+                .maybe_before(before.as_deref())
+                .maybe_after(after.as_deref())
                 .maybe_limit(limit)
                 .maybe_output(output.as_deref())
                 .maybe_other(cache.max_age_option())
@@ -153,45 +176,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                         };
 
                         let mut stdout = std::io::stdout().lock();
-                        let mut write_line = |line: &[u8]| -> Result<(), BoxError> {
-                            if let Some(filter) = jq.as_ref() {
-                                for value in shared::filter_jq(filter, line).map_err(|e| {
-                                    ceprintln!(
-                                        "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
-                                    );
-                                    EX_DATAERR
-                                })? {
-                                    writeln!(stdout, "{value}")?;
-                                }
-                            } else {
-                                stdout.write_all(line)?;
-                            }
-
-                            if jev.is_some() {
-                                // Make each passing line visible as its request completes.
-                                stdout.flush()?;
-                            }
-                            Ok(())
-                        };
-
-                        if let Some(filter) = jev.as_ref() {
-                            let mut lines = batch.lines();
-                            while lines.len() > 0 {
-                                let matches = shared::filter_jev_batch(
-                                    filter,
-                                    lines.by_ref().take(shared::JEV_BATCH_SIZE),
-                                )?;
-                                futures_lite::pin!(matches);
-                                while let Some(line) = matches.next().await {
-                                    write_line(&line?)?;
-                                }
-                            }
-                        } else {
-                            for line in batch.lines() {
-                                write_line(line)?;
-                            }
-                        }
-                        stdout.flush()?;
+                        filter.write_batch(&batch, &url, &mut stdout).await?;
                     }
                     if succeeded && verbose > 0 {
                         ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
@@ -215,5 +200,74 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         Err(EX_UNAVAILABLE.into())
     } else {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::{Parser, error::ErrorKind};
+
+    #[derive(Debug, Parser)]
+    struct Command {
+        #[command(flatten)]
+        args: SourceListArgs,
+    }
+
+    #[test]
+    fn cursors_preserve_uri_spelling_without_an_implicit_offset() {
+        let args = Command::try_parse_from([
+            "list",
+            "--sort=-name",
+            "--before=HTTPS://Example.COM/a%2fb?x=a=b#end",
+            "--after=urn:entry:1",
+            "--limit=5",
+            "https://example.com/",
+        ])
+        .unwrap()
+        .args;
+        assert!(args.offset.is_none());
+        assert_eq!(
+            args.before.as_deref(),
+            Some("HTTPS://Example.COM/a%2fb?x=a=b#end")
+        );
+        assert_eq!(args.after.as_deref(), Some("urn:entry:1"));
+        assert_eq!(args.limit, Some(5));
+        assert!(
+            Command::try_parse_from(["list", "https://example.com/"])
+                .unwrap()
+                .args
+                .offset
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn rejects_mixed_pagination_and_malformed_cursors_during_parsing() {
+        for option in ["--before", "--after"] {
+            for offset in ["0", "2"] {
+                let error = Command::try_parse_from([
+                    "list",
+                    option,
+                    "urn:entry:1",
+                    "--offset",
+                    offset,
+                    "https://example.com/",
+                ])
+                .unwrap_err();
+                assert_eq!(error.kind(), ErrorKind::ArgumentConflict);
+            }
+            for uri in [
+                "",
+                "relative/path",
+                "urn:entry:1\n",
+                " urn:entry:1",
+                "not a URI",
+            ] {
+                let error = Command::try_parse_from(["list", option, uri, "https://example.com/"])
+                    .unwrap_err();
+                assert_eq!(error.kind(), ErrorKind::ValueValidation);
+            }
+        }
     }
 }

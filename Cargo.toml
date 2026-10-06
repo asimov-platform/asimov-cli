@@ -197,6 +197,8 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
+# Use the container-compatible identity backend until the next SDK release.
+asimov-keyring = { path = "../asimov-sdk/rust/lib/asimov-keyring" }
 #asimov-config = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-core = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-directory = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

@@ -93,6 +93,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
+- [ ] Replace the local `asimov-keyring` Cargo patch with a published SDK
+  release containing the file-backed identity fallback. Local builds currently
+  require the sibling `asimov-sdk` checkout.
+
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.
 

@@ -1,14 +1,15 @@
 // This is free and unencumbered software released into the public domain.
 
+use super::filter::OutputFilter;
 use crate::shared::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
+use alloc::{format, string::String, vec::Vec};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
-use asimov_patterns::{CachingOptions, TimingOptions};
+use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
 use miette::Result;
-use std::io::Write;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#fetcher-arguments>
 #[derive(Args, Clone, Debug, Default)]
@@ -23,9 +24,8 @@ pub struct SourceFetchArgs {
     #[arg(value_name = "FORMAT", short = 'o', long)]
     output: Option<String>,
 
-    /// Filter JSON output using a jq expression.
-    #[arg(long, value_name = "EXPR")]
-    jq: Option<String>,
+    #[clap(flatten)]
+    filtering: FilteringOptions,
 
     #[clap(flatten)]
     cache: CachingOptions,
@@ -39,7 +39,7 @@ pub struct SourceFetchArgs {
 
 /// See: <https://asimov-specs.github.io/program-patterns/#fetcher%E2%91%A0>
 pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
-    let jq = shared::compile_jq(args.jq.as_deref())?;
+    let filter = OutputFilter::new(args.filtering)?;
     let registry = asimov_registry::Registry::default();
 
     let installed_modules = shared::installed_modules(&registry, Some("fetcher")).await?;
@@ -129,21 +129,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                         };
 
                         let mut stdout = std::io::stdout().lock();
-                        for line in batch.lines() {
-                            if let Some(filter) = jq.as_ref() {
-                                for value in shared::filter_jq(filter, line).map_err(|e| {
-                                    ceprintln!(
-                                        "<s,r>error:</> jq filtering failed for <s>{url}</>: {e}"
-                                    );
-                                    EX_DATAERR
-                                })? {
-                                    writeln!(stdout, "{value}")?;
-                                }
-                            } else {
-                                stdout.write_all(line)?;
-                            }
-                        }
-                        stdout.flush()?;
+                        filter.write_batch(&batch, &url, &mut stdout).await?;
                     }
                     if succeeded && verbose > 0 {
                         ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
@@ -211,5 +197,21 @@ mod tests {
             assert!(Command::try_parse_from(args).is_err());
         }
         assert!(Command::try_parse_from(["test", "--wait"]).is_err());
+    }
+
+    #[test]
+    fn parses_jev_and_jq_together() {
+        let args = Command::try_parse_from([
+            "test",
+            "--jev",
+            "The name is Ukrainian",
+            "--jq",
+            ".name",
+            "https://example.com",
+        ])
+        .unwrap()
+        .args;
+        assert_eq!(args.filtering.jev.as_deref(), Some("The name is Ukrainian"));
+        assert_eq!(args.filtering.jq.as_deref(), Some(".name"));
     }
 }
