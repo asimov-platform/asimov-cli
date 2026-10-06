@@ -2,7 +2,7 @@
 
 [package]
 name = "asimov-cli"
-version = "25.7.0"
+version = "25.7.1"
 authors = ["ASIMOV Community"]
 edition = "2024"
 rust-version = "1.97.1"
@@ -75,15 +75,15 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.7.0"
-asimov-env = "25.7.0"
-asimov-id = { version = "25.7.0", features = ["iroh"] }
-asimov-installer = "25.7.0"
-asimov-keyring = "25.7.0"
-asimov-module = "25.7.0"
-asimov-patterns = { version = "25.7.0", features = ["clap"] }
-asimov-registry = "25.7.0"
-asimov-runner = "25.7.0"
+asimov-directory = "25.7.1"
+asimov-env = "25.7.1"
+asimov-id = { version = "25.7.1", features = ["iroh"] }
+asimov-installer = "25.7.1"
+asimov-keyring = "25.7.1"
+asimov-module = "25.7.1"
+asimov-patterns = { version = "25.7.1", features = ["clap"] }
+asimov-registry = "25.7.1"
+asimov-runner = "25.7.1"
 async-stream = "0.3.6"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.5.0", features = ["gofer", "serde-json", "tokio"] }
@@ -115,14 +115,14 @@ url = "2.5"
 
 # Optional dependencies:
 tempfile = { version = "3", optional = true }
-asimov-module-kit = { version = "25.7.0", optional = true }
-asimov-protocol = { version = "25.7.0", optional = true }
-asimov-proxy = { version = "25.7.0", default-features = false, features = [
+asimov-module-kit = { version = "25.7.1", optional = true }
+asimov-protocol = { version = "25.7.1", optional = true }
+asimov-proxy = { version = "25.7.1", default-features = false, features = [
   "std",
   "tracing",
 ], optional = true }
-asimov-snapshot = { version = "25.7.0", optional = true }
-asimov-telemetry = { version = "25.7.0", optional = true }
+asimov-snapshot = { version = "25.7.1", optional = true }
+asimov-telemetry = { version = "25.7.1", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
@@ -197,8 +197,6 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
-# Use the container-compatible identity backend until the next SDK release.
-asimov-keyring = { path = "../asimov-sdk/rust/lib/asimov-keyring" }
 #asimov-config = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-core = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-directory = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

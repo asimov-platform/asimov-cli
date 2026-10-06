@@ -93,20 +93,17 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
-- [ ] Replace the local `asimov-keyring` Cargo patch with a published SDK
-  release containing the file-backed identity fallback. Local builds currently
-  require the sibling `asimov-sdk` checkout.
-
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.
 
 - [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
   operational CLI tests). Include stderr in remaining status assertions.
   Isolate cwd, dotenv, telemetry, and keyring state.
-  SDK HEAD `713cff00` checks the secret backend even with a cached public key;
-  `cargo test --locked` now stops in `external_arguments` when macOS keychain
-  access is canceled. Provide an injectable test identity/backend so these
-  fixtures do not depend on interactive keychain access.
+  SDK 25.7.1 checks the secret backend even with a cached public key;
+  `cargo test --locked --all-features` stalled in `external_arguments` on macOS
+  during 25.7.1 release verification (600-second timeout). Provide an injectable
+  test identity/backend so these fixtures do not depend on interactive keychain
+  access.
 
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
