@@ -149,7 +149,7 @@ dirs = { version = "6", default-features = false, optional = true }
 edikt-core = { version = "0.5.0", optional = true }
 edikt-jsonc = { version = "0.4.0", optional = true }
 iroh-base = { version = "1.2", default-features = false, features = ["key"] }
-jsonc-parser = { version = "0.33", default-features = false, features = [
+jsonc-parser = { version = "0.34", default-features = false, features = [
   "cst",
 ], optional = true }
 secrecy = "0.10"
