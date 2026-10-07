@@ -10,7 +10,7 @@ use alloc::{
 };
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
-use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
+use asimov_runner::{ExecutorError, GraphOutput, Lister, ListerOptions, StreamExt};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
@@ -71,6 +71,10 @@ fn parse_cursor(value: &str) -> core::result::Result<String, &'static str> {
 }
 
 /// See: <https://asimov-specs.github.io/program-patterns/#lister>
+///
+/// Processes all URLs and preserves the first module failure's sysexits code,
+/// including `EX_NOINPUT` for missing resources. Unclassified module failures use
+/// `EX_UNAVAILABLE`.
 pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     let SourceListArgs {
         urls: input_urls,
@@ -152,7 +156,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         })
         .collect();
 
-    let mut failed = false;
+    let mut failure = None;
     for (url, telemetry, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
@@ -166,11 +170,11 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                         let batch = match batch {
                             Ok(batch) => batch,
                             Err(err) => {
-                                failed = true;
                                 succeeded = false;
                                 ceprintln!(
                                     "<s,r>error:</> lister execution failed for <s>{url}</>: {err}"
                                 );
+                                failure.get_or_insert(err);
                                 break;
                             },
                         };
@@ -183,8 +187,8 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                     }
                 },
                 Err(err) => {
-                    failed = true;
                     ceprintln!("<s,r>error:</> lister execution failed for <s>{url}</>: {err}");
+                    failure.get_or_insert(err);
                 },
             }
             Ok(())
@@ -196,10 +200,10 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         result?;
     }
 
-    if failed {
-        Err(EX_UNAVAILABLE.into())
-    } else {
-        Ok(())
+    match failure {
+        Some(ExecutorError::Failure(code, _)) => Err(code.into()),
+        Some(_) => Err(EX_UNAVAILABLE.into()),
+        None => Ok(()),
     }
 }
 

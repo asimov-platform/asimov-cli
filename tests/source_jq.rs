@@ -157,6 +157,60 @@ fn source_commands_report_subprocess_failures_after_output() -> Result {
 }
 
 #[test]
+fn source_commands_preserve_module_sysexits() -> Result {
+    for code in [EX_NOINPUT, EX_NOPERM, EX_TEMPFAIL] {
+        for payload in ["", "[1,2]\n"] {
+            let sandbox = Sandbox::with_script(&format!(
+                "#!/bin/sh\nprintf '%s' '{payload}'\nexit {}\n",
+                code as i32
+            ))?;
+            for command in ["fetch", "list"] {
+                let output = sandbox.run_options(command, &[])?;
+                assert_eq!(
+                    output.status.code(),
+                    Some(code as i32),
+                    "{command}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                assert_eq!(output.stdout, payload.as_bytes());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn source_commands_preserve_the_first_failure_in_url_order() -> Result {
+    let sandbox = Sandbox::with_script(
+        "#!/bin/sh\nfor url do :; done\ncase \"$url\" in\n\
+         */missing) exit 66;;\n*/unavailable) exit 69;;\n\
+         *) printf '%s\\n' '[1,2]';;\nesac\n",
+    )?;
+    for command in ["fetch", "list"] {
+        for (paths, code) in [
+            (["missing", "unavailable"], EX_NOINPUT),
+            (["unavailable", "missing"], EX_UNAVAILABLE),
+        ] {
+            let urls = paths.map(|path| format!("https://jq.example/{path}"));
+            let output = sandbox
+                .command(command, &[])
+                .args(urls)
+                .arg("https://jq.example/success")
+                .output()?;
+            assert_eq!(
+                output.status.code(),
+                Some(code as i32),
+                "{command}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            // Failure must not prevent subsequent URLs from being processed.
+            assert_eq!(output.stdout, b"[1,2]\n[1,2]\n");
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn source_commands_preserve_all_jq_results() -> Result {
     let sandbox = Sandbox::new()?;
     for command in ["fetch", "list"] {
