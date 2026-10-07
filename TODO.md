@@ -99,11 +99,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
   operational CLI tests). Include stderr in remaining status assertions.
   Isolate cwd, dotenv, telemetry, and keyring state.
-  SDK 25.7.1 checks the secret backend even with a cached public key;
-  `cargo test --locked --all-features` stalled in `external_arguments` on macOS
-  during 25.7.1 release verification (600-second timeout). Provide an injectable
-  test identity/backend so these fixtures do not depend on interactive keychain
-  access.
+  SDK 25.7.1 checks the secret backend even with a cached public key, which can
+  stall macOS tests on interactive keychain access. Setting
+  `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1` avoids this for the default suite;
+  set these in operational fixtures and keep file-backed identity storage within
+  each test sandbox.
 
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
