@@ -291,7 +291,7 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    // Operational commands require identity; help/version/license do not.
+    // Read the local public identity, initializing keys only if it is absent.
     if let Err(error) = Keyring::my_public_key() {
         ceprintln!("<s,r>error:</> failed to initialize local identity: {error}");
         return match error {

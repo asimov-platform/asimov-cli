@@ -206,7 +206,7 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-id = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-installer = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-kb = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-#asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
+asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module-kit = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-patterns = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

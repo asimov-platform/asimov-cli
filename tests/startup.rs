@@ -1,10 +1,15 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(any(feature = "proxy", feature = "telemetry"))]
+#![cfg(any(
+    all(unix, feature = "module"),
+    feature = "proxy",
+    feature = "telemetry"
+))]
 
 use std::process::{Command, Stdio};
 
 #[test]
+#[cfg(any(feature = "proxy", feature = "telemetry"))]
 fn independent_commands_do_not_initialize_module_or_snapshot_storage()
 -> Result<(), Box<dyn core::error::Error>> {
     for blocked in [false, true] {
@@ -39,6 +44,41 @@ fn independent_commands_do_not_initialize_module_or_snapshot_storage()
                 }
             }
         }
+    }
+    Ok(())
+}
+
+#[cfg(all(unix, feature = "module"))]
+#[test]
+fn module_list_with_a_public_identity_does_not_access_the_secret_backend()
+-> Result<(), Box<dyn core::error::Error>> {
+    let home = temp_dir::TempDir::new()?;
+    let root = home.child(".asimov");
+    let directory = root.join("keyring");
+    std::fs::create_dir_all(&directory)?;
+    let user = whoami::username().unwrap_or_else(|_| "default".into());
+    let public: asimov_id::PublicKey = iroh_base::SecretKey::from_bytes(&[42; 32]).public().into();
+    let contents = format!("{public}\n");
+    std::fs::write(directory.join(&user), &contents)?;
+
+    for _ in 0..2 {
+        let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+            .args(["module", "list"])
+            .env("HOME", home.path())
+            .env("ASIMOV_ROOT", &root)
+            // Any attempt to initialize a secret backend must fail this test.
+            .env("ASIMOV_KEYRING_BACKEND", "invalid")
+            .env("DO_NOT_TRACK", "1")
+            .current_dir(home.path())
+            .stdin(Stdio::null())
+            .output()?;
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(std::fs::read_to_string(directory.join(&user))?, contents);
+        assert!(!root.join(".keyring").exists());
     }
     Ok(())
 }
