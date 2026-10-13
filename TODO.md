@@ -102,9 +102,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Set `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1` in operational fixtures and
   keep file-backed identity storage within each test sandbox, including `HOME`.
 
-- [ ] Replace the local `asimov-keyring` Cargo patch with a released SDK version
-  containing lazy secret-backend access.
-
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
   `@master` refs and inherit all secrets; CI runs on `pull_request_target` with
