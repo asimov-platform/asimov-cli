@@ -75,15 +75,15 @@ indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.7.4"
-asimov-env = "25.7.4"
-asimov-id = { version = "25.7.4", features = ["iroh"] }
-asimov-installer = "25.7.4"
-asimov-keyring = "25.7.4"
-asimov-module = "25.7.4"
-asimov-patterns = { version = "25.7.4", features = ["clap"] }
-asimov-registry = "25.7.4"
-asimov-runner = "25.7.4"
+asimov-directory = "25.7.5"
+asimov-env = "25.7.5"
+asimov-id = { version = "25.7.5", features = ["iroh"] }
+asimov-installer = "25.7.5"
+asimov-keyring = "25.7.5"
+asimov-module = "25.7.5"
+asimov-patterns = { version = "25.7.5", features = ["clap"] }
+asimov-registry = "25.7.5"
+asimov-runner = "25.7.5"
 async-stream = "0.3.6"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.5.0", features = ["gofer", "serde-json", "tokio"] }
@@ -115,14 +115,14 @@ url = "2.5"
 
 # Optional dependencies:
 tempfile = { version = "3", optional = true }
-asimov-module-kit = { version = "25.7.4", optional = true }
-asimov-protocol = { version = "25.7.4", optional = true }
-asimov-proxy = { version = "25.7.4", default-features = false, features = [
+asimov-module-kit = { version = "25.7.5", optional = true }
+asimov-protocol = { version = "25.7.5", optional = true }
+asimov-proxy = { version = "25.7.5", default-features = false, features = [
   "std",
   "tracing",
 ], optional = true }
-asimov-snapshot = { version = "25.7.4", optional = true }
-asimov-telemetry = { version = "25.7.4", optional = true }
+asimov-snapshot = { version = "25.7.5", optional = true }
+asimov-telemetry = { version = "25.7.5", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
