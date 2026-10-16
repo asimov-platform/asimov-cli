@@ -13,7 +13,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
 - `cargo test --locked`: 109 tests pass; one doctest is ignored.
 - `cargo test --locked --all-features`: 112 tests pass; one doctest is ignored.
-- `cargo +1.97.1 check --locked`: pass on the declared minimum toolchain.
+- Rust 1.99.1 (2026-10-16): formatting, locked check, and all 102 default-feature
+  tests pass with `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
   Individual `module`, `proxy`, `source`, `telemetry`, and `source-snap` feature
@@ -118,11 +119,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   `default = ["all", "std"]`, and verify the portable subset on a no_std target.
   Clarify feature behavior: `source-snap` alone exposes no built-in commands.
 
-- [ ] Align minimum-toolchain policy (`Cargo.toml`, CI/release workflows,
-  `AGENTS.md`). The manifest/workflows require 1.97.1 while the baseline says
-  1.97. The declared 1.97.1 build passes; establish whether 1.97.0 is supported,
-  synchronize the requirement, and continuously check the chosen minimum with
-  the locked dependency graph as well as current stable Rust.
+- [ ] Check the MSRV and current stable Rust against the locked dependency graph
+  in CI.
 
 - [ ] Reduce unused and unnecessarily unconditional dependencies
   (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`, `whoami`,

@@ -31,4 +31,4 @@ jobs:
       contents: read
       pull-requests: write
     with:
-      building_toolchain: "1.97.1"
+      building_toolchain: "1.99.1"

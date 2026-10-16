@@ -38,7 +38,8 @@
 
 # Rust code
 - Don't ever directly read the contents of `Cargo.lock`, it can very large.
-- Our current MSRV is Rust 1.97; update and enforce everywhere as needed.
+- Our current MSRV is Rust 1.99.1; older versions have miscompilation bugs.
+  Keep `Cargo.toml` and CI/release toolchain requirements synchronized.
 - Our crates collect their default features under an `all` feature, and
   their `[features]` should start with the line `default = ["all", "std"]`.
 - Our crates are meant to always be buildable with `#![no_std]` and hence
@@ -96,8 +97,6 @@
   PATH-dependent library checks in children with private environments.
 
 # Baseline alignment to review
-- `Cargo.toml` and CI/release workflows currently pin Rust 1.97.1; the baseline
-  specifies 1.97. Keep toolchain requirements synchronized when changing them.
 - This CLI currently depends on `std`, declares no `std` feature, and uses
   `default = ["all"]`. Review how to reconcile this with the baseline's
   feature/no_std policy; `--no-default-features` alone is not `no_std` support.
