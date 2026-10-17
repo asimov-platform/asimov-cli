@@ -612,7 +612,7 @@ dependencies = [
 [[package]]
 name = "asimov-remote"
 version = "25.7.5"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#93cf9822d5f064b69abe28f327ad7e0f1abbe162"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#5be99422fc365772617bc2e03c30ac7a0c6bffae"
 dependencies = [
  "agent-detector",
  "asimov-flow",

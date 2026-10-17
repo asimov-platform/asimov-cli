@@ -64,10 +64,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
-- [ ] Publish the SDK's `asimov` response-signature label fix, then advance the
-  `asimov-remote` GitHub lockfile revision. Until then, verify with Cargo's
-  `patch.crates-io.asimov-remote.path` config override pointing to the local SDK.
-
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
