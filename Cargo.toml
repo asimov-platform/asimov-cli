@@ -44,7 +44,7 @@ proxy = [
   "dep:jsonc-parser",
   "dep:tempfile",
 ]
-source = ["source-snap", "dep:infer"]
+source = ["source-snap", "dep:asimov-remote", "dep:infer"]
 source-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 telemetry = ["dep:asimov-telemetry"]
 
@@ -71,6 +71,8 @@ shadow-rs = { version = "1.7", features = [
 cc = "1.2"
 
 [dev-dependencies]
+asimov-http = { version = "25.7.5", default-features = false, features = ["std"] }
+base64 = { version = "0.23", default-features = false, features = ["alloc"] }
 indoc = "2.0"
 temp-dir = "0.1"
 
@@ -120,6 +122,9 @@ asimov-protocol = { version = "25.7.5", optional = true }
 asimov-proxy = { version = "25.7.5", default-features = false, features = [
   "std",
   "tracing",
+], optional = true }
+asimov-remote = { version = "25.7.5", default-features = false, features = [
+  "http",
 ], optional = true }
 asimov-snapshot = { version = "25.7.5", optional = true }
 asimov-telemetry = { version = "25.7.5", optional = true }
@@ -214,7 +219,7 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-#asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
+asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Relay fallback for `source fetch` and `source list` via `ASIMOV_RELAY_URL`
+  when no enabled module handles the URL; sign requests within the CLI and
+  honor `ASIMOV_RELAY_SECRET` for bearer authentication
 ### Changed
 - Require Rust 1.99.1 to avoid miscompilation bugs in older versions
 

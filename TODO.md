@@ -64,6 +64,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Module configuration and source execution
 
+- [ ] Publish the SDK's `asimov` response-signature label fix, then advance the
+  `asimov-remote` GitHub lockfile revision. Until then, verify with Cargo's
+  `patch.crates-io.asimov-remote.path` config override pointing to the local SDK.
+
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
@@ -77,6 +81,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). Expose
   useful, credential-safe status/body-generation errors, and test HTTP failures
   and upload cancellation against an injectable local endpoint.
+
+- [ ] Bound relay HTTP connection/read waits in the SDK transport. Forwarded
+  `--deadline` controls remote execution; operation HTTP requests have no local
+  timeout. Test stalled headers/bodies without losing EOF signature checks.
 
 ## P2: Proxy reliability and interoperability
 
@@ -123,7 +131,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   in CI.
 
 - [ ] Reduce unused and unnecessarily unconditional dependencies
-  (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`, `whoami`,
+  (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`,
   optional `mime`, and generated shadow metadata, which have no corresponding
   source consumers. Gate experimental SDK dependencies and narrow broad
   Tokio/default features where practical. Measure clean-build time and binary

@@ -221,6 +221,7 @@ version = "25.7.5"
 dependencies = [
  "asimov-directory",
  "asimov-env",
+ "asimov-http",
  "asimov-id",
  "asimov-installer",
  "asimov-keyring",
@@ -230,10 +231,12 @@ dependencies = [
  "asimov-protocol",
  "asimov-proxy",
  "asimov-registry",
+ "asimov-remote",
  "asimov-runner",
  "asimov-snapshot",
  "asimov-telemetry",
  "async-stream",
+ "base64 0.23.1",
  "cc",
  "cfg_aliases",
  "clap",
@@ -342,6 +345,25 @@ dependencies = [
  "futures-lite",
  "memchr",
  "tokio",
+]
+
+[[package]]
+name = "asimov-http"
+version = "25.7.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d317220d2144fdf8f0c454aa37d035e313a686ae7be7cc04efbd32c75c641683"
+dependencies = [
+ "asimov-protocol",
+ "base64 0.23.1",
+ "bs58",
+ "bytes",
+ "getrandom 0.4.3",
+ "http",
+ "http-body",
+ "sfv",
+ "sha2 0.10.9",
+ "thiserror 2.0.21",
+ "url",
 ]
 
 [[package]]
@@ -496,6 +518,7 @@ dependencies = [
  "clientele",
  "humantime",
  "rdf-model",
+ "serde",
 ]
 
 [[package]]
@@ -584,6 +607,29 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "asimov-remote"
+version = "25.7.5"
+source = "git+https://github.com/asimov-platform/asimov-sdk.git#93cf9822d5f064b69abe28f327ad7e0f1abbe162"
+dependencies = [
+ "agent-detector",
+ "asimov-flow",
+ "asimov-http",
+ "asimov-id",
+ "asimov-keyring",
+ "asimov-patterns",
+ "async-trait",
+ "base64 0.23.1",
+ "clientele",
+ "http-body-util",
+ "reqwest 0.12.28",
+ "secrecy",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "tokio",
 ]
 
 [[package]]
@@ -6404,6 +6450,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-util",
+ "h2",
  "http",
  "http-body",
  "http-body-util",
@@ -6971,6 +7018,17 @@ checksum = "66cf8fedced2fcf12406bcb34223dffb92eaf34908ede12fed414c82b7f00b3e"
 dependencies = [
  "base16ct",
  "serde",
+]
+
+[[package]]
+name = "sfv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "890ef0e5532daf21fdaa3dbaf991417187f3a87ab69231fe69be942495746480"
+dependencies = [
+ "base64 0.22.1",
+ "indexmap 2.14.2",
+ "ref-cast",
 ]
 
 [[package]]

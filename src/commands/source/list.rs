@@ -1,16 +1,20 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::filter::OutputFilter;
+use super::{
+    execution::{self, Source, SourceResolver},
+    filter::OutputFilter,
+};
 use crate::shared::telemetry::{ModuleMetadata, Operation};
-use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
+use crate::{BoxError, StandardOptions};
 use alloc::{
     format,
     string::{String, ToString},
     vec::Vec,
 };
-use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
+use asimov_module::{ModuleName, normalization::normalize_url};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
-use asimov_runner::{ExecutorError, GraphOutput, Lister, ListerOptions, StreamExt};
+use asimov_remote::{ListerRequest, http};
+use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
 use clientele::sort::SortKeys;
 use color_print::ceprintln;
 use miette::Result;
@@ -89,15 +93,8 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         cache,
         timing,
     } = args;
-    let filter = OutputFilter::new(filtering)?;
-
-    let registry = asimov_registry::Registry::default();
-    let installed_modules = shared::installed_modules(&registry, Some("lister")).await?;
-
-    let resolver = Resolver::try_from_iter(installed_modules.iter()).map_err(|e| {
-        ceprintln!("<s,r>error:</> failed to build resolver: {e}");
-        EX_UNAVAILABLE
-    })?;
+    let mut filter = None;
+    let mut resolver = SourceResolver::new("lister").await?;
 
     let mut listers = Vec::with_capacity(input_urls.len());
     for input_url in input_urls {
@@ -110,54 +107,64 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
             input_url.clone()
         });
 
-        let modules = resolver.resolve(&input_url).map_err(|e| {
-            ceprintln!("<s,r>error:</> unable to handle URL <s>{input_url}</>: {e}");
-            EX_USAGE
-        })?;
+        let source = resolver.resolve(&input_url, module.as_deref()).await?;
+        let mut options = ListerOptions::builder()
+            .maybe_sort(sort.clone())
+            .maybe_offset(offset)
+            .maybe_before(before.as_deref())
+            .maybe_after(after.as_deref())
+            .maybe_limit(limit)
+            .maybe_output(output.as_deref())
+            .build();
+        let (metadata, remote, lister) = match source {
+            Source::Local(module) => {
+                if filter.is_none() {
+                    filter = Some(OutputFilter::new(filtering.clone())?);
+                }
+                options.other.extend(cache.max_age_option());
+                options.other.extend(timing.deadline_option());
+                if flags.debug {
+                    options.other.push("--debug".into());
+                }
+                let lister = Lister::new(
+                    format!("asimov-{}-lister", module.name),
+                    &input_url,
+                    GraphOutput::Captured,
+                    options,
+                );
+                (
+                    ModuleMetadata::new(Operation::List, &module.name),
+                    false,
+                    execution::execute(lister),
+                )
+            },
+            Source::Relay(executor) => {
+                let request = ListerRequest::new(&input_url, options)
+                    .with_caching(cache.clone())
+                    .with_filtering(filtering.clone())
+                    .with_timing(timing.clone());
+                (
+                    ModuleMetadata::new(Operation::List, "relay"),
+                    true,
+                    execution::execute(http::Lister::new(*executor, request)),
+                )
+            },
+        };
 
-        let module =
-            shared::pick_module(&registry, &input_url, modules.as_slice(), module.as_deref())
-                .await?;
-
-        let lister = Lister::new(
-            format!("asimov-{}-lister", module.name),
-            &input_url,
-            GraphOutput::Captured,
-            ListerOptions::builder()
-                .maybe_sort(sort.clone())
-                .maybe_offset(offset)
-                .maybe_before(before.as_deref())
-                .maybe_after(after.as_deref())
-                .maybe_limit(limit)
-                .maybe_output(output.as_deref())
-                .maybe_other(cache.max_age_option())
-                .maybe_other(timing.deadline_option())
-                .maybe_other(flags.debug.then_some("--debug"))
-                .build(),
-        );
-
-        listers.push((
-            input_url,
-            ModuleMetadata::new(Operation::List, &module.name),
-            lister,
-        ));
+        listers.push((input_url, metadata, remote, lister));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = listers
         .into_iter()
-        .map(|(url, metadata, mut lister)| {
-            (
-                url,
-                metadata.start(),
-                tokio::spawn(async move { lister.execute().await }),
-            )
+        .map(|(url, metadata, remote, lister)| {
+            (url, metadata.start(), remote, tokio::spawn(lister))
         })
         .collect();
 
     let mut failure = None;
-    for (url, telemetry, task) in tasks {
+    for (url, telemetry, remote, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
@@ -180,7 +187,15 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                         };
 
                         let mut stdout = std::io::stdout().lock();
-                        filter.write_batch(&batch, &url, &mut stdout).await?;
+                        if remote {
+                            execution::write_remote_batch(&batch, &mut stdout)?;
+                        } else {
+                            filter
+                                .as_ref()
+                                .expect("local output filter was initialized")
+                                .write_batch(&batch, &url, &mut stdout)
+                                .await?;
+                        }
                     }
                     if succeeded && verbose > 0 {
                         ceprintln!("<s,g>✓</> Listed <s>{}</>.", url);
@@ -201,8 +216,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
     }
 
     match failure {
-        Some(ExecutorError::Failure(code, _)) => Err(code.into()),
-        Some(_) => Err(EX_UNAVAILABLE.into()),
+        Some(error) => Err(error.exit_code().into()),
         None => Ok(()),
     }
 }

@@ -1,12 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::filter::OutputFilter;
+use super::{
+    execution::{self, Source, SourceResolver},
+    filter::OutputFilter,
+};
 use crate::shared::telemetry::{ModuleMetadata, Operation};
-use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
+use crate::{BoxError, StandardOptions};
 use alloc::{format, string::String, vec::Vec};
-use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
+use asimov_module::{ModuleName, normalization::normalize_url};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
-use asimov_runner::{ExecutorError, FetcherOptions, GraphOutput, StreamExt};
+use asimov_remote::{FetcherRequest, http};
+use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
 use clientele::crates::clap::Args;
 use color_print::ceprintln;
 use miette::Result;
@@ -43,15 +47,8 @@ pub struct SourceFetchArgs {
 /// including `EX_NOINPUT` for missing resources. Unclassified module failures use
 /// `EX_UNAVAILABLE`.
 pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
-    let filter = OutputFilter::new(args.filtering)?;
-    let registry = asimov_registry::Registry::default();
-
-    let installed_modules = shared::installed_modules(&registry, Some("fetcher")).await?;
-
-    let resolver = Resolver::try_from_iter(installed_modules.iter()).map_err(|e| {
-        ceprintln!("<s,r>error:</> failed to build resolver: {e}");
-        EX_UNAVAILABLE
-    })?;
+    let mut filter = None;
+    let mut resolver = SourceResolver::new("fetcher").await?;
 
     let mut fetchers = Vec::with_capacity(args.urls.len());
     for input_url in args.urls {
@@ -64,53 +61,61 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
             input_url.clone()
         });
 
-        let modules = resolver.resolve(&input_url).map_err(|e| {
-            ceprintln!("<s,r>error:</> unable to handle URL <s>{input_url}</>: {e}");
-            EX_USAGE
-        })?;
+        let source = resolver.resolve(&input_url, args.module.as_deref()).await?;
+        let (metadata, remote, fetcher) = match source {
+            Source::Local(module) => {
+                if filter.is_none() {
+                    filter = Some(OutputFilter::new(args.filtering.clone())?);
+                }
+                let fetcher = asimov_runner::Fetcher::new(
+                    format!("asimov-{}-fetcher", module.name),
+                    &input_url,
+                    GraphOutput::Captured,
+                    FetcherOptions::builder()
+                        .maybe_output(args.output.as_deref())
+                        .maybe_other(args.cache.max_age_option())
+                        .maybe_other(args.timing.deadline_option())
+                        .maybe_other(flags.debug.then_some("--debug"))
+                        .build(),
+                );
+                (
+                    ModuleMetadata::new(Operation::Fetch, &module.name),
+                    false,
+                    execution::execute(fetcher),
+                )
+            },
+            Source::Relay(executor) => {
+                let request = FetcherRequest::new(
+                    &input_url,
+                    FetcherOptions::builder()
+                        .maybe_output(args.output.as_deref())
+                        .build(),
+                )
+                .with_caching(args.cache.clone())
+                .with_filtering(args.filtering.clone())
+                .with_timing(args.timing.clone());
+                (
+                    ModuleMetadata::new(Operation::Fetch, "relay"),
+                    true,
+                    execution::execute(http::Fetcher::new(*executor, request)),
+                )
+            },
+        };
 
-        let module = shared::pick_module(
-            &registry,
-            &input_url,
-            modules.as_slice(),
-            args.module.as_deref(),
-        )
-        .await?;
-
-        let fetcher = asimov_runner::Fetcher::new(
-            format!("asimov-{}-fetcher", module.name),
-            &input_url,
-            GraphOutput::Captured,
-            FetcherOptions::builder()
-                .maybe_output(args.output.as_deref())
-                .maybe_other(args.cache.max_age_option())
-                .maybe_other(args.timing.deadline_option())
-                .maybe_other(flags.debug.then_some("--debug"))
-                .build(),
-        );
-
-        fetchers.push((
-            input_url,
-            ModuleMetadata::new(Operation::Fetch, &module.name),
-            fetcher,
-        ));
+        fetchers.push((input_url, metadata, remote, fetcher));
     }
 
     let verbose = flags.verbose;
 
     let tasks: Vec<_> = fetchers
         .into_iter()
-        .map(|(url, metadata, mut fetcher)| {
-            (
-                url,
-                metadata.start(),
-                tokio::spawn(async move { fetcher.execute().await }),
-            )
+        .map(|(url, metadata, remote, fetcher)| {
+            (url, metadata.start(), remote, tokio::spawn(fetcher))
         })
         .collect();
 
     let mut failure = None;
-    for (url, telemetry, task) in tasks {
+    for (url, telemetry, remote, task) in tasks {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
@@ -133,7 +138,15 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                         };
 
                         let mut stdout = std::io::stdout().lock();
-                        filter.write_batch(&batch, &url, &mut stdout).await?;
+                        if remote {
+                            execution::write_remote_batch(&batch, &mut stdout)?;
+                        } else {
+                            filter
+                                .as_ref()
+                                .expect("local output filter was initialized")
+                                .write_batch(&batch, &url, &mut stdout)
+                                .await?;
+                        }
                     }
                     if succeeded && verbose > 0 {
                         ceprintln!("<s,g>✓</> Fetched <s>{}</>.", url);
@@ -154,8 +167,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
     }
 
     match failure {
-        Some(ExecutorError::Failure(code, _)) => Err(code.into()),
-        Some(_) => Err(EX_UNAVAILABLE.into()),
+        Some(error) => Err(error.exit_code().into()),
         None => Ok(()),
     }
 }

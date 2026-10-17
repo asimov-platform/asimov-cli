@@ -6,14 +6,14 @@ use clientele::{StandardOptions, crates::clap::Subcommand};
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommand {
-    /// Fetch a resource from a URL, utilizing enabled modules.
+    /// Fetch a resource using enabled modules, or ASIMOV_RELAY_URL as fallback.
     #[clap(aliases = ["extract", "get", "import", "ingest", "parse"])]
     Fetch {
         #[clap(flatten)]
         args: fetch::SourceFetchArgs,
     },
 
-    /// List resources from a collection URL, utilizing enabled modules.
+    /// List resources using enabled modules, or ASIMOV_RELAY_URL as fallback.
     #[clap(aliases = ["dir", "ls"])]
     List {
         #[clap(flatten)]
@@ -71,6 +71,8 @@ impl SourceCommand {
 
 #[cfg(false)]
 pub mod describe;
+
+mod execution;
 
 mod fetch;
 pub use fetch::*;
