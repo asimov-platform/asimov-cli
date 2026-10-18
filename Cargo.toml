@@ -71,21 +71,21 @@ shadow-rs = { version = "1.7", features = [
 cc = "1.2"
 
 [dev-dependencies]
-asimov-http = { version = "25.7.5", default-features = false, features = ["std"] }
+asimov-http = { version = "25.8.0", default-features = false, features = ["std"] }
 base64 = { version = "0.23", default-features = false, features = ["alloc"] }
 indoc = "2.0"
 temp-dir = "0.1"
 
 [dependencies]
-asimov-directory = "25.7.5"
-asimov-env = "25.7.5"
-asimov-id = { version = "25.7.5", features = ["iroh"] }
-asimov-installer = "25.7.5"
-asimov-keyring = "25.7.5"
-asimov-module = "25.7.5"
-asimov-patterns = { version = "25.7.5", features = ["clap"] }
-asimov-registry = "25.7.5"
-asimov-runner = "25.7.5"
+asimov-directory = "25.8.0"
+asimov-env = "25.8.0"
+asimov-id = { version = "25.8.0", features = ["iroh"] }
+asimov-installer = "25.8.0"
+asimov-keyring = "25.8.0"
+asimov-module = "25.8.0"
+asimov-patterns = { version = "25.8.0", features = ["clap"] }
+asimov-registry = "25.8.0"
+asimov-runner = "25.8.0"
 async-stream = "0.3.6"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.5.0", features = ["gofer", "serde-json", "tokio"] }
@@ -97,11 +97,10 @@ known-types-rubygems = { version = "0.1.5", features = ["serde"] }
 miette = { version = "7.5", features = ["fancy"] }
 open = "5"
 rayon = "1.11"
-reqwest = { version = "0.12", default-features = false, features = [
+reqwest = { version = "0.13.5", default-features = false, features = [
   "json",
   "stream",
-  "rustls-tls",
-  "rustls-tls-native-roots",
+  "rustls",
 ] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -117,17 +116,17 @@ url = "2.5"
 
 # Optional dependencies:
 tempfile = { version = "3", optional = true }
-asimov-module-kit = { version = "25.7.5", optional = true }
-asimov-protocol = { version = "25.7.5", optional = true }
-asimov-proxy = { version = "25.7.5", default-features = false, features = [
+asimov-module-kit = { version = "25.8.0", optional = true }
+asimov-protocol = { version = "25.8.0", optional = true }
+asimov-proxy = { version = "25.8.0", default-features = false, features = [
   "std",
   "tracing",
 ], optional = true }
-asimov-remote = { version = "25.7.5", default-features = false, features = [
+asimov-remote = { version = "25.8.0", default-features = false, features = [
   "http",
 ], optional = true }
-asimov-snapshot = { version = "25.7.5", optional = true }
-asimov-telemetry = { version = "25.7.5", optional = true }
+asimov-snapshot = { version = "25.8.0", optional = true }
+asimov-telemetry = { version = "25.8.0", optional = true }
 dialoguer = { version = "0.12", default-features = false, features = [
   "password",
 ], optional = true }
@@ -214,12 +213,12 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module-kit = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }
+#asimov-patterns = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-prompt = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-asimov-remote = { path = "../asimov-sdk/rust/lib/asimov-remote" }
+#asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

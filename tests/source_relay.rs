@@ -97,8 +97,9 @@ impl Sandbox {
             .env("ASIMOV_KEYRING_BACKEND", "file")
             .env("DO_NOT_TRACK", "1")
             .env("PATH", self.0.child("bin"))
-            .env("NO_PROXY", "*")
-            .env("no_proxy", "*")
+            // The HTTP transport's wildcard does not match IP literals.
+            .env("NO_PROXY", "127.0.0.1")
+            .env("no_proxy", "127.0.0.1")
             .env_remove("ASIMOV_RELAY_URL")
             .env_remove("ASIMOV_RELAY_SECRET")
             .env_remove("TYPESAFE_API_TOKEN")

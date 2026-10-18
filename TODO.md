@@ -88,10 +88,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   useful, credential-safe status/body-generation errors, and test HTTP failures
   and upload cancellation against an injectable local endpoint.
 
-- [ ] Bound relay HTTP connection/read waits in the SDK transport. Forwarded
-  `--deadline` controls remote execution; operation HTTP requests have no local
-  timeout. Test stalled headers/bodies without losing EOF signature checks.
-
 ## P2: Proxy reliability and interoperability
 
 - [ ] Bound graceful proxy shutdown waits for stalled streamed responses
@@ -107,10 +103,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/commands/proxy/config.rs`).
 
 ## P2: Verification and delivery
-
-- [ ] Replace the sibling-checkout `asimov-patterns` and `asimov-remote` patches
-  in `Cargo.toml` with an SDK revision/release containing JSON property selection.
-  Refresh `Cargo.lock` and rerun locked checks against those shared dependencies.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.

@@ -144,7 +144,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -155,7 +155,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -263,7 +263,7 @@ dependencies = [
  "mime",
  "open",
  "rayon",
- "reqwest 0.12.28",
+ "reqwest",
  "secrecy",
  "serde",
  "serde_json",
@@ -283,18 +283,18 @@ dependencies = [
 
 [[package]]
 name = "asimov-config"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80ae3a47733610e35226561337bfd1df57716ac81a87c147ab6af9e8aa553d83"
+checksum = "97351a3324f2f1c584f935f582eb0ec045b4b6b707e6aaf5cb5389c879ebf917"
 dependencies = [
  "asimov-core",
 ]
 
 [[package]]
 name = "asimov-core"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d02c369715014478b49800317b0c064cc6bc7dfa0041362307f0cc8d73861947"
+checksum = "8302c0f8c35163ac8d809175f48e1a287c5cc21db2247007bc14a21cc66d28b0"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -305,9 +305,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-directory"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98262c9b56d9d40443192d473f87ef237efb0c10cd318938f2f1d3f5ea1667bc"
+checksum = "9806124922252398ea19b9e001694f4dc663dddabd4bc91982dd2a1cb1fdffe5"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -322,9 +322,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9386ce62bbb53190800d8b3b6085a94b68f4fdfbbf681a30d1fd7e4bc6ed207"
+checksum = "5cc960324db73c24749543d2c1b6ba29174907a099eebce57fa5853709a8f199"
 dependencies = [
  "asimov-core",
  "cap-directories",
@@ -334,9 +334,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-flow"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40e2d11f147eb66c49e2ae56773ba3b9c07ca7734a1a44ffb64f1f455a202ec4"
+checksum = "b81dadb843ac4101e821cd8a0b3c024b5933738ccd35934d2bded5aa637eaa83"
 dependencies = [
  "asimov-core",
  "async-flow",
@@ -349,9 +349,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-http"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d317220d2144fdf8f0c454aa37d035e313a686ae7be7cc04efbd32c75c641683"
+checksum = "dbda6999245d2c9dd6a70428f861b85823562ed85f87a220634c042b8bb89de4"
 dependencies = [
  "asimov-protocol",
  "base64 0.23.1",
@@ -368,9 +368,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-huggingface"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f51fe240d1973abf660e529855a5b3d2d2c97b98d0f63558510705c54f6dbc09"
+checksum = "4b731b75828dc826d384584b4f73e4e3085cdf50a8b82d7f6e6fea9328be099d"
 dependencies = [
  "asimov-core",
  "hf-hub",
@@ -380,9 +380,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-id"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66a42a606499d4a6af62bb4838329347058898adb6eaaf3fbb83882a7a120a23"
+checksum = "bf37025a6cc0598ec321043da16265ce3efab78d76b7ad8cd31605ff19d2a9f5"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -397,9 +397,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-installer"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea873ab7c71e400e45e80d933835f1687b0753a8530964497db44b463bb2f73e"
+checksum = "4785808a0548be8eeb4b672eea16e5e41b077c5ec529ba1d7712df36a30643b6"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -410,7 +410,7 @@ dependencies = [
  "clientele",
  "flate2",
  "getenv",
- "reqwest 0.12.28",
+ "reqwest",
  "secrecy",
  "serde",
  "serde_json",
@@ -427,9 +427,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-kb"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "081aed5e5d37dc3c93248c0510ac909813942531e55b9114a0c3587f85a0a46c"
+checksum = "ea9a1e20a2fad39d28daf66765715db1be91379134482edb24f5af45e12e14e2"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -440,9 +440,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-keyring"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cc88ea8a9199ed36294a8ef57006c9ae9842ee1685cf96ca1ad11a1a462d3ff"
+checksum = "6b6b447f3c06ed8efe5e000a7f844a7f319638f1f7ab018d88086a084e9ac5f1"
 dependencies = [
  "apple-native-keyring-store",
  "asimov-core",
@@ -461,9 +461,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61567062b900101794ae870d0e18cdec74e92d4c91bc249af7afe87e4e023310"
+checksum = "5c9d0948afd023371f42f5d1e71adcf78d3507763673808506b6e734c9e18192"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -471,7 +471,7 @@ dependencies = [
  "getenv",
  "iri-string",
  "mime",
- "reqwest 0.12.28",
+ "reqwest",
  "secrecy",
  "serde",
  "serde_json",
@@ -485,9 +485,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module-kit"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14c179f8aa388743ad8aea8e30a172bd632e176643dc942d524c5b00182e6314"
+checksum = "6771ecdc7e05534020510e9adde74f995fbd18910dc27288dae911aa3c7e53af"
 dependencies = [
  "anyhow",
  "asimov-core",
@@ -507,7 +507,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.7.5"
+version = "25.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24e67e97e2806613258dcd01207b8666372e724502d9d239d84bb90ebcd968f4"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -521,9 +523,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ea3cb428d84b9a245fa244f16ed6ca34e8da9c39b6cd1bd5873b5f80621c7a5"
+checksum = "2b8dc02ffa1b7dea9b9de0c119cdcf143a398e4d5910eaf590e4edbc13f8fafc"
 dependencies = [
  "asimov-core",
  "bon",
@@ -533,9 +535,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-protocol"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16325b75e14ec8b8bebd2d6e6da846c421560be380c7e4297ee9d166f582cbf7"
+checksum = "e895921b3e36d9f4711f70f6054f65f5e579e3e802a0239f5480761590ad9dc6"
 dependencies = [
  "asimov-core",
  "asimov-id",
@@ -562,9 +564,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ecfa3079927a67b5f92d7d4bb67b9335f77dc48cc1178384b236793dc8f9a82"
+checksum = "6f71786fccfe950d7e2a2f583f565da4e4999bd55f48d385c0c758d113e924c4"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -585,9 +587,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6620a9612ad35bd96d05458181be34fafff17bc9461786704248c2dfbcfdf986"
+checksum = "24655c659604a4c224983efb3001987581c68fa1165653a56086fd9fd4ac6ee2"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -609,7 +611,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-remote"
-version = "25.7.5"
+version = "25.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2d57d49f3853929c90f757d3d5738ac97f8f526253be2cde59a3af42bca3a65"
 dependencies = [
  "agent-detector",
  "asimov-flow",
@@ -622,7 +626,7 @@ dependencies = [
  "clientele",
  "http-body-util",
  "plist",
- "reqwest 0.13.5",
+ "reqwest",
  "rustls",
  "rustls-platform-verifier",
  "secrecy",
@@ -635,9 +639,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14f888d4c1416adc9bb75e5d3f05fb35941e9809f4b2c3b73d115367b4c7f3b2"
+checksum = "5950c8bae43c54f1a3049eed08d7c822720436732f550ee7b6a2b9a7e9d4063e"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -661,9 +665,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4ab9d24513a4f9c54443c98220bda54293ce54ad5a406bc65f66ccc698ac72f"
+checksum = "19674d968fe0b02bc60d2d96e53e1a9a6b06d2ef5593c14d3a2a5bfae5731c2e"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -683,14 +687,14 @@ dependencies = [
 
 [[package]]
 name = "asimov-telemetry"
-version = "25.7.5"
+version = "25.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9ccd4892d6c421269be9ab85149d12b5919c525a7d3b4f4dc94329a9c686e33"
+checksum = "d422e285f97ce4e6096f1848a65b8a62802218fee937ca7ce73df04f6bc9f311"
 dependencies = [
  "agent-detector",
  "bs58",
  "dogma-uuid",
- "reqwest 0.12.28",
+ "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -1149,7 +1153,7 @@ dependencies = [
  "cap-std",
  "directories",
  "rustix",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1166,7 +1170,7 @@ dependencies = [
  "maybe-owned",
  "rustix",
  "rustix-linux-procfs",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
  "winx",
 ]
 
@@ -1194,7 +1198,7 @@ dependencies = [
  "rustix",
  "rustix-linux-procfs",
  "uuid",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1898,7 +1902,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c54e03a951783e8b327515db3f2a2fd0e3bed362a96b066f341ce66ed49b4ead"
 dependencies = [
  "data-encoding",
- "syn 1.0.109",
+ "syn 3.0.6",
 ]
 
 [[package]]
@@ -2077,7 +2081,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2599,7 +2603,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3494,9 +3498,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.11.1"
+version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27b501faa50e7a26c3d3560ca625132f4078a17771f4810baf70475ae48cbe43"
+checksum = "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c"
 dependencies = [
  "atomic-waker",
  "bytes",
@@ -3528,7 +3532,6 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower-service",
- "webpki-roots 1.0.9",
 ]
 
 [[package]]
@@ -3952,7 +3955,7 @@ dependencies = [
  "portable-atomic",
  "portmapper",
  "rand 0.10.3",
- "reqwest 0.13.5",
+ "reqwest",
  "rustc-hash 2.1.3",
  "rustls",
  "rustls-pki-types",
@@ -4092,7 +4095,7 @@ dependencies = [
  "pin-project",
  "postcard",
  "rand 0.10.3",
- "reqwest 0.13.5",
+ "reqwest",
  "rustls",
  "rustls-pki-types",
  "serde",
@@ -4980,7 +4983,7 @@ dependencies = [
  "n0-future",
  "ndk-context",
  "rand 0.10.3",
- "reqwest 0.13.5",
+ "reqwest",
  "rustc-hash 2.1.3",
  "rustls",
  "simple-dns",
@@ -5361,7 +5364,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6196,7 +6199,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6500,48 +6503,6 @@ checksum = "51743d3e274e2b18df81c4dc6caf8a5b8e15dbe799e0dca05c7617380094e884"
 
 [[package]]
 name = "reqwest"
-version = "0.12.28"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
-dependencies = [
- "base64 0.22.1",
- "bytes",
- "futures-core",
- "futures-util",
- "http",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-rustls",
- "hyper-util",
- "js-sys",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "quinn",
- "rustls",
- "rustls-native-certs",
- "rustls-pki-types",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "sync_wrapper",
- "tokio",
- "tokio-rustls",
- "tokio-util",
- "tower",
- "tower-http",
- "tower-service",
- "url",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "wasm-streams 0.4.2",
- "web-sys",
- "webpki-roots 1.0.9",
-]
-
-[[package]]
-name = "reqwest"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
@@ -6577,7 +6538,7 @@ dependencies = [
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
- "wasm-streams 0.5.0",
+ "wasm-streams",
  "web-sys",
 ]
 
@@ -6682,7 +6643,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6751,7 +6712,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7003,18 +6964,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
 dependencies = [
  "serde_core",
-]
-
-[[package]]
-name = "serde_urlencoded"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
-dependencies = [
- "form_urlencoded",
- "itoa",
- "ryu",
- "serde",
 ]
 
 [[package]]
@@ -7292,7 +7241,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7475,7 +7424,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b64191b275b66ffe2469e8af2c1cfe3bafa67b529ead792a6d0160888b4237"
 dependencies = [
  "proc-macro2",
- "quote",
  "unicode-ident",
 ]
 
@@ -7596,10 +7544,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7619,7 +7567,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "230a1b821ccbd75b185820a1f1ff7b14d21da1e442e22c0863ea5f08771a8874"
 dependencies = [
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8367,9 +8315,9 @@ dependencies = [
 
 [[package]]
 name = "want"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
+checksum = "ec4cdd0dd910afe868b7ef477227d8d538b46b3075031afee8a9f2acb0a2ed0b"
 dependencies = [
  "try-lock",
 ]
@@ -8461,19 +8409,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23f0c9c52aa7cd7d77769a4cfe2a9adb1b331f489a41d912ce14513d5ab995c6"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "wasm-streams"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15053d8d85c7eccdbefef60f06769760a563c7f0a9d6902a13d35c7800b0ad65"
-dependencies = [
- "futures-util",
- "js-sys",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -8586,7 +8521,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

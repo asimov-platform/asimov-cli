@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   honor `ASIMOV_RELAY_SECRET` for bearer authentication
 ### Changed
 - Require Rust 1.99.1 to avoid miscompilation bugs in older versions
+- Update to ASIMOV SDK 25.8.0, with system TLS trust and improved relay proxy
+  support
+- Limit relay connection waits to 10 seconds and header/body-idle waits to
+  60 seconds
 
 ## 25.7.5 - 2026-10-16
 ### Fixed
