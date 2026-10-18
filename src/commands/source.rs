@@ -137,6 +137,8 @@ mod tests {
             "0s",
             "--jev",
             "The name is Ukrainian",
+            "--json",
+            "@id,name",
             "--jq",
             ".name",
             "https://example.com/",
@@ -148,6 +150,7 @@ mod tests {
         assert_eq!(cache.max_age_option().as_deref(), Some("--max-age=1h"));
         assert_eq!(timing.deadline_option().as_deref(), Some("--deadline=0s"));
         assert_eq!(filtering.jev.as_deref(), Some("The name is Ukrainian"));
+        assert_eq!(filtering.json.unwrap(), ["@id", "name"]);
         assert_eq!(filtering.jq.as_deref(), Some(".name"));
         assert_eq!(urls, ["https://example.com/"]);
     }

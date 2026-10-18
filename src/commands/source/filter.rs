@@ -1,26 +1,49 @@
 // This is free and unencumbered software released into the public domain.
 
-//! Shared Jev-then-jq processing for fetched and listed records.
+//! Shared Jev, JSON property selection, and jq processing for source records.
 
 use crate::{BoxError, SysexitsError::*, shared};
+use alloc::{collections::BTreeSet, string::String};
 use asimov_patterns::FilteringOptions;
 use asimov_runner::{JsonlBatch, StreamExt};
 use color_print::ceprintln;
+use serde_json::Value;
 use std::io::Write;
 
 pub(super) struct OutputFilter {
     options: FilteringOptions,
+    json: Option<BTreeSet<String>>,
     jq: Option<jq::JsonFilter>,
 }
 
 impl OutputFilter {
     pub fn new(options: FilteringOptions) -> Result<Self, BoxError> {
+        Self::validate_json(&options, None)?;
         if options.jev.is_some() && std::env::var("TYPESAFE_API_TOKEN").is_err() {
             ceprintln!("<s,r>error:</> --jev requires TYPESAFE_API_TOKEN to be set");
             return Err(EX_CONFIG.into());
         }
         let jq = shared::compile_jq(options.jq.as_deref())?;
-        Ok(Self { options, jq })
+        let json = options
+            .json
+            .as_ref()
+            .map(|fields| fields.iter().cloned().collect());
+        Ok(Self { options, json, jq })
+    }
+
+    /// Validate selection before resolving either local modules or the relay.
+    pub fn validate_json(options: &FilteringOptions, output: Option<&str>) -> Result<(), BoxError> {
+        if let Some(fields) = &options.json {
+            if fields.is_empty() || fields.iter().any(String::is_empty) {
+                ceprintln!("<s,r>error:</> --json requires one or more nonempty property names");
+                return Err(EX_USAGE.into());
+            }
+            if output.is_some_and(|format| format != "jsonl") {
+                ceprintln!("<s,r>error:</> --json requires JSONL output (--output=jsonl)");
+                return Err(EX_USAGE.into());
+            }
+        }
+        Ok(())
     }
 
     pub async fn write_batch(
@@ -45,8 +68,31 @@ impl OutputFilter {
         mut evaluate: impl FnMut(&'a str, alloc::vec::Vec<&'a [u8]>) -> Result<S, BoxError>,
     ) -> Result<(), BoxError> {
         let mut write_line = |line: &[u8]| -> Result<(), BoxError> {
-            if let Some(filter) = self.jq.as_ref() {
-                for value in shared::filter_jq(filter, line).map_err(|error| {
+            let values = if let Some(fields) = &self.json {
+                let mut value = serde_json::from_slice(line).map_err(|error| {
+                    ceprintln!(
+                        "<s,r>error:</> JSON property selection failed for <s>{url}</>: {error}"
+                    );
+                    EX_DATAERR
+                })?;
+                select_properties(&mut value, fields).map_err(|error| {
+                    ceprintln!(
+                        "<s,r>error:</> JSON property selection failed for <s>{url}</>: {error}"
+                    );
+                    EX_DATAERR
+                })?;
+                Some(if let Some(filter) = &self.jq {
+                    shared::filter_jq_value(filter, value)
+                } else {
+                    Ok(alloc::vec![value])
+                })
+            } else {
+                self.jq
+                    .as_ref()
+                    .map(|filter| shared::filter_jq(filter, line))
+            };
+            if let Some(values) = values {
+                for value in values.map_err(|error| {
                     ceprintln!("<s,r>error:</> jq filtering failed for <s>{url}</>: {error}");
                     EX_DATAERR
                 })? {
@@ -83,6 +129,20 @@ impl OutputFilter {
     }
 }
 
+fn select_properties(value: &mut Value, fields: &BTreeSet<String>) -> Result<(), &'static str> {
+    let select_object = |value: &mut Value| {
+        let object = value
+            .as_object_mut()
+            .ok_or("expected a JSON object or an array of objects")?;
+        object.retain(|name, _| fields.contains(name));
+        Ok(())
+    };
+    match value {
+        Value::Array(values) => values.iter_mut().try_for_each(select_object),
+        _ => select_object(value),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +159,7 @@ mod tests {
         );
         let filter = OutputFilter {
             options: FilteringOptions::builder().jev("Keep even IDs").build(),
+            json: None,
             jq: shared::compile_jq(Some(".id, (.id + 100)")).unwrap(),
         };
         let mut output = Vec::new();
@@ -135,10 +196,52 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn jev_sees_original_records_and_jq_sees_selected_properties() {
+        let options = FilteringOptions::builder()
+            .json(alloc::vec!["name".into()])
+            .jq(r#"if has("keep") then error("unselected property") else {label: .name}, .name end"#)
+            .build();
+        let mut filter = OutputFilter::new(options).unwrap();
+        // Use the injected evaluator without requiring live Jev credentials.
+        filter.options.jev = Some("Keep matching records".into());
+        let batch = JsonlBatch::from_bytes(asimov_runner::Bytes::from_static(
+            b"{\"keep\":true,\"name\":\"Ada\"}\n{\"keep\":false,\"name\":\"Grace\"}\n",
+        ));
+        let mut output = Vec::new();
+        filter
+            .write_batch_with(&batch, "test:", &mut output, |_, inputs| {
+                let matches: Vec<_> = inputs
+                    .into_iter()
+                    .filter(|line| {
+                        let value: Value = serde_json::from_slice(line).unwrap();
+                        value["keep"]
+                            .as_bool()
+                            .expect("Jev sees original properties")
+                    })
+                    .map(|line| Ok(line.to_vec()))
+                    .collect();
+                Ok(futures_lite::stream::iter(matches))
+            })
+            .await
+            .unwrap();
+        assert_eq!(output, b"{\"label\":\"Ada\"}\n\"Ada\"\n");
+    }
+
+    #[test]
+    fn programmatic_json_selection_requires_nonempty_names() {
+        for fields in [alloc::vec![], alloc::vec![String::new()]] {
+            let options = FilteringOptions::builder().json(fields).build();
+            let error = OutputFilter::new(options).err().unwrap();
+            assert_eq!(error.downcast_ref(), Some(&EX_USAGE));
+        }
+    }
+
+    #[tokio::test]
     async fn jev_failures_stop_output_without_hiding_the_error() {
         let batch = JsonlBatch::from_bytes(asimov_runner::Bytes::from_static(b"{}\n"));
         let filter = OutputFilter {
             options: FilteringOptions::builder().jev("anything").build(),
+            json: None,
             jq: None,
         };
         let mut output = Vec::new();

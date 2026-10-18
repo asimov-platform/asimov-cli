@@ -39,6 +39,12 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: CLI behavior and process lifecycle
 
+- [ ] Make argument-file expansion aware of literal option values.
+  `clientele::args_os()` expands all `@...` arguments before Clap, so
+  `--json '@id,name'` tries to read an argument file. The documented equals form
+  (`--json=@id,name`) works. Coordinate an option-aware upstream API, preserving
+  wildcard expansion, recursive-include detection, and external arguments.
+
 - [ ] Bound and correctly reap help subprocesses
   (`src/commands/{help,help_cmd}.rs`). Collection waits for exit before draining
   pipes, uses one deadline for the entire parallel batch, busy-polls, and kills
@@ -63,6 +69,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   output as well as help output.
 
 ## P2: Module configuration and source execution
+
+- [ ] Complete `--json` relay rollout. The server must accept the `options.json`
+  name array and apply Jev, property selection, then jq; relay output is already
+  filtered and is printed directly. Coordinate this with the SDK's relay backlog.
 
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
@@ -97,6 +107,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/commands/proxy/config.rs`).
 
 ## P2: Verification and delivery
+
+- [ ] Replace the sibling-checkout `asimov-patterns` and `asimov-remote` patches
+  in `Cargo.toml` with an SDK revision/release containing JSON property selection.
+  Refresh `Cargo.lock` and rerun locked checks against those shared dependencies.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.

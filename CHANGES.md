@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Select fetch/list output properties with `--json FIELDS`, after Jev and
+  before jq
 - Relay fallback for `source fetch` and `source list` via `ASIMOV_RELAY_URL`
   when no enabled module handles the URL; sign requests within the CLI and
   honor `ASIMOV_RELAY_SECRET` for bearer authentication

@@ -6,6 +6,7 @@ extern crate alloc;
 
 use alloc::{format, string::String};
 use clientele::SysexitsError::*;
+use serde_json::{Value, json};
 use std::{
     os::unix::fs::{PermissionsExt, symlink},
     process::{Command, Output, Stdio},
@@ -55,9 +56,13 @@ impl Sandbox {
     }
 
     fn command(&self, command: &str, options: &[&str]) -> Command {
+        self.command_path(&["source", command], options)
+    }
+
+    fn command_path(&self, path: &[&str], options: &[&str]) -> Command {
         let mut process = Command::new(env!("CARGO_BIN_EXE_asimov"));
         process
-            .args(["source", command])
+            .args(path)
             .args(options)
             .arg("https://jq.example/data")
             .env("ASIMOV_ROOT", self.0.path())
@@ -65,6 +70,7 @@ impl Sandbox {
             .env("ASIMOV_KEYRING_BACKEND", "file")
             .env("DO_NOT_TRACK", "1")
             .env_remove("TYPESAFE_API_TOKEN")
+            .env_remove("ASIMOV_RELAY_URL")
             .env("PATH", self.0.child("bin"))
             .current_dir(self.0.path())
             .stdin(Stdio::null());
@@ -258,6 +264,139 @@ fn source_commands_report_jq_errors_after_a_result() -> Result {
             "{command}: {stderr}"
         );
         assert!(stderr.contains("late failure"), "{command}: {stderr}");
+    }
+    Ok(())
+}
+
+#[test]
+fn json_selection_preserves_literal_properties_nested_values_and_array_shape() -> Result {
+    let record = json!({
+        "@context": {"name": "https://schema.org/name"},
+        "@id": "urn:person:1", "@type": "Person", "name": "Ada", "url": null,
+        "author": {"name": "Grace", "extra": true},
+        "a.b": 1, "a\"b": 2, "schema:name": "Ada", "naïve": true, "extra": 3,
+    });
+    let selected = json!({
+        "@id": "urn:person:1", "name": "Ada", "url": null,
+        "author": {"name": "Grace", "extra": true},
+        "a.b": 1, "a\"b": 2, "schema:name": "Ada", "naïve": true,
+    });
+    let sandbox = Sandbox::with_script(&format!(
+        "#!/bin/sh\nprintf '%s\\r\\n' '{record}' '[{record},{{\"extra\":true}}]'\nprintf '%s' '[]'\n"
+    ))?;
+    for command in ["fetch", "list"] {
+        for path in [vec!["source", command], vec![command]] {
+            let output = sandbox
+                .command_path(
+                    &path,
+                    &[
+                        "--output=jsonl",
+                        "--json=@id,name,url,missing",
+                        "--json",
+                        "author,a.b,a\"b,schema:name,naïve,name",
+                    ],
+                )
+                .output()?;
+            assert!(output.status.success(), "{path:?}: {output:?}");
+            let values: Vec<Value> = serde_json::Deserializer::from_slice(&output.stdout)
+                .into_iter()
+                .collect::<core::result::Result<_, _>>()?;
+            assert_eq!(values, [selected.clone(), json!([selected, {}]), json!([])]);
+            assert!(output.stdout.ends_with(b"\n"));
+        }
+        // JSON-LD metadata is retained only when explicitly requested.
+        let output = sandbox.run_options(command, &["--json=@context,@type"])?;
+        assert!(output.status.success(), "{output:?}");
+        let values: Vec<Value> = serde_json::Deserializer::from_slice(&output.stdout)
+            .into_iter()
+            .collect::<core::result::Result<_, _>>()?;
+        assert_eq!(
+            values[0],
+            json!({"@context": record["@context"], "@type": "Person"})
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn json_selection_precedes_jq_and_preserves_all_or_no_results() -> Result {
+    let sandbox =
+        Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' '{\"name\":\"Ada\",\"extra\":true}'\n")?;
+    for command in ["fetch", "list"] {
+        for (expression, expected) in [
+            (
+                r#"if has("extra") then error("unselected property") else {label: .name}, .name end"#,
+                "{\"label\":\"Ada\"}\n\"Ada\"\n",
+            ),
+            ("empty", ""),
+        ] {
+            let output = sandbox.run_options(command, &["--json=name", "--jq", expression])?;
+            assert!(output.status.success(), "{command}: {output:?}");
+            assert_eq!(output.stdout, expected.as_bytes());
+        }
+        let output = sandbox.run_options(
+            command,
+            &["--json=name", "--jq", r#".name, error("late failure")"#],
+        )?;
+        assert_eq!(output.status.code(), Some(EX_DATAERR as i32), "{output:?}");
+        assert!(String::from_utf8_lossy(&output.stderr).contains("jq filtering failed"));
+        assert!(output.stdout.is_empty());
+    }
+    Ok(())
+}
+
+#[test]
+fn json_selection_reports_invalid_records_after_prior_output() -> Result {
+    for record in [
+        "not JSON",
+        "42",
+        "true",
+        "null",
+        r#""text""#,
+        "[{},42]",
+        "[[{}]]",
+    ] {
+        let sandbox = Sandbox::with_script(&format!(
+            "#!/bin/sh\nprintf '%s\\n' '{{\"name\":\"first\",\"extra\":1}}' '{record}'\n"
+        ))?;
+        for command in ["fetch", "list"] {
+            let output = sandbox.run_options(command, &["--json=name"])?;
+            assert_eq!(output.status.code(), Some(EX_DATAERR as i32), "{output:?}");
+            assert_eq!(output.stdout, b"{\"name\":\"first\"}\n");
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(
+                stderr.contains("JSON property selection failed"),
+                "{stderr}"
+            );
+            assert!(stderr.contains("https://jq.example/data"), "{stderr}");
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn json_selection_rejects_incompatible_formats_before_module_execution() -> Result {
+    let sandbox = Sandbox::with_script("#!/bin/sh\nexit 99\n")?;
+    for command in ["fetch", "list"] {
+        for format in ["url", "csv", "turtle", "json"] {
+            let output = sandbox.run_options(command, &["--json=name", "--output", format])?;
+            assert_eq!(output.status.code(), Some(EX_USAGE as i32), "{output:?}");
+            assert!(output.stdout.is_empty());
+            assert!(String::from_utf8_lossy(&output.stderr).contains("--json requires JSONL"));
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn json_selection_preserves_terminal_subprocess_failures() -> Result {
+    let sandbox = Sandbox::with_script(
+        "#!/bin/sh\nprintf '%s\\n' '{\"name\":\"Ada\",\"extra\":true}'\nexit 66\n",
+    )?;
+    for command in ["fetch", "list"] {
+        let output = sandbox.run_options(command, &["--json=name"])?;
+        assert_eq!(output.status.code(), Some(EX_NOINPUT as i32), "{output:?}");
+        assert_eq!(output.stdout, b"{\"name\":\"Ada\"}\n");
     }
     Ok(())
 }

@@ -47,6 +47,7 @@ pub struct SourceFetchArgs {
 /// including `EX_NOINPUT` for missing resources. Unclassified module failures use
 /// `EX_UNAVAILABLE`.
 pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+    OutputFilter::validate_json(&args.filtering, args.output.as_deref())?;
     let mut filter = None;
     let mut resolver = SourceResolver::new("fetcher").await?;
 
@@ -216,11 +217,13 @@ mod tests {
     }
 
     #[test]
-    fn parses_jev_and_jq_together() {
+    fn parses_all_filters_together() {
         let args = Command::try_parse_from([
             "test",
             "--jev",
             "The name is Ukrainian",
+            "--json",
+            "@id,name",
             "--jq",
             ".name",
             "https://example.com",
@@ -228,6 +231,7 @@ mod tests {
         .unwrap()
         .args;
         assert_eq!(args.filtering.jev.as_deref(), Some("The name is Ukrainian"));
+        assert_eq!(args.filtering.json.unwrap(), ["@id", "name"]);
         assert_eq!(args.filtering.jq.as_deref(), Some(".name"));
     }
 }

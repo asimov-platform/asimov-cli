@@ -93,6 +93,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
         cache,
         timing,
     } = args;
+    OutputFilter::validate_json(&filtering, output.as_deref())?;
     let mut filter = None;
     let mut resolver = SourceResolver::new("lister").await?;
 

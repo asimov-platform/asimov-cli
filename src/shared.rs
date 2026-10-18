@@ -451,13 +451,19 @@ pub fn filter_jq(
     for input in
         serde_json::Deserializer::from_slice(input.as_ref()).into_iter::<serde_json::Value>()
     {
-        values.extend(
-            filter
-                .filter_json_all(input?)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?,
-        );
+        values.extend(filter_jq_value(filter, input?)?);
     }
     Ok(values)
+}
+
+/// Collects every jq result from an already parsed JSON value.
+pub fn filter_jq_value(
+    filter: &jq::JsonFilter,
+    input: serde_json::Value,
+) -> std::result::Result<Vec<serde_json::Value>, BoxError> {
+    filter
+        .filter_json_all(input)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()).into())
 }
 
 #[cfg(test)]

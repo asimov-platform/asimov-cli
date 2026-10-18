@@ -243,6 +243,7 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
                     "--max-age=1m 30s",
                     "--deadline=0.5s",
                     "--jev=Keep matching entries",
+                    "--json=name",
                     "--jq=.name",
                 ]);
             if let Some(token) = token {
@@ -251,6 +252,7 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
             let mut options = json!({
                 "output": "jsonl", "max-age": "1m 30s", "deadline": "500ms",
                 "jev": "Keep matching entries", "jq": ".name",
+                "json": ["name"],
             });
             if operation == "list" {
                 command.args([
@@ -270,7 +272,7 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
             ];
             let output = command.args(inputs).output().unwrap();
             assert!(output.status.success(), "{output:?}");
-            // No local Jev credentials or second jq pass; append final LFs.
+            // No local credentials or second selection/jq pass; append final LFs.
             assert_eq!(output.stdout, b"123\n123\n");
             let requests = server.join().unwrap();
             let mut nonces = Vec::new();
@@ -387,6 +389,7 @@ fn mixed_sources_preserve_input_order_and_filter_only_local_output() {
             .env("ASIMOV_RELAY_URL", url)
             .args([
                 operation,
+                "--json=name",
                 "--jq=.name",
                 "https://LOCAL.example/first",
                 "https://remote.example/second",
@@ -396,7 +399,10 @@ fn mixed_sources_preserve_input_order_and_filter_only_local_output() {
             .unwrap();
         assert!(output.status.success(), "{output:?}");
         assert_eq!(output.stdout, b"\"local\"\n\"remote\"\n\"local\"\n");
-        assert_eq!(server.join().unwrap().len(), 1);
+        let requests = server.join().unwrap();
+        assert_eq!(requests.len(), 1);
+        let body: Value = serde_json::from_slice(requests[0].body()).unwrap();
+        assert_eq!(body["options"]["json"], json!(["name"]));
     }
 }
 

@@ -214,12 +214,12 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-module-kit = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-#asimov-patterns = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
+asimov-patterns = { path = "../asimov-sdk/rust/lib/asimov-patterns" }
 #asimov-prompt = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
+asimov-remote = { path = "../asimov-sdk/rust/lib/asimov-remote" }
 #asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
