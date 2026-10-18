@@ -113,7 +113,8 @@ enum Command {
 
 #[tokio::main]
 pub async fn main() -> SysexitsError {
-    // Load environment variables from `.env`:
+    // Load `$ASIMOV_ROOT/.env` before the nearest `.env`:
+    clientele::crates::dotenvy::from_path(asimov_env::paths::asimov_root().join(".env")).ok();
     clientele::dotenv().ok();
 
     // Expand wildcards and @argfiles:
