@@ -612,8 +612,6 @@ dependencies = [
 [[package]]
 name = "asimov-remote"
 version = "25.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2d57d49f3853929c90f757d3d5738ac97f8f526253be2cde59a3af42bca3a65"
 dependencies = [
  "agent-detector",
  "asimov-flow",
@@ -625,6 +623,7 @@ dependencies = [
  "base64 0.23.1",
  "clientele",
  "http-body-util",
+ "httpdate",
  "plist",
  "reqwest",
  "rustls",

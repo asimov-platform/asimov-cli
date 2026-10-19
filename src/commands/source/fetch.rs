@@ -82,7 +82,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                 (
                     ModuleMetadata::new(Operation::Fetch, &module.name),
                     false,
-                    execution::execute(fetcher),
+                    execution::execute(fetcher, &input_url),
                 )
             },
             Source::Relay(executor) => {
@@ -98,7 +98,7 @@ pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(),
                 (
                     ModuleMetadata::new(Operation::Fetch, "relay"),
                     true,
-                    execution::execute(http::Fetcher::new(*executor, request)),
+                    execution::execute(http::Fetcher::new(*executor, request), &input_url),
                 )
             },
         };

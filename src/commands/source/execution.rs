@@ -3,7 +3,7 @@
 //! Local-first source routing and a common execution stream for both transports.
 
 use crate::{BoxError, SysexitsError, SysexitsError::*, shared};
-use alloc::{boxed::Box, rc::Rc};
+use alloc::{boxed::Box, rc::Rc, string::String};
 use asimov_keyring::Keyring;
 use asimov_module::resolve::{Module, Resolver};
 use asimov_patterns::Execute;
@@ -129,13 +129,33 @@ type OutputStream = Pin<Box<dyn Stream<Item = Result<JsonlBatch, ExecutionError>
 type Execution = Pin<Box<dyn Future<Output = Result<OutputStream, ExecutionError>> + Send>>;
 
 /// Prepare either SDK executor without starting it until all URLs are resolved.
-pub(super) fn execute<S, E>(mut program: impl Execute<S, Error = E> + Send + 'static) -> Execution
+pub(super) fn execute<S, E>(
+    mut program: impl Execute<S, Error = E> + Send + 'static,
+    url: &str,
+) -> Execution
 where
     S: Stream<Item = Result<JsonlBatch, E>> + Send + 'static,
     E: Into<ExecutionError> + 'static,
 {
+    let url = String::from(url);
     Box::pin(async move {
-        let stream = program.execute().await.map_err(Into::into)?;
+        let stream = loop {
+            match program.execute().await.map_err(Into::into) {
+                Ok(stream) => break stream,
+                Err(error) => {
+                    if let ExecutionError::Remote(remote) = &error
+                        && let Some(delay) = remote.retry_after()
+                    {
+                        ceprintln!(
+                            "<s,y>warning:</> relay rate limited <s>{url}</> (HTTP 429); retrying after {delay:?}..."
+                        );
+                        tokio::time::sleep(delay).await;
+                        continue;
+                    }
+                    return Err(error);
+                },
+            }
+        };
         Ok(Box::pin(stream.map(|batch| batch.map_err(Into::into))) as OutputStream)
     })
 }

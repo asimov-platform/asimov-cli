@@ -136,7 +136,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                 (
                     ModuleMetadata::new(Operation::List, &module.name),
                     false,
-                    execution::execute(lister),
+                    execution::execute(lister, &input_url),
                 )
             },
             Source::Relay(executor) => {
@@ -147,7 +147,7 @@ pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), B
                 (
                     ModuleMetadata::new(Operation::List, "relay"),
                     true,
-                    execution::execute(http::Lister::new(*executor, request)),
+                    execution::execute(http::Lister::new(*executor, request), &input_url),
                 )
             },
         };

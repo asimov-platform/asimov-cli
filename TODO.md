@@ -104,6 +104,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
+- [ ] Replace the local `asimov-remote` Cargo patch with the next SDK release
+  containing the `Retry-After` API before publishing the CLI.
+
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.
 

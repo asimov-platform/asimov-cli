@@ -218,7 +218,8 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ arch
 #asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
-#asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
+# Use the local Retry-After API until the next SDK release.
+asimov-remote = { path = "../asimov-sdk/rust/lib/asimov-remote" }
 #asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git" }
 #asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git" }

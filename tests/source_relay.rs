@@ -158,6 +158,13 @@ fn signed_response(body: &[u8]) -> Response<Vec<u8>> {
 }
 
 fn mock_relay(responses: Vec<Response<Vec<u8>>>) -> (String, JoinHandle<Vec<Request<Vec<u8>>>>) {
+    mock_relay_with_discovery(responses, Vec::new())
+}
+
+fn mock_relay_with_discovery(
+    responses: Vec<Response<Vec<u8>>>,
+    discovery_responses: Vec<Response<Vec<u8>>>,
+) -> (String, JoinHandle<Vec<Request<Vec<u8>>>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     listener.set_nonblocking(true).unwrap();
@@ -174,7 +181,13 @@ fn mock_relay(responses: Vec<Response<Vec<u8>>>) -> (String, JoinHandle<Vec<Requ
             )
             .unwrap();
         let mut requests = Vec::new();
-        for (index, mut response) in core::iter::once(jwks).chain(responses).enumerate() {
+        let discovery_count = discovery_responses.len() + 1;
+        for (index, mut response) in discovery_responses
+            .into_iter()
+            .chain(core::iter::once(jwks))
+            .chain(responses)
+            .enumerate()
+        {
             let deadline = Instant::now() + Duration::from_secs(10);
             let mut stream = loop {
                 match listener.accept() {
@@ -193,8 +206,9 @@ fn mock_relay(responses: Vec<Response<Vec<u8>>>) -> (String, JoinHandle<Vec<Requ
             stream
                 .set_write_timeout(Some(Duration::from_secs(5)))
                 .unwrap();
-            let request = read_request(&mut stream);
-            if index == 0 {
+            let mut request = read_request(&mut stream);
+            request.extensions_mut().insert(Instant::now());
+            if index < discovery_count {
                 assert_eq!(request.method(), "GET");
                 assert_eq!(request.uri(), "/.well-known/jwks.json");
                 assert!(!request.headers().contains_key("authorization"));
@@ -310,6 +324,105 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
     }
 }
 
+fn rate_limited(retry_after: &str) -> Response<Vec<u8>> {
+    Response::builder()
+        .status(429)
+        .header("retry-after", retry_after)
+        .body(b"rate limited\n".to_vec())
+        .unwrap()
+}
+
+#[test]
+fn relay_rate_limits_wait_and_retry_with_fresh_signatures() {
+    let key = SecretKey::from_bytes(&[7; 32]);
+    let verifier = Verifier::new(
+        key.public(),
+        &key_id(&key.public()),
+        "asimov",
+        VerificationPolicy::request(),
+    )
+    .unwrap();
+    for operation in ["fetch", "list"] {
+        let sandbox = Sandbox::new();
+        let (url, server) = mock_relay(vec![
+            rate_limited("1"),
+            rate_limited("2"),
+            signed_response(b"123\n"),
+        ]);
+        let output = sandbox
+            .command()
+            .env("ASIMOV_RELAY_URL", &url)
+            .args([
+                "source",
+                operation,
+                "--max-age=1m",
+                "--jq=.name",
+                "https://remote.example/data",
+            ])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(output.stdout, b"123\n");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(stderr.matches("warning:").count(), 2, "{stderr}");
+        for delay in [1, 2] {
+            assert!(
+                stderr.contains(&format!("retrying after {delay}s")),
+                "{stderr}"
+            );
+        }
+        assert!(stderr.contains("https://remote.example/data"), "{stderr}");
+        let requests = server.join().unwrap();
+        assert_eq!(requests.len(), 3);
+        for (pair, delay) in requests.windows(2).zip([1, 2]) {
+            let before = pair[0].extensions().get::<Instant>().unwrap();
+            let after = pair[1].extensions().get::<Instant>().unwrap();
+            assert!(after.duration_since(*before) >= Duration::from_secs(delay));
+        }
+        let mut nonces = Vec::new();
+        for request in &requests {
+            assert_eq!(request.method(), "POST");
+            assert_eq!(request.uri().path(), format!("/{operation}"));
+            assert_eq!(request.body(), requests[0].body());
+            assert_eq!(
+                request.headers()["authorization"],
+                requests[0].headers()["authorization"]
+            );
+            let signature = verify_request(
+                request,
+                &format!("{url}{}", request.uri()),
+                &verifier,
+                SignatureParams::now().unwrap(),
+            )
+            .unwrap();
+            let nonce = String::from(signature.input.parameter("nonce").unwrap());
+            assert!(!nonces.contains(&nonce));
+            nonces.push(nonce);
+        }
+    }
+}
+
+#[test]
+fn relay_rate_limits_during_discovery_are_retried() {
+    for operation in ["fetch", "list"] {
+        let sandbox = Sandbox::new();
+        let (url, server) = mock_relay_with_discovery(
+            vec![signed_response(b"{}\n")],
+            vec![rate_limited("Sun, 06 Nov 1994 08:49:37 GMT")],
+        );
+        let output = sandbox
+            .command()
+            .env("ASIMOV_RELAY_URL", url)
+            .args(["source", operation, "https://remote.example/data"])
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{output:?}");
+        assert_eq!(output.stdout, b"{}\n");
+        assert!(String::from_utf8_lossy(&output.stderr).contains("retrying after 0ns"));
+        assert_eq!(server.join().unwrap().len(), 1);
+    }
+}
+
 #[test]
 fn enabled_handlers_and_explicit_modules_prevent_relay_fallback() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -410,11 +523,25 @@ fn mixed_sources_preserve_input_order_and_filter_only_local_output() {
 #[test]
 fn remote_status_and_terminal_stream_failures_are_reported() {
     for operation in ["fetch", "list"] {
-        for failure in ["status", "unsigned", "tampered", "truncated"] {
+        for failure in [
+            "status",
+            "missing-retry-after",
+            "invalid-retry-after",
+            "unsigned",
+            "tampered",
+            "truncated",
+        ] {
             let sandbox = Sandbox::new();
             let mut response = signed_response(b"{\"id\":1}\n");
             match failure {
-                "status" => *response.status_mut() = 503.try_into().unwrap(),
+                "status" => {
+                    *response.status_mut() = 503.try_into().unwrap();
+                    response
+                        .headers_mut()
+                        .insert("retry-after", "0".parse().unwrap());
+                },
+                "missing-retry-after" => *response.status_mut() = 429.try_into().unwrap(),
+                "invalid-retry-after" => response = rate_limited("invalid"),
                 "unsigned" => {
                     response.headers_mut().remove("signature");
                 },
@@ -443,6 +570,7 @@ fn remote_status_and_terminal_stream_failures_are_reported() {
                 "{failure}: {output:?}"
             );
             assert!(!output.stderr.is_empty());
+            assert!(!String::from_utf8_lossy(&output.stderr).contains("retrying after"));
             assert_eq!(server.join().unwrap().len(), 1);
         }
     }
