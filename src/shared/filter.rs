@@ -10,7 +10,7 @@ use color_print::ceprintln;
 use serde_json::Value;
 use std::io::Write;
 
-pub(super) struct OutputFilter {
+pub(crate) struct OutputFilter {
     options: FilteringOptions,
     json: Option<BTreeSet<String>>,
     jq: Option<jq::JsonFilter>,

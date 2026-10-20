@@ -201,6 +201,13 @@ asimov help module
 
 {% render 'etc/readmer/asimov.sh-session' %}
 
+<details>
+<summary><code>asimov resource fetch</code></summary>
+
+{% render 'etc/readmer/asimov-resource-fetch.sh-session' %}
+
+</details>
+
 #### `asimov module`
 
 {% render 'etc/readmer/asimov-module.sh-session' %}
@@ -270,13 +277,6 @@ asimov help module
 {% render 'etc/readmer/asimov-source.sh-session' %}
 
 <details>
-<summary><code>asimov source fetch</code></summary>
-
-{% render 'etc/readmer/asimov-source-fetch.sh-session' %}
-
-</details>
-
-<details>
 <summary><code>asimov source list</code></summary>
 
 {% render 'etc/readmer/asimov-source-list.sh-session' %}
@@ -320,7 +320,8 @@ asimov configure telemetry disable
 export ASIMOV_TELEMETRY=0   # or `false`
 
 # By building the CLI yourself, without the `telemetry` feature:
-cargo install asimov-cli --locked --no-default-features --features module,proxy,source
+cargo install asimov-cli --locked --no-default-features \
+  --features module,proxy,resource,source
 ```
 
 Disabling telemetry also discards any events that haven't been sent yet.
@@ -333,7 +334,7 @@ Each command you run records when it started and finished. Each event
 contains:
 
 - A random installation ID (`~/.asimov/.telemetry/id`), as an identifier
-- The command that was run (e.g., `source fetch`), without its arguments
+- The command that was run (e.g., `resource fetch`), without its arguments
 - The names of the modules involved
 - The exit code and duration
 - The CLI version, operating system, and CPU architecture

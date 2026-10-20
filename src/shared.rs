@@ -11,6 +11,12 @@ use std::{rc::Rc, sync::LazyLock};
 #[cfg_attr(not(feature = "telemetry"), path = "shared/telemetry_disabled.rs")]
 pub mod telemetry;
 
+#[cfg(any(feature = "resource", feature = "source"))]
+pub(crate) mod execution;
+
+#[cfg(any(feature = "resource", feature = "source"))]
+pub(crate) mod filter;
+
 #[cfg(any(feature = "module", feature = "proxy"))]
 mod files;
 #[cfg(any(feature = "module", feature = "proxy"))]

@@ -13,8 +13,8 @@ use std::ffi::OsString;
 
 /// The table of command aliases, mapping an alias name to its expansion.
 pub static ALIASES: &[(&str, &[&str])] = &[
-    #[cfg(feature = "source")]
-    ("fetch", &["source", "fetch"]),
+    #[cfg(feature = "resource")]
+    ("fetch", &["resource", "fetch"]),
     #[cfg(feature = "module")]
     ("install", &["module", "install"]),
     #[cfg(feature = "source")]
@@ -63,7 +63,7 @@ pub fn command_position(args: &[OsString]) -> Option<usize> {
 /// splices in the expansion. Any arguments following the alias are preserved.
 ///
 /// The `help` subcommand is treated as transparent, so `asimov help fetch`
-/// expands to `asimov help source fetch`.
+/// expands to `asimov help resource fetch`.
 pub fn resolve(args: &mut Vec<OsString>) {
     let mut i = 1; // skip the program name
     while i < args.len() {
@@ -113,11 +113,11 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "source")]
+    #[cfg(feature = "resource")]
     fn expands_fetch() {
         assert_eq!(
             resolved(&["asimov", "fetch", "http://example.org"]),
-            ["asimov", "source", "fetch", "http://example.org"]
+            ["asimov", "resource", "fetch", "http://example.org"]
         );
     }
 
@@ -137,11 +137,13 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "source")]
+    #[cfg(feature = "resource")]
     fn skips_leading_flags() {
         assert_eq!(
             resolved(&["asimov", "-d", "--color", "auto", "fetch", "url"]),
-            ["asimov", "-d", "--color", "auto", "source", "fetch", "url"]
+            [
+                "asimov", "-d", "--color", "auto", "resource", "fetch", "url"
+            ]
         );
     }
 
@@ -162,12 +164,12 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(feature = "source", feature = "module"))]
+    #[cfg(any(feature = "resource", feature = "module"))]
     fn expands_alias_after_help() {
-        #[cfg(feature = "source")]
+        #[cfg(feature = "resource")]
         assert_eq!(
             resolved(&["asimov", "help", "fetch"]),
-            ["asimov", "help", "source", "fetch"]
+            ["asimov", "help", "resource", "fetch"]
         );
         #[cfg(feature = "module")]
         assert_eq!(
@@ -179,7 +181,7 @@ mod tests {
     #[test]
     fn unavailable_aliases_remain_available_for_external_dispatch() {
         for (alias, enabled) in [
-            ("fetch", cfg!(feature = "source")),
+            ("fetch", cfg!(feature = "resource")),
             ("list", cfg!(feature = "source")),
             ("read", cfg!(feature = "source")),
             (

@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(all(unix, feature = "source"))]
+#![cfg(all(unix, any(feature = "resource", feature = "source")))]
 
 extern crate alloc;
 
@@ -14,6 +14,13 @@ use std::{
 use temp_dir::TempDir;
 
 type Result<T = ()> = core::result::Result<T, Box<dyn core::error::Error>>;
+
+const OPERATIONS: &[&str] = &[
+    #[cfg(feature = "resource")]
+    "fetch",
+    #[cfg(feature = "source")]
+    "list",
+];
 
 struct Sandbox(TempDir);
 
@@ -56,7 +63,12 @@ impl Sandbox {
     }
 
     fn command(&self, command: &str, options: &[&str]) -> Command {
-        self.command_path(&["source", command], options)
+        let group = if command == "fetch" {
+            "resource"
+        } else {
+            "source"
+        };
+        self.command_path(&[group, command], options)
     }
 
     fn command_path(&self, path: &[&str], options: &[&str]) -> Command {
@@ -81,7 +93,7 @@ impl Sandbox {
 #[test]
 fn source_commands_require_jev_credentials_and_validate_input_before_http() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' 'not JSON'\n")?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         let output = sandbox.run_options(command, &["--jev", "The name is Ukrainian"])?;
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert_eq!(
@@ -112,6 +124,7 @@ fn source_commands_require_jev_credentials_and_validate_input_before_http() -> R
 }
 
 #[test]
+#[cfg(feature = "source")]
 fn list_forwards_cursor_bounds_and_explicit_offsets_to_the_module() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' \"$@\"\n")?;
     for (options, expected) in [
@@ -146,7 +159,7 @@ fn list_forwards_cursor_bounds_and_explicit_offsets_to_the_module() -> Result {
 #[test]
 fn source_commands_report_subprocess_failures_after_output() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' '[1,2]'\nexit 42\n")?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         for (options, expected) in [(vec![], "[1,2]\n"), (vec!["--jq", ".[]"], "1\n2\n")] {
             let output = sandbox.run_options(command, &options)?;
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -170,7 +183,7 @@ fn source_commands_preserve_module_sysexits() -> Result {
                 "#!/bin/sh\nprintf '%s' '{payload}'\nexit {}\n",
                 code as i32
             ))?;
-            for command in ["fetch", "list"] {
+            for &command in OPERATIONS {
                 let output = sandbox.run_options(command, &[])?;
                 assert_eq!(
                     output.status.code(),
@@ -192,7 +205,7 @@ fn source_commands_preserve_the_first_failure_in_url_order() -> Result {
          */missing) exit 66;;\n*/unavailable) exit 69;;\n\
          *) printf '%s\\n' '[1,2]';;\nesac\n",
     )?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         for (paths, code) in [
             (["missing", "unavailable"], EX_NOINPUT),
             (["unavailable", "missing"], EX_UNAVAILABLE),
@@ -219,7 +232,7 @@ fn source_commands_preserve_the_first_failure_in_url_order() -> Result {
 #[test]
 fn source_commands_preserve_all_jq_results() -> Result {
     let sandbox = Sandbox::new()?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         let output = sandbox.run(command, ".[]")?;
         assert_eq!(
             output.status.code(),
@@ -235,7 +248,7 @@ fn source_commands_preserve_all_jq_results() -> Result {
 #[test]
 fn source_commands_accept_empty_jq_output() -> Result {
     let sandbox = Sandbox::new()?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         let output = sandbox.run(command, "empty")?;
         assert_eq!(
             output.status.code(),
@@ -251,7 +264,7 @@ fn source_commands_accept_empty_jq_output() -> Result {
 #[test]
 fn source_commands_report_jq_errors_after_a_result() -> Result {
     let sandbox = Sandbox::new()?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         let output = sandbox.run(command, r#".[], error("late failure")"#)?;
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert_eq!(
@@ -284,8 +297,13 @@ fn json_selection_preserves_literal_properties_nested_values_and_array_shape() -
     let sandbox = Sandbox::with_script(&format!(
         "#!/bin/sh\nprintf '%s\\r\\n' '{record}' '[{record},{{\"extra\":true}}]'\nprintf '%s' '[]'\n"
     ))?;
-    for command in ["fetch", "list"] {
-        for path in [vec!["source", command], vec![command]] {
+    for &command in OPERATIONS {
+        let group = if command == "fetch" {
+            "resource"
+        } else {
+            "source"
+        };
+        for path in [vec![group, command], vec![command]] {
             let output = sandbox
                 .command_path(
                     &path,
@@ -322,7 +340,7 @@ fn json_selection_preserves_literal_properties_nested_values_and_array_shape() -
 fn json_selection_precedes_jq_and_preserves_all_or_no_results() -> Result {
     let sandbox =
         Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' '{\"name\":\"Ada\",\"extra\":true}'\n")?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         for (expression, expected) in [
             (
                 r#"if has("extra") then error("unselected property") else {label: .name}, .name end"#,
@@ -359,7 +377,7 @@ fn json_selection_reports_invalid_records_after_prior_output() -> Result {
         let sandbox = Sandbox::with_script(&format!(
             "#!/bin/sh\nprintf '%s\\n' '{{\"name\":\"first\",\"extra\":1}}' '{record}'\n"
         ))?;
-        for command in ["fetch", "list"] {
+        for &command in OPERATIONS {
             let output = sandbox.run_options(command, &["--json=name"])?;
             assert_eq!(output.status.code(), Some(EX_DATAERR as i32), "{output:?}");
             assert_eq!(output.stdout, b"{\"name\":\"first\"}\n");
@@ -377,7 +395,7 @@ fn json_selection_reports_invalid_records_after_prior_output() -> Result {
 #[test]
 fn json_selection_rejects_incompatible_formats_before_module_execution() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nexit 99\n")?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         for format in ["url", "csv", "turtle", "json"] {
             let output = sandbox.run_options(command, &["--json=name", "--output", format])?;
             assert_eq!(output.status.code(), Some(EX_USAGE as i32), "{output:?}");
@@ -393,7 +411,7 @@ fn json_selection_preserves_terminal_subprocess_failures() -> Result {
     let sandbox = Sandbox::with_script(
         "#!/bin/sh\nprintf '%s\\n' '{\"name\":\"Ada\",\"extra\":true}'\nexit 66\n",
     )?;
-    for command in ["fetch", "list"] {
+    for &command in OPERATIONS {
         let output = sandbox.run_options(command, &["--json=name"])?;
         assert_eq!(output.status.code(), Some(EX_NOINPUT as i32), "{output:?}");
         assert_eq!(output.stdout, b"{\"name\":\"Ada\"}\n");

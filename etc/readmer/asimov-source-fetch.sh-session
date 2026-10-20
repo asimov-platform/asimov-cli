@@ -1,1 +1,0 @@
-$ asimov source fetch --help

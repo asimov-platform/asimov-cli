@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
 - Verify remotes with `asimov remote check`; use `-v` to report round-trip time
 ### Changed
+- Move `asimov source fetch` to `asimov resource fetch`; update `asimov fetch`
+- Require an explicit subcommand for `asimov source`
 - Rename `asimov configure` to `asimov config`, keeping `configure` as an alias
 - Use ASIMOV SDK from GitHub HEAD
 ### Fixed

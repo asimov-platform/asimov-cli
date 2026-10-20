@@ -7,6 +7,13 @@ use clientele::{StandardOptions, crates::clap::Subcommand};
 /// Commands for managing tracked resources.
 #[derive(Debug, Subcommand)]
 pub enum ResourceCommand {
+    /// Fetch a resource using enabled modules, or ASIMOV_RELAY_URL as fallback.
+    #[clap(aliases = ["extract", "get", "import", "ingest", "parse"])]
+    Fetch {
+        #[clap(flatten)]
+        args: ResourceFetchArgs,
+    },
+
     /// List the set of tracked resources
     #[clap(alias = "ls")]
     List {},
@@ -41,6 +48,7 @@ impl ResourceCommand {
     pub async fn run(self, flags: &StandardOptions) -> Result<(), BoxError> {
         use ResourceCommand::*;
         match self {
+            Fetch { args } => fetch(args, flags).await,
             List {} => list(flags).await,
             Track { urls } => track(urls, flags).await,
             Untrack { urls } => untrack(urls, flags).await,
@@ -48,6 +56,9 @@ impl ResourceCommand {
         }
     }
 }
+
+mod fetch;
+pub use fetch::*;
 
 mod list;
 pub use list::*;

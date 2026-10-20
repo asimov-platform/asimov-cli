@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(all(unix, feature = "source"))]
+#![cfg(all(unix, any(feature = "resource", feature = "source")))]
 
 extern crate alloc;
 
@@ -24,6 +24,13 @@ use std::{
     time::Instant,
 };
 use temp_dir::TempDir;
+
+const COMMANDS: &[(&str, &str)] = &[
+    #[cfg(feature = "resource")]
+    ("resource", "fetch"),
+    #[cfg(feature = "source")]
+    ("source", "list"),
+];
 
 struct Sandbox(TempDir);
 
@@ -244,7 +251,7 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
     let public_key = id.strip_prefix("ed25519:").unwrap();
     let verifier =
         Verifier::new(key.public(), &id, "asimov", VerificationPolicy::request()).unwrap();
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         for token in [None, Some("explicit-token")] {
             let sandbox = Sandbox::new();
             let (url, server) = mock_relay(vec![signed_response(b"123"); 2]);
@@ -252,7 +259,7 @@ fn signs_and_verifies_relay_requests_and_forwards_remote_options() {
             command
                 .env("ASIMOV_RELAY_URL", format!("{url}/api/relay"))
                 .args([
-                    "source",
+                    group,
                     operation,
                     "--output=jsonl",
                     "--max-age=1m 30s",
@@ -342,7 +349,7 @@ fn relay_rate_limits_wait_and_retry_with_fresh_signatures() {
         VerificationPolicy::request(),
     )
     .unwrap();
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         let sandbox = Sandbox::new();
         let (url, server) = mock_relay(vec![
             rate_limited("1"),
@@ -353,7 +360,7 @@ fn relay_rate_limits_wait_and_retry_with_fresh_signatures() {
             .command()
             .env("ASIMOV_RELAY_URL", &url)
             .args([
-                "source",
+                group,
                 operation,
                 "--max-age=1m",
                 "--jq=.name",
@@ -404,7 +411,7 @@ fn relay_rate_limits_wait_and_retry_with_fresh_signatures() {
 
 #[test]
 fn relay_rate_limits_during_discovery_are_retried() {
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         let sandbox = Sandbox::new();
         let (url, server) = mock_relay_with_discovery(
             vec![signed_response(b"{}\n")],
@@ -413,7 +420,7 @@ fn relay_rate_limits_during_discovery_are_retried() {
         let output = sandbox
             .command()
             .env("ASIMOV_RELAY_URL", url)
-            .args(["source", operation, "https://remote.example/data"])
+            .args([group, operation, "https://remote.example/data"])
             .output()
             .unwrap();
         assert!(output.status.success(), "{output:?}");
@@ -427,7 +434,7 @@ fn relay_rate_limits_during_discovery_are_retried() {
 fn enabled_handlers_and_explicit_modules_prevent_relay_fallback() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         for (enabled, programs, explicit, exit, expected) in [
             (true, vec!["fetcher", "lister"], false, 0, EX_OK),
             (true, vec!["fetcher", "lister"], false, 66, EX_NOINPUT),
@@ -442,7 +449,7 @@ fn enabled_handlers_and_explicit_modules_prevent_relay_fallback() {
                 // Cached public identity permits startup, but signing must not run.
                 .env("ASIMOV_KEYRING_BACKEND", "invalid")
                 .env("ASIMOV_RELAY_URL", format!("http://{}", listener.local_addr().unwrap()))
-                .args(["source", operation]);
+                .args([group, operation]);
             if explicit {
                 command.arg(if enabled {
                     "--module=missing"
@@ -461,13 +468,13 @@ fn enabled_handlers_and_explicit_modules_prevent_relay_fallback() {
 
 #[test]
 fn relay_is_opt_in_and_disabled_modules_do_not_block_it() {
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         let sandbox = Sandbox::new();
         sandbox.install(false, &["fetcher", "lister"], "#!/bin/sh\nexit 99\n");
         let output = sandbox
             .command()
             .env("ASIMOV_RELAY_SECRET", "token")
-            .args(["source", operation, "https://local.example/data"])
+            .args([group, operation, "https://local.example/data"])
             .output()
             .unwrap();
         assert_eq!(
@@ -479,7 +486,7 @@ fn relay_is_opt_in_and_disabled_modules_do_not_block_it() {
         let output = sandbox
             .command()
             .env("ASIMOV_RELAY_URL", url)
-            .args(["source", operation, "https://local.example/data"])
+            .args([group, operation, "https://local.example/data"])
             .output()
             .unwrap();
         assert!(output.status.success(), "{output:?}");
@@ -490,7 +497,7 @@ fn relay_is_opt_in_and_disabled_modules_do_not_block_it() {
 
 #[test]
 fn mixed_sources_preserve_input_order_and_filter_only_local_output() {
-    for operation in ["fetch", "list"] {
+    for &(_, operation) in COMMANDS {
         let sandbox = Sandbox::new();
         sandbox.install(
             true,
@@ -522,7 +529,7 @@ fn mixed_sources_preserve_input_order_and_filter_only_local_output() {
 
 #[test]
 fn remote_status_and_terminal_stream_failures_are_reported() {
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         for failure in [
             "status",
             "missing-retry-after",
@@ -558,7 +565,7 @@ fn remote_status_and_terminal_stream_failures_are_reported() {
             let output = sandbox
                 .command()
                 .env("ASIMOV_RELAY_URL", url)
-                .args(["source", operation])
+                .args([group, operation])
                 // Reaching the requested count must not skip EOF verification.
                 .args((operation == "list").then_some("--limit=1"))
                 .arg("https://remote.example/data")
@@ -580,7 +587,7 @@ fn remote_status_and_terminal_stream_failures_are_reported() {
 fn signing_failures_prevent_requests_even_with_an_explicit_bearer() {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     listener.set_nonblocking(true).unwrap();
-    for operation in ["fetch", "list"] {
+    for &(group, operation) in COMMANDS {
         let sandbox = Sandbox::new();
         let output = sandbox
             .command()
@@ -590,7 +597,7 @@ fn signing_failures_prevent_requests_even_with_an_explicit_bearer() {
                 format!("http://{}", listener.local_addr().unwrap()),
             )
             .env("ASIMOV_RELAY_SECRET", "explicit-token")
-            .args(["source", operation, "https://remote.example/data"])
+            .args([group, operation, "https://remote.example/data"])
             .output()
             .unwrap();
         assert_eq!(

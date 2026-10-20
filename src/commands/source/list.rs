@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{
+use crate::shared::{
     execution::{self, Source, SourceResolver},
     filter::OutputFilter,
+    telemetry::{ModuleMetadata, Operation},
 };
-use crate::shared::telemetry::{ModuleMetadata, Operation};
 use crate::{BoxError, StandardOptions};
 use alloc::{
     format,

@@ -1,23 +1,23 @@
 // This is free and unencumbered software released into the public domain.
 
-use super::{
+use crate::BoxError;
+use crate::shared::{
     execution::{self, Source, SourceResolver},
     filter::OutputFilter,
+    telemetry::{ModuleMetadata, Operation},
 };
-use crate::shared::telemetry::{ModuleMetadata, Operation};
-use crate::{BoxError, StandardOptions};
 use alloc::{format, string::String, vec::Vec};
 use asimov_module::{ModuleName, normalization::normalize_url};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_remote::{FetcherRequest, http};
 use asimov_runner::{FetcherOptions, GraphOutput, StreamExt};
-use clientele::crates::clap::Args;
+use clientele::{StandardOptions, crates::clap::Args};
 use color_print::ceprintln;
 use miette::Result;
 
 /// See: <https://asimov-specs.github.io/program-patterns/#fetcher-arguments>
 #[derive(Args, Clone, Debug, Default)]
-pub struct SourceFetchArgs {
+pub struct ResourceFetchArgs {
     /// Optionally choose the module instead of using module resolution.
     /// The module's manifest must declare support for the URL for the
     /// module to be used.
@@ -46,7 +46,7 @@ pub struct SourceFetchArgs {
 /// Processes all URLs and preserves the first module failure's sysexits code,
 /// including `EX_NOINPUT` for missing resources. Unclassified module failures use
 /// `EX_UNAVAILABLE`.
-pub async fn fetch(args: SourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     OutputFilter::validate_json(&args.filtering, args.output.as_deref())?;
     let mut filter = None;
     let mut resolver = SourceResolver::new("fetcher").await?;
@@ -181,7 +181,7 @@ mod tests {
     #[derive(Parser)]
     struct Command {
         #[command(flatten)]
-        args: SourceFetchArgs,
+        args: ResourceFetchArgs,
     }
 
     #[test]

@@ -14,12 +14,12 @@ use color_print::ceprintln;
 use core::{future::Future, pin::Pin};
 use std::io::Write;
 
-pub(super) enum Source {
+pub(crate) enum Source {
     Local(Rc<Module>),
     Relay(Box<http::Executor>),
 }
 
-pub(super) struct SourceResolver {
+pub(crate) struct SourceResolver {
     registry: Registry,
     local: Resolver,
     enabled: Option<Resolver>,
@@ -109,7 +109,7 @@ fn relay_executor() -> Result<http::Executor, BoxError> {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub(super) enum ExecutionError {
+pub(crate) enum ExecutionError {
     #[error(transparent)]
     Local(#[from] ExecutorError),
     #[error(transparent)]
@@ -129,7 +129,7 @@ type OutputStream = Pin<Box<dyn Stream<Item = Result<JsonlBatch, ExecutionError>
 type Execution = Pin<Box<dyn Future<Output = Result<OutputStream, ExecutionError>> + Send>>;
 
 /// Prepare either SDK executor without starting it until all URLs are resolved.
-pub(super) fn execute<S, E>(
+pub(crate) fn execute<S, E>(
     mut program: impl Execute<S, Error = E> + Send + 'static,
     url: &str,
 ) -> Execution
@@ -162,7 +162,7 @@ where
 
 /// Remote filters already ran on the server. Preserve bytes, separating final
 /// unterminated records; output remains provisional until verified at EOF.
-pub(super) fn write_remote_batch(
+pub(crate) fn write_remote_batch(
     batch: &JsonlBatch,
     output: &mut dyn Write,
 ) -> std::io::Result<()> {

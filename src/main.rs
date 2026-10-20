@@ -113,16 +113,10 @@ enum Command {
     #[clap(subcommand)]
     Resource(ResourceCommand),
 
-    /// Manage data sources, fetching/listing/snapshotting them
+    /// Manage data sources, listing/reading/snapshotting them
     #[cfg(feature = "source")]
-    #[clap(subcommand_negates_reqs = true)]
-    Source {
-        #[clap(subcommand)]
-        command: Option<SourceCommand>,
-
-        #[clap(flatten)]
-        args: Box<commands::source::SourceFetchArgs>,
-    },
+    #[clap(subcommand)]
+    Source(SourceCommand),
 
     #[cfg(feature = "unstable")]
     #[clap(flatten)]
@@ -143,7 +137,7 @@ pub async fn main() -> SysexitsError {
         return EX_USAGE;
     };
 
-    // Resolve command aliases (e.g. `asimov fetch` -> `asimov source fetch`):
+    // Resolve command aliases (e.g. `asimov fetch` -> `asimov resource fetch`):
     asimov_cli::aliases::resolve(&mut args);
     let help_position =
         asimov_cli::aliases::command_position(&args).filter(|&index| args[index] == "help");
@@ -338,8 +332,10 @@ pub async fn main() -> SysexitsError {
         let needs_modules = match &command {
             #[cfg(feature = "module")]
             Command::Module(_) => true,
+            #[cfg(feature = "resource")]
+            Command::Resource(ResourceCommand::Fetch { .. }) => true,
             #[cfg(feature = "source")]
-            Command::Source { .. } => true,
+            Command::Source(_) => true,
             _ => false,
         };
         if needs_modules {
@@ -353,19 +349,15 @@ pub async fn main() -> SysexitsError {
         }
 
         #[cfg(all(feature = "source", feature = "source-snap"))]
-        if matches!(
-            &command,
-            Command::Source {
-                command: Some(SourceCommand::Snap { .. }),
-                ..
-            }
-        ) && let Err(err) = std::fs::create_dir_all(
-            asimov_env::paths::asimov_root().join("snapshots"),
-        )
-        .map_err(|e| {
-            ceprintln!("<s,r>error:</> failed to create snapshot directory: {e}");
-            EX_IOERR
-        }) {
+        if matches!(&command, Command::Source(SourceCommand::Snap { .. }))
+            && let Err(err) = std::fs::create_dir_all(
+                asimov_env::paths::asimov_root().join("snapshots"),
+            )
+            .map_err(|e| {
+                ceprintln!("<s,r>error:</> failed to create snapshot directory: {e}");
+                EX_IOERR
+            })
+        {
             return err;
         }
 
@@ -393,12 +385,7 @@ pub async fn main() -> SysexitsError {
             Resource(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
             #[cfg(feature = "source")]
-            Source { command, args } => command
-                .unwrap_or(SourceCommand::Fetch { args: *args })
-                .run(flags)
-                .await
-                .map_err(sysexits)
-                .map(|_| EX_OK),
+            Source(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
             External(args) => {
                 let cmd = ExternalSubcommand {
@@ -583,6 +570,39 @@ fn sysexits(err: BoxError) -> SysexitsError {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[cfg(any(feature = "resource", feature = "source"))]
+    fn fetching_requires_the_resource_command_group() {
+        let url = "https://example.com/";
+        for operation in ["fetch", "extract", "get", "import", "ingest", "parse"] {
+            #[cfg(feature = "resource")]
+            {
+                let options =
+                    Options::try_parse_from(["asimov", "resource", operation, url]).unwrap();
+                assert!(matches!(
+                    options.command,
+                    Some(Command::Resource(ResourceCommand::Fetch { .. }))
+                ));
+                let error = Options::try_parse_from(["asimov", "resource", operation]).unwrap_err();
+                assert_eq!(
+                    error.kind(),
+                    clap::error::ErrorKind::MissingRequiredArgument
+                );
+            }
+            #[cfg(feature = "source")]
+            {
+                let error =
+                    Options::try_parse_from(["asimov", "source", operation, url]).unwrap_err();
+                assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
+            }
+        }
+        #[cfg(feature = "source")]
+        {
+            let error = Options::try_parse_from(["asimov", "source", url]).unwrap_err();
+            assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
+        }
+    }
 
     #[test]
     fn preserves_explicit_exit_codes_and_classifies_io_failures() {

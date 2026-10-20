@@ -78,11 +78,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
 - [ ] Bound source subprocess concurrency and make cancellation explicit
-  (`src/commands/source/{fetch,list}.rs`). All URL tasks are spawned at once and
-  drained in input order; early jq, HTTP, or stdout errors drop remaining join
-  handles. Use a bounded, cancellation-aware runner group and verify SDK child
-  cleanup on early return. Add fake-runner tests for delayed output, ordering,
-  debug/cache/deadline forwarding, and inherited reader I/O.
+  (`src/commands/resource/fetch.rs`, `src/commands/source/list.rs`). All URL tasks
+  are spawned at once and drained in input order; early jq, HTTP, or stdout errors
+  drop remaining join handles. Use a bounded, cancellation-aware runner group
+  and verify SDK child cleanup on early return. Add fake-runner tests for delayed
+  output, ordering, debug/cache/deadline forwarding, and inherited reader I/O.
 
 - [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). Expose
   useful, credential-safe status/body-generation errors, and test HTTP failures

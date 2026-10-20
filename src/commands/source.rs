@@ -6,13 +6,6 @@ use clientele::{StandardOptions, crates::clap::Subcommand};
 
 #[derive(Debug, Subcommand)]
 pub enum SourceCommand {
-    /// Fetch a resource using enabled modules, or ASIMOV_RELAY_URL as fallback.
-    #[clap(aliases = ["extract", "get", "import", "ingest", "parse"])]
-    Fetch {
-        #[clap(flatten)]
-        args: fetch::SourceFetchArgs,
-    },
-
     /// List resources using enabled modules, or ASIMOV_RELAY_URL as fallback.
     #[clap(aliases = ["dir", "ls"])]
     List {
@@ -40,20 +33,10 @@ pub enum SourceCommand {
     },
 }
 
-impl Default for SourceCommand {
-    fn default() -> Self {
-        SourceCommand::Fetch {
-            args: fetch::SourceFetchArgs::default(),
-        }
-    }
-}
-
 impl SourceCommand {
     pub async fn run(self, flags: &StandardOptions) -> Result<(), BoxError> {
         use SourceCommand::*;
         match self {
-            Fetch { args } => fetch(args, flags).await,
-
             List { args } => list(args, flags).await,
 
             Read { module, urls } => read(urls, module, flags).await,
@@ -71,13 +54,6 @@ impl SourceCommand {
 
 #[cfg(false)]
 pub mod describe;
-
-mod execution;
-
-mod fetch;
-pub use fetch::*;
-
-mod filter;
 
 mod list;
 pub use list::{SourceListArgs, list};
@@ -101,7 +77,7 @@ mod tests {
 
     #[test]
     fn source_operations_require_urls() {
-        for operation in ["fetch", "get", "list", "ls", "read"] {
+        for operation in ["list", "ls", "read"] {
             let error = Command::try_parse_from(["source", operation])
                 .err()
                 .expect("URL is required");

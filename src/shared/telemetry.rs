@@ -71,7 +71,6 @@ impl CommandMetadata {
             matches = submatches;
         }
         let command = match parts.join(" ").as_str() {
-            "source" => "source fetch".into(),
             "source snap" => "source snap save".into(),
             "proxy" => "proxy serve".into(),
             "module config" if !modules.is_empty() => "module config show".into(),
