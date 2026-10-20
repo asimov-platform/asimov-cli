@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Add `asimov resource {list,track,untrack,search}` command stubs
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
 - Verify remotes with `asimov remote check`; use `-v` to report round-trip time
 ### Changed

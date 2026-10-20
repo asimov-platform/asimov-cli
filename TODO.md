@@ -125,6 +125,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P3: Portability, maintenance, and further coverage
 
+- [ ] Implement `asimov resource {list,track,untrack,search}`; the handlers in
+  `src/commands/resource/` currently return `EX_UNAVAILABLE`.
+
 - [ ] Add Iroh remote URL support when the corresponding SDK transport is
   available.
 

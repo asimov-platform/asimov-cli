@@ -7,6 +7,7 @@
     feature = "module",
     feature = "proxy",
     feature = "remote",
+    feature = "resource",
     feature = "source",
     feature = "telemetry"
 ))]
@@ -15,6 +16,7 @@ use asimov_cli::BoxError;
     feature = "module",
     feature = "proxy",
     feature = "remote",
+    feature = "resource",
     feature = "source",
     feature = "telemetry",
     feature = "unstable"
@@ -45,6 +47,9 @@ use crate::commands::proxy::ProxyCommand;
 
 #[cfg(feature = "remote")]
 use crate::commands::remote::RemoteCommand;
+
+#[cfg(feature = "resource")]
+use crate::commands::resource::ResourceCommand;
 
 #[cfg(feature = "source")]
 use crate::commands::source::SourceCommand;
@@ -102,6 +107,11 @@ enum Command {
     #[cfg(feature = "remote")]
     #[clap(subcommand)]
     Remote(RemoteCommand),
+
+    /// Manage the set of tracked resources
+    #[cfg(feature = "resource")]
+    #[clap(subcommand)]
+    Resource(ResourceCommand),
 
     /// Manage data sources, fetching/listing/snapshotting them
     #[cfg(feature = "source")]
@@ -379,6 +389,9 @@ pub async fn main() -> SysexitsError {
             #[cfg(feature = "remote")]
             Remote(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
+            #[cfg(feature = "resource")]
+            Resource(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+
             #[cfg(feature = "source")]
             Source { command, args } => command
                 .unwrap_or(SourceCommand::Fetch { args: *args })
@@ -546,6 +559,7 @@ pub fn after_help(color: bool) -> String {
     feature = "module",
     feature = "proxy",
     feature = "remote",
+    feature = "resource",
     feature = "source",
     feature = "telemetry"
 ))]

@@ -21,6 +21,9 @@ pub mod proxy;
 #[cfg(feature = "remote")]
 pub mod remote;
 
+#[cfg(feature = "resource")]
+pub mod resource;
+
 #[cfg(feature = "source")]
 pub mod source;
 
