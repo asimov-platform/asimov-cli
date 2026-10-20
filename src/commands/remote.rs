@@ -42,7 +42,10 @@ pub enum RemoteCommand {
         name: String,
     },
 
-    /// Ping the remote named NAME
+    /// Check the remote named NAME with a signed OPTIONS request
+    ///
+    /// Verifies the signed response. With --verbose, reports success and RTT
+    /// on standard error; otherwise success is silent.
     #[clap(alias = "ping")]
     Check {
         /// The name of the remote to ping

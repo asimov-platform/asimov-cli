@@ -9,6 +9,10 @@ use asimov_directory::fs::StateDirectory;
 use clientele::SysexitsError::{self, *};
 use std::process::{Command, Output, Stdio};
 
+#[cfg(unix)]
+#[path = "remote/check.rs"]
+mod check;
+
 struct Sandbox {
     home: temp_dir::TempDir,
     state: StateDirectory,
@@ -153,13 +157,13 @@ fn remotes_default_to_the_home_state_directory() {
 }
 
 #[test]
-fn help_and_the_check_placeholder_remain_available() {
+fn help_and_checks_for_unknown_remotes_report_correctly() {
     let sandbox = Sandbox::new();
     let output = sandbox.run(&["remote", "--help"], EX_OK);
     let help = String::from_utf8(output.stdout).unwrap();
     for command in ["list", "add", "rename", "remove", "check"] {
         assert!(help.contains(command));
     }
-    sandbox.run(&["remote", "check", "origin"], EX_UNAVAILABLE);
-    sandbox.run(&["remote", "ping", "origin"], EX_UNAVAILABLE);
+    sandbox.run(&["remote", "check", "origin"], EX_NOINPUT);
+    sandbox.run(&["remote", "ping", "origin"], EX_NOINPUT);
 }

@@ -125,8 +125,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P3: Portability, maintenance, and further coverage
 
-- [ ] Implement `asimov remote check` and add Iroh remote URL support when the
-  corresponding SDK transport is available.
+- [ ] Add Iroh remote URL support when the corresponding SDK transport is
+  available.
 
 - [ ] Reconcile the feature/no_std baseline (`Cargo.toml`, `src/lib.rs`).
   Defaults are `["all"]`, no `std` feature exists, and the library and its
