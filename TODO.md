@@ -107,7 +107,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P2: Verification and delivery
 
 - [ ] Replace the SDK Git and local path patches with the next release containing
-  the `Retry-After` and tracked-remote APIs before publishing the CLI.
+  the `Retry-After`, tracked-remote, and resource-collection APIs before publishing
+  the CLI.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
@@ -127,9 +128,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P3: Portability, maintenance, and further coverage
 
-- [ ] Implement tracked-resource listing (the no-URL `resource list` path),
-  tracking, untracking, and search in `src/commands/resource/`; these operations
-  currently return `EX_UNAVAILABLE`.
+- [ ] Implement tracked-resource search in `src/commands/resource/search.rs`;
+  it currently returns `EX_UNAVAILABLE`.
 
 - [ ] Add Iroh remote URL support when the corresponding SDK transport is
   available.

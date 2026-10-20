@@ -20,9 +20,9 @@ fn independent_commands_do_not_initialize_module_or_snapshot_storage()
             #[cfg(feature = "proxy")]
             (vec!["proxy", "url"], EX_OK),
             #[cfg(feature = "resource")]
-            (vec!["resource", "list"], EX_UNAVAILABLE),
+            (vec!["resource", "list"], EX_OK),
             #[cfg(feature = "resource")]
-            (vec!["list"], EX_UNAVAILABLE),
+            (vec!["list"], EX_OK),
             #[cfg(feature = "telemetry")]
             (vec!["configure", "telemetry", "disable"], EX_OK),
         ] {
@@ -48,12 +48,9 @@ fn independent_commands_do_not_initialize_module_or_snapshot_storage()
                 "{args:?}: {}",
                 String::from_utf8_lossy(&output.stderr)
             );
-            if expected == EX_UNAVAILABLE {
+            if args.last() == Some(&"list") {
                 assert!(output.stdout.is_empty());
-                assert!(
-                    String::from_utf8_lossy(&output.stderr)
-                        .contains("listing tracked resources is not implemented yet")
-                );
+                assert!(!root.child("resources").exists());
             }
             for name in ["modules", "snapshots"] {
                 if blocked {

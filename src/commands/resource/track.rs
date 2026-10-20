@@ -2,14 +2,14 @@
 
 use crate::BoxError;
 use alloc::{string::String, vec::Vec};
-use clientele::{StandardOptions, SysexitsError::EX_UNAVAILABLE};
-use std::io::Write;
+use asimov_directory::fs::ResourcesDirectory;
+use clientele::StandardOptions;
 
-/// Tracks the given resource URLs (not yet implemented).
-pub async fn track(_urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
-    let _ = writeln!(
-        std::io::stderr().lock(),
-        "asimov: resource track is not implemented yet"
-    );
-    Err(EX_UNAVAILABLE.into())
+/// Appends new URLs to the default tracked collection in input order.
+pub async fn track(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
+    let urls = super::parse_urls(urls)?;
+    super::resources()?
+        .append_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .map_err(|e| super::report("track resources", e))?;
+    Ok(())
 }

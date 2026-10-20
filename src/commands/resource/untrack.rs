@@ -2,14 +2,14 @@
 
 use crate::BoxError;
 use alloc::{string::String, vec::Vec};
-use clientele::{StandardOptions, SysexitsError::EX_UNAVAILABLE};
-use std::io::Write;
+use asimov_directory::fs::ResourcesDirectory;
+use clientele::StandardOptions;
 
-/// Untracks the given resource URLs (not yet implemented).
-pub async fn untrack(_urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
-    let _ = writeln!(
-        std::io::stderr().lock(),
-        "asimov: resource untrack is not implemented yet"
-    );
-    Err(EX_UNAVAILABLE.into())
+/// Removes URLs from the default collection, silently ignoring absent URLs.
+pub async fn untrack(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
+    let urls = super::parse_urls(urls)?;
+    super::resources()?
+        .remove_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .map_err(|e| super::report("untrack resources", e))?;
+    Ok(())
 }

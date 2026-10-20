@@ -2,8 +2,13 @@
 
 use crate::BoxError;
 use alloc::{string::String, vec::Vec};
+use asimov_directory::{
+    UrlsFile,
+    fs::{ResourcesDirectory, StateDirectory},
+};
 use asimov_module::ModuleName;
-use clientele::{StandardOptions, crates::clap::Subcommand};
+use clientele::{StandardOptions, SysexitsError::*, crates::clap::Subcommand};
+use std::io::{self, Write};
 
 /// Commands for managing tracked resources.
 #[derive(Debug, Subcommand)]
@@ -18,7 +23,7 @@ pub enum ResourceCommand {
     /// List tracked resources or resources at the given URLs
     ///
     /// With URLs, uses enabled modules, or ASIMOV_RELAY_URL as fallback.
-    /// Listing tracked resources without URLs is not yet implemented.
+    /// Without URLs, prints tracked URLs in stored order, one per line.
     #[clap(aliases = ["dir", "ls"])]
     List {
         #[clap(flatten)]
@@ -113,6 +118,38 @@ pub use track::*;
 
 mod untrack;
 pub use untrack::*;
+
+fn resources() -> Result<ResourcesDirectory, BoxError> {
+    let state = StateDirectory::from_env().map_err(|e| report("open state directory", e))?;
+    state
+        .resources()
+        .map_err(|e| report("open resource storage", e))
+}
+
+fn parse_urls(urls: Vec<String>) -> Result<UrlsFile, BoxError> {
+    UrlsFile::new(urls).map_err(|error| {
+        report(
+            "validate resource URLs",
+            io::Error::new(io::ErrorKind::InvalidInput, error),
+        )
+    })
+}
+
+fn report(operation: &str, error: io::Error) -> BoxError {
+    let _ = writeln!(
+        io::stderr().lock(),
+        "asimov: failed to {operation}: {error}"
+    );
+    match error.kind() {
+        io::ErrorKind::InvalidInput | io::ErrorKind::InvalidFilename => EX_USAGE,
+        io::ErrorKind::InvalidData => EX_DATAERR,
+        io::ErrorKind::NotFound => EX_NOINPUT,
+        io::ErrorKind::AlreadyExists => EX_CANTCREAT,
+        io::ErrorKind::PermissionDenied => EX_NOPERM,
+        _ => EX_IOERR,
+    }
+    .into()
+}
 
 #[cfg(test)]
 mod tests {
