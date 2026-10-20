@@ -104,8 +104,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
-- [ ] Replace the SDK Git patches with the next release containing the
-  `Retry-After` API before publishing the CLI.
+- [ ] Replace the SDK Git and local path patches with the next release containing
+  the `Retry-After` and tracked-remote APIs before publishing the CLI.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and source integration suites.
@@ -125,8 +125,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P3: Portability, maintenance, and further coverage
 
-- [ ] Implement tracked-remote storage and operations behind the
-  `asimov remote {list,add,rename,remove,check}` stubs.
+- [ ] Implement `asimov remote check` and add Iroh remote URL support when the
+  corresponding SDK transport is available.
 
 - [ ] Reconcile the feature/no_std baseline (`Cargo.toml`, `src/lib.rs`).
   Defaults are `["all"]`, no `std` feature exists, and the library and its

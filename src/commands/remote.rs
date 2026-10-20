@@ -2,12 +2,17 @@
 
 use crate::BoxError;
 use alloc::string::String;
-use clientele::{StandardOptions, crates::clap::Subcommand};
+use asimov_directory::fs::StateDirectory;
+use asimov_remote::RemotesRegistry;
+use clientele::{StandardOptions, SysexitsError::*, crates::clap::Subcommand};
+use std::io::{self, Write};
 
 /// Commands for managing tracked remotes.
 #[derive(Debug, Subcommand)]
 pub enum RemoteCommand {
     /// List the set of tracked remotes
+    ///
+    /// Prints names in sorted order. With --verbose, includes each remote's URL.
     #[clap(alias = "ls")]
     List {},
 
@@ -16,7 +21,7 @@ pub enum RemoteCommand {
         /// The name of the remote to add
         name: String,
 
-        /// The URL of the remote
+        /// The HTTP(S) URL of the remote
         url: String,
     },
 
@@ -73,3 +78,24 @@ pub use remove::*;
 
 mod rename;
 pub use rename::*;
+
+fn open() -> Result<RemotesRegistry, BoxError> {
+    let state = StateDirectory::from_env().map_err(|e| report("open state directory", e))?;
+    RemotesRegistry::open(&state).map_err(|e| report("open remote storage", e))
+}
+
+fn report(operation: &str, error: io::Error) -> BoxError {
+    let _ = writeln!(
+        io::stderr().lock(),
+        "asimov: failed to {operation}: {error}"
+    );
+    match error.kind() {
+        io::ErrorKind::InvalidInput | io::ErrorKind::InvalidFilename => EX_USAGE,
+        io::ErrorKind::InvalidData => EX_DATAERR,
+        io::ErrorKind::NotFound => EX_NOINPUT,
+        io::ErrorKind::AlreadyExists => EX_CANTCREAT,
+        io::ErrorKind::PermissionDenied => EX_NOPERM,
+        _ => EX_IOERR,
+    }
+    .into()
+}

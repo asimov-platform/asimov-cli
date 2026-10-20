@@ -304,13 +304,13 @@ dependencies = [
 [[package]]
 name = "asimov-directory"
 version = "25.8.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#2aba3bb6a40c928b5c341b4d625294b68dcb8b38"
 dependencies = [
  "asimov-config",
  "asimov-core",
  "asimov-module",
  "asimov-protocol",
  "camino",
+ "cap-tempfile",
  "derive_more",
  "serde_json",
  "serde_yaml_ng",
@@ -613,9 +613,9 @@ dependencies = [
 [[package]]
 name = "asimov-remote"
 version = "25.8.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#2aba3bb6a40c928b5c341b4d625294b68dcb8b38"
 dependencies = [
  "agent-detector",
+ "asimov-directory",
  "asimov-flow",
  "asimov-http",
  "asimov-id",
@@ -634,6 +634,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.21",
  "tokio",
+ "url",
 ]
 
 [[package]]
