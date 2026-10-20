@@ -14,9 +14,15 @@ pub enum ResourceCommand {
         args: ResourceFetchArgs,
     },
 
-    /// List the set of tracked resources
-    #[clap(alias = "ls")]
-    List {},
+    /// List tracked resources or resources at the given URLs
+    ///
+    /// With URLs, uses enabled modules, or ASIMOV_RELAY_URL as fallback.
+    /// Listing tracked resources without URLs is not yet implemented.
+    #[clap(aliases = ["dir", "ls"])]
+    List {
+        #[clap(flatten)]
+        args: ResourceListArgs,
+    },
 
     /// Track the given resource URLs
     #[clap(alias = "add")]
@@ -49,7 +55,7 @@ impl ResourceCommand {
         use ResourceCommand::*;
         match self {
             Fetch { args } => fetch(args, flags).await,
-            List {} => list(flags).await,
+            List { args } => list(args, flags).await,
             Track { urls } => track(urls, flags).await,
             Untrack { urls } => untrack(urls, flags).await,
             Search { query } => search(query, flags).await,
@@ -71,3 +77,56 @@ pub use track::*;
 
 mod untrack;
 pub use untrack::*;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clientele::crates::clap::Parser;
+
+    #[derive(Parser)]
+    struct Command {
+        #[command(subcommand)]
+        command: ResourceCommand,
+    }
+
+    #[test]
+    fn list_parses_shared_options() {
+        let Command {
+            command:
+                ResourceCommand::List {
+                    args:
+                        ResourceListArgs {
+                            cache,
+                            timing,
+                            filtering,
+                            urls,
+                            ..
+                        },
+                },
+        } = Command::try_parse_from([
+            "test",
+            "ls",
+            "--max-age",
+            "1h",
+            "--deadline",
+            "0s",
+            "--jev",
+            "The name is Ukrainian",
+            "--json",
+            "@id,name",
+            "--jq",
+            ".name",
+            "https://example.com/",
+        ])
+        .unwrap()
+        else {
+            panic!("expected resource list");
+        };
+        assert_eq!(cache.max_age_option().as_deref(), Some("--max-age=1h"));
+        assert_eq!(timing.deadline_option().as_deref(), Some("--deadline=0s"));
+        assert_eq!(filtering.jev.as_deref(), Some("The name is Ukrainian"));
+        assert_eq!(filtering.json.unwrap(), ["@id", "name"]);
+        assert_eq!(filtering.jq.as_deref(), Some(".name"));
+        assert_eq!(urls, ["https://example.com/"]);
+    }
+}

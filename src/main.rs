@@ -113,7 +113,7 @@ enum Command {
     #[clap(subcommand)]
     Resource(ResourceCommand),
 
-    /// Manage data sources, listing/reading/snapshotting them
+    /// Manage data sources, reading/snapshotting them
     #[cfg(feature = "source")]
     #[clap(subcommand)]
     Source(SourceCommand),
@@ -334,6 +334,8 @@ pub async fn main() -> SysexitsError {
             Command::Module(_) => true,
             #[cfg(feature = "resource")]
             Command::Resource(ResourceCommand::Fetch { .. }) => true,
+            #[cfg(feature = "resource")]
+            Command::Resource(ResourceCommand::List { args }) => !args.urls.is_empty(),
             #[cfg(feature = "source")]
             Command::Source(_) => true,
             _ => false,
@@ -601,6 +603,39 @@ mod tests {
         {
             let error = Options::try_parse_from(["asimov", "source", url]).unwrap_err();
             assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
+        }
+    }
+
+    #[test]
+    #[cfg(any(feature = "resource", feature = "source"))]
+    fn listing_uses_the_resource_group_with_optional_urls() {
+        for operation in ["list", "ls", "dir"] {
+            for urls in [vec![], vec!["https://example.com/", "https://example.org/"]] {
+                #[cfg(feature = "resource")]
+                {
+                    let options = Options::try_parse_from(
+                        ["asimov", "resource", operation]
+                            .into_iter()
+                            .chain(urls.iter().copied()),
+                    )
+                    .unwrap();
+                    let Some(Command::Resource(ResourceCommand::List { args })) = options.command
+                    else {
+                        panic!("expected resource list");
+                    };
+                    assert_eq!(args.urls, urls);
+                }
+                #[cfg(feature = "source")]
+                {
+                    let error = Options::try_parse_from(
+                        ["asimov", "source", operation]
+                            .into_iter()
+                            .chain(urls.iter().copied()),
+                    )
+                    .unwrap_err();
+                    assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
+                }
+            }
         }
     }
 

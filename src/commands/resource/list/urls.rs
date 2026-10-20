@@ -1,11 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
+use crate::BoxError;
 use crate::shared::{
     execution::{self, Source, SourceResolver},
     filter::OutputFilter,
     telemetry::{ModuleMetadata, Operation},
 };
-use crate::{BoxError, StandardOptions};
 use alloc::{
     format,
     string::{String, ToString},
@@ -15,14 +15,13 @@ use asimov_module::{ModuleName, normalization::normalize_url};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_remote::{ListerRequest, http};
 use asimov_runner::{GraphOutput, Lister, ListerOptions, StreamExt};
-use clientele::sort::SortKeys;
+use clientele::{StandardOptions, sort::SortKeys};
 use color_print::ceprintln;
 use miette::Result;
 
 #[derive(Clone, Debug, Default, clap::Args)]
-pub struct SourceListArgs {
-    /// The collection URL(s) to examine.
-    #[arg(required = true)]
+pub struct ResourceListArgs {
+    /// The collection URL(s) to examine; omit to list tracked resources.
     pub urls: Vec<String>,
 
     #[clap(flatten)]
@@ -79,8 +78,8 @@ fn parse_cursor(value: &str) -> core::result::Result<String, &'static str> {
 /// Processes all URLs and preserves the first module failure's sysexits code,
 /// including `EX_NOINPUT` for missing resources. Unclassified module failures use
 /// `EX_UNAVAILABLE`.
-pub async fn list(args: SourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
-    let SourceListArgs {
+pub(super) async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+    let ResourceListArgs {
         urls: input_urls,
         module,
         sort,
@@ -230,7 +229,7 @@ mod tests {
     #[derive(Debug, Parser)]
     struct Command {
         #[command(flatten)]
-        args: SourceListArgs,
+        args: ResourceListArgs,
     }
 
     #[test]

@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(all(unix, any(feature = "resource", feature = "source")))]
+#![cfg(all(unix, feature = "resource"))]
 
 extern crate alloc;
 
@@ -25,12 +25,7 @@ use std::{
 };
 use temp_dir::TempDir;
 
-const COMMANDS: &[(&str, &str)] = &[
-    #[cfg(feature = "resource")]
-    ("resource", "fetch"),
-    #[cfg(feature = "source")]
-    ("source", "list"),
-];
+const COMMANDS: &[(&str, &str)] = &[("resource", "fetch"), ("resource", "list")];
 
 struct Sandbox(TempDir);
 

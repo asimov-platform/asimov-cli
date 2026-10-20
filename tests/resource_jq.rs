@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(all(unix, any(feature = "resource", feature = "source")))]
+#![cfg(all(unix, feature = "resource"))]
 
 extern crate alloc;
 
@@ -15,12 +15,7 @@ use temp_dir::TempDir;
 
 type Result<T = ()> = core::result::Result<T, Box<dyn core::error::Error>>;
 
-const OPERATIONS: &[&str] = &[
-    #[cfg(feature = "resource")]
-    "fetch",
-    #[cfg(feature = "source")]
-    "list",
-];
+const OPERATIONS: &[&str] = &["fetch", "list"];
 
 struct Sandbox(TempDir);
 
@@ -63,12 +58,7 @@ impl Sandbox {
     }
 
     fn command(&self, command: &str, options: &[&str]) -> Command {
-        let group = if command == "fetch" {
-            "resource"
-        } else {
-            "source"
-        };
-        self.command_path(&[group, command], options)
+        self.command_path(&["resource", command], options)
     }
 
     fn command_path(&self, path: &[&str], options: &[&str]) -> Command {
@@ -91,7 +81,7 @@ impl Sandbox {
 }
 
 #[test]
-fn source_commands_require_jev_credentials_and_validate_input_before_http() -> Result {
+fn resource_commands_require_jev_credentials_and_validate_input_before_http() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' 'not JSON'\n")?;
     for &command in OPERATIONS {
         let output = sandbox.run_options(command, &["--jev", "The name is Ukrainian"])?;
@@ -124,7 +114,6 @@ fn source_commands_require_jev_credentials_and_validate_input_before_http() -> R
 }
 
 #[test]
-#[cfg(feature = "source")]
 fn list_forwards_cursor_bounds_and_explicit_offsets_to_the_module() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' \"$@\"\n")?;
     for (options, expected) in [
@@ -157,7 +146,7 @@ fn list_forwards_cursor_bounds_and_explicit_offsets_to_the_module() -> Result {
 }
 
 #[test]
-fn source_commands_report_subprocess_failures_after_output() -> Result {
+fn resource_commands_report_subprocess_failures_after_output() -> Result {
     let sandbox = Sandbox::with_script("#!/bin/sh\nprintf '%s\\n' '[1,2]'\nexit 42\n")?;
     for &command in OPERATIONS {
         for (options, expected) in [(vec![], "[1,2]\n"), (vec!["--jq", ".[]"], "1\n2\n")] {
@@ -176,7 +165,7 @@ fn source_commands_report_subprocess_failures_after_output() -> Result {
 }
 
 #[test]
-fn source_commands_preserve_module_sysexits() -> Result {
+fn resource_commands_preserve_module_sysexits() -> Result {
     for code in [EX_NOINPUT, EX_NOPERM, EX_TEMPFAIL] {
         for payload in ["", "[1,2]\n"] {
             let sandbox = Sandbox::with_script(&format!(
@@ -199,7 +188,7 @@ fn source_commands_preserve_module_sysexits() -> Result {
 }
 
 #[test]
-fn source_commands_preserve_the_first_failure_in_url_order() -> Result {
+fn resource_commands_preserve_the_first_failure_in_url_order() -> Result {
     let sandbox = Sandbox::with_script(
         "#!/bin/sh\nfor url do :; done\ncase \"$url\" in\n\
          */missing) exit 66;;\n*/unavailable) exit 69;;\n\
@@ -230,7 +219,7 @@ fn source_commands_preserve_the_first_failure_in_url_order() -> Result {
 }
 
 #[test]
-fn source_commands_preserve_all_jq_results() -> Result {
+fn resource_commands_preserve_all_jq_results() -> Result {
     let sandbox = Sandbox::new()?;
     for &command in OPERATIONS {
         let output = sandbox.run(command, ".[]")?;
@@ -246,7 +235,7 @@ fn source_commands_preserve_all_jq_results() -> Result {
 }
 
 #[test]
-fn source_commands_accept_empty_jq_output() -> Result {
+fn resource_commands_accept_empty_jq_output() -> Result {
     let sandbox = Sandbox::new()?;
     for &command in OPERATIONS {
         let output = sandbox.run(command, "empty")?;
@@ -262,7 +251,7 @@ fn source_commands_accept_empty_jq_output() -> Result {
 }
 
 #[test]
-fn source_commands_report_jq_errors_after_a_result() -> Result {
+fn resource_commands_report_jq_errors_after_a_result() -> Result {
     let sandbox = Sandbox::new()?;
     for &command in OPERATIONS {
         let output = sandbox.run(command, r#".[], error("late failure")"#)?;
@@ -298,12 +287,7 @@ fn json_selection_preserves_literal_properties_nested_values_and_array_shape() -
         "#!/bin/sh\nprintf '%s\\r\\n' '{record}' '[{record},{{\"extra\":true}}]'\nprintf '%s' '[]'\n"
     ))?;
     for &command in OPERATIONS {
-        let group = if command == "fetch" {
-            "resource"
-        } else {
-            "source"
-        };
-        for path in [vec![group, command], vec![command]] {
+        for path in [vec!["resource", command], vec![command]] {
             let output = sandbox
                 .command_path(
                     &path,

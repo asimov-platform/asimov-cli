@@ -17,8 +17,8 @@ pub static ALIASES: &[(&str, &[&str])] = &[
     ("fetch", &["resource", "fetch"]),
     #[cfg(feature = "module")]
     ("install", &["module", "install"]),
-    #[cfg(feature = "source")]
-    ("list", &["source", "list"]),
+    #[cfg(feature = "resource")]
+    ("list", &["resource", "list"]),
     #[cfg(feature = "source")]
     ("read", &["source", "read"]),
     #[cfg(feature = "module")]
@@ -114,11 +114,17 @@ mod tests {
 
     #[test]
     #[cfg(feature = "resource")]
-    fn expands_fetch() {
-        assert_eq!(
-            resolved(&["asimov", "fetch", "http://example.org"]),
-            ["asimov", "resource", "fetch", "http://example.org"]
-        );
+    fn expands_resource_aliases() {
+        for command in ["fetch", "list"] {
+            assert_eq!(
+                resolved(&["asimov", command]),
+                ["asimov", "resource", command]
+            );
+            assert_eq!(
+                resolved(&["asimov", command, "http://example.org"]),
+                ["asimov", "resource", command, "http://example.org"]
+            );
+        }
     }
 
     #[test]
@@ -167,10 +173,12 @@ mod tests {
     #[cfg(any(feature = "resource", feature = "module"))]
     fn expands_alias_after_help() {
         #[cfg(feature = "resource")]
-        assert_eq!(
-            resolved(&["asimov", "help", "fetch"]),
-            ["asimov", "help", "resource", "fetch"]
-        );
+        for command in ["fetch", "list"] {
+            assert_eq!(
+                resolved(&["asimov", "help", command]),
+                ["asimov", "help", "resource", command]
+            );
+        }
         #[cfg(feature = "module")]
         assert_eq!(
             resolved(&["asimov", "help", "install"]),
@@ -182,7 +190,7 @@ mod tests {
     fn unavailable_aliases_remain_available_for_external_dispatch() {
         for (alias, enabled) in [
             ("fetch", cfg!(feature = "resource")),
-            ("list", cfg!(feature = "source")),
+            ("list", cfg!(feature = "resource")),
             ("read", cfg!(feature = "source")),
             (
                 "snap",

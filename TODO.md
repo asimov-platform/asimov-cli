@@ -78,7 +78,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
 - [ ] Bound source subprocess concurrency and make cancellation explicit
-  (`src/commands/resource/fetch.rs`, `src/commands/source/list.rs`). All URL tasks
+  (`src/commands/resource/{fetch,list/urls}.rs`). All URL tasks
   are spawned at once and drained in input order; early jq, HTTP, or stdout errors
   drop remaining join handles. Use a bounded, cancellation-aware runner group
   and verify SDK child cleanup on early return. Add fake-runner tests for delayed
@@ -108,7 +108,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   the `Retry-After` and tracked-remote APIs before publishing the CLI.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
-  CI, including the feature-gated module and source integration suites.
+  CI, including the feature-gated module and resource integration suites.
 
 - [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
   operational CLI tests). Include stderr in remaining status assertions.
@@ -125,8 +125,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P3: Portability, maintenance, and further coverage
 
-- [ ] Implement `asimov resource {list,track,untrack,search}`; the handlers in
-  `src/commands/resource/` currently return `EX_UNAVAILABLE`.
+- [ ] Implement tracked-resource listing (the no-URL `resource list` path),
+  tracking, untracking, and search in `src/commands/resource/`; these operations
+  currently return `EX_UNAVAILABLE`.
 
 - [ ] Add Iroh remote URL support when the corresponding SDK transport is
   available.

@@ -4,11 +4,20 @@ use crate::BoxError;
 use clientele::{StandardOptions, SysexitsError::EX_UNAVAILABLE};
 use std::io::Write;
 
-/// Lists the set of tracked resources (not yet implemented).
-pub async fn list(_flags: &StandardOptions) -> Result<(), BoxError> {
+mod urls;
+pub use urls::ResourceListArgs;
+
+/// Lists tracked resources, or uses module/relay listers for the given URLs.
+///
+/// Tracked-resource listing without URLs is not yet implemented.
+pub async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
+    if !args.urls.is_empty() {
+        return urls::list(args, flags).await;
+    }
+
     let _ = writeln!(
         std::io::stderr().lock(),
-        "asimov: resource list is not implemented yet"
+        "asimov: listing tracked resources is not implemented yet"
     );
     Err(EX_UNAVAILABLE.into())
 }

@@ -3,21 +3,28 @@
 #![cfg(any(
     all(unix, feature = "module"),
     feature = "proxy",
+    feature = "resource",
     feature = "telemetry"
 ))]
 
+#[cfg(any(feature = "proxy", feature = "resource", feature = "telemetry"))]
+use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
 #[test]
-#[cfg(any(feature = "proxy", feature = "telemetry"))]
+#[cfg(any(feature = "proxy", feature = "resource", feature = "telemetry"))]
 fn independent_commands_do_not_initialize_module_or_snapshot_storage()
 -> Result<(), Box<dyn core::error::Error>> {
     for blocked in [false, true] {
-        for args in [
+        for (args, expected) in [
             #[cfg(feature = "proxy")]
-            vec!["proxy", "url"],
+            (vec!["proxy", "url"], EX_OK),
+            #[cfg(feature = "resource")]
+            (vec!["resource", "list"], EX_UNAVAILABLE),
+            #[cfg(feature = "resource")]
+            (vec!["list"], EX_UNAVAILABLE),
             #[cfg(feature = "telemetry")]
-            vec!["configure", "telemetry", "disable"],
+            (vec!["configure", "telemetry", "disable"], EX_OK),
         ] {
             let root = temp_dir::TempDir::new()?;
             if blocked {
@@ -28,14 +35,26 @@ fn independent_commands_do_not_initialize_module_or_snapshot_storage()
             let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
                 .args(&args)
                 .env("ASIMOV_ROOT", root.path())
+                .env("HOME", root.path())
+                .env("USERPROFILE", root.path())
+                .env("ASIMOV_KEYRING_BACKEND", "file")
+                .env("DO_NOT_TRACK", "1")
                 .current_dir(root.path())
                 .stdin(Stdio::null())
                 .output()?;
-            assert!(
-                output.status.success(),
+            assert_eq!(
+                output.status.code(),
+                Some(expected as i32),
                 "{args:?}: {}",
                 String::from_utf8_lossy(&output.stderr)
             );
+            if expected == EX_UNAVAILABLE {
+                assert!(output.stdout.is_empty());
+                assert!(
+                    String::from_utf8_lossy(&output.stderr)
+                        .contains("listing tracked resources is not implemented yet")
+                );
+            }
             for name in ["modules", "snapshots"] {
                 if blocked {
                     assert_eq!(std::fs::read(root.child(name))?, b"keep");
