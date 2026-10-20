@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
 - Verify remotes with `asimov remote check`; use `-v` to report round-trip time
 ### Changed
+- Process tracked-resource files incrementally; malformed lines are reported
+  after any preceding listing output
 - Move snapshots to `asimov resource snap` (`asimov snap`); require `unstable`
 - Make `asimov source` an alias for `asimov resource`
 - Move `asimov source read` to `asimov resource read`; update `asimov read`

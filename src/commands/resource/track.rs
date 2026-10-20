@@ -10,6 +10,7 @@ pub async fn track(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), Bo
     let urls = super::parse_urls(urls)?;
     super::resources()?
         .append_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .await
         .map_err(|e| super::report("track resources", e))?;
     Ok(())
 }

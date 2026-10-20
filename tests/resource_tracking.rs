@@ -159,7 +159,14 @@ fn invalid_batches_and_corrupt_storage_fail_without_partial_changes() {
     let path = sandbox.root.join("resources/tracked.urls");
     let malformed = b"https://valid.example\nnot a URL\n";
     std::fs::write(&path, malformed).unwrap();
-    sandbox.run(&["resource", "list"], EX_DATAERR);
+    let output = sandbox
+        .command()
+        .args(["resource", "list"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(EX_DATAERR as i32));
+    assert_eq!(output.stdout, b"https://valid.example\n");
+    assert!(!output.stderr.is_empty());
     sandbox.run(&["resource", "track", "https://new.example"], EX_DATAERR);
     sandbox.run(
         &["resource", "untrack", "https://valid.example"],

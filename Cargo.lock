@@ -313,10 +313,11 @@ dependencies = [
  "cap-fs-ext",
  "cap-tempfile",
  "derive_more",
+ "iri-string",
+ "memchr",
  "serde_json",
  "serde_yaml_ng",
  "tokio",
- "url",
 ]
 
 [[package]]

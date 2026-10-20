@@ -10,6 +10,7 @@ pub async fn untrack(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), 
     let urls = super::parse_urls(urls)?;
     super::resources()?
         .remove_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .await
         .map_err(|e| super::report("untrack resources", e))?;
     Ok(())
 }
