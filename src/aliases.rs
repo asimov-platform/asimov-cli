@@ -19,8 +19,8 @@ pub static ALIASES: &[(&str, &[&str])] = &[
     ("install", &["module", "install"]),
     #[cfg(feature = "resource")]
     ("list", &["resource", "list"]),
-    #[cfg(feature = "source")]
-    ("read", &["source", "read"]),
+    #[cfg(feature = "resource")]
+    ("read", &["resource", "read"]),
     #[cfg(feature = "module")]
     ("resolve", &["module", "resolve"]),
     #[cfg(all(feature = "source", feature = "source-snap"))]
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     #[cfg(feature = "resource")]
     fn expands_resource_aliases() {
-        for command in ["fetch", "list"] {
+        for command in ["fetch", "list", "read"] {
             assert_eq!(
                 resolved(&["asimov", command]),
                 ["asimov", "resource", command]
@@ -173,7 +173,7 @@ mod tests {
     #[cfg(any(feature = "resource", feature = "module"))]
     fn expands_alias_after_help() {
         #[cfg(feature = "resource")]
-        for command in ["fetch", "list"] {
+        for command in ["fetch", "list", "read"] {
             assert_eq!(
                 resolved(&["asimov", "help", command]),
                 ["asimov", "help", "resource", command]
@@ -191,7 +191,7 @@ mod tests {
         for (alias, enabled) in [
             ("fetch", cfg!(feature = "resource")),
             ("list", cfg!(feature = "resource")),
-            ("read", cfg!(feature = "source")),
+            ("read", cfg!(feature = "resource")),
             (
                 "snap",
                 cfg!(all(feature = "source", feature = "source-snap")),

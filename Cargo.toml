@@ -45,8 +45,8 @@ proxy = [
   "dep:tempfile",
 ]
 remote = ["dep:asimov-remote", "asimov-remote/fs", "asimov-remote/http"]
-resource = ["dep:asimov-remote", "asimov-remote/http"]
-source = ["source-snap", "dep:infer"]
+resource = ["dep:asimov-remote", "asimov-remote/http", "dep:infer"]
+source = ["source-snap"]
 source-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 telemetry = ["dep:asimov-telemetry"]
 

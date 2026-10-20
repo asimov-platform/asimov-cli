@@ -224,6 +224,15 @@ $ asimov resource list --help
 
 </details>
 
+<details>
+<summary><code>asimov resource read</code></summary>
+
+```shellsession
+$ asimov resource read --help
+```
+
+</details>
+
 #### `asimov module`
 
 ```shellsession
@@ -313,15 +322,6 @@ $ asimov proxy install --help
 ```shellsession
 $ asimov source --help
 ```
-
-<details>
-<summary><code>asimov source read</code></summary>
-
-```shellsession
-$ asimov source read --help
-```
-
-</details>
 
 <details>
 <summary><code>asimov source snap</code></summary>

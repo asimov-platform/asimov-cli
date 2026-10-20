@@ -1,9 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::shared::telemetry::{ModuleMetadata, Operation};
-use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
+use crate::{BoxError, SysexitsError::*, shared};
+use alloc::{format, string::String, vec::Vec};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
 use asimov_runner::{GraphOutput, Input, ReaderOptions, StreamExt};
+use clientele::StandardOptions;
 use color_print::ceprintln;
 use miette::Result;
 

@@ -77,6 +77,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
+- [ ] Preserve reader subprocess sysexits (`src/commands/resource/read.rs`).
+  Execution and stream errors currently become `EX_UNAVAILABLE`. Align with
+  fetch/list while continuing to drain inherited-stdout streams.
+
 - [ ] Bound source subprocess concurrency and make cancellation explicit
   (`src/commands/resource/{fetch,list/urls}.rs`). All URL tasks
   are spawned at once and drained in input order; early jq, HTTP, or stdout errors

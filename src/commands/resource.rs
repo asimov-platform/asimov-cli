@@ -2,6 +2,7 @@
 
 use crate::BoxError;
 use alloc::{string::String, vec::Vec};
+use asimov_module::ModuleName;
 use clientele::{StandardOptions, crates::clap::Subcommand};
 
 /// Commands for managing tracked resources.
@@ -22,6 +23,15 @@ pub enum ResourceCommand {
     List {
         #[clap(flatten)]
         args: ResourceListArgs,
+    },
+
+    /// Read a resource specified by a URL, utilizing enabled modules
+    Read {
+        #[clap(long, short = 'M')]
+        module: Option<ModuleName>,
+
+        #[arg(required = true)]
+        urls: Vec<String>,
     },
 
     /// Track the given resource URLs
@@ -56,6 +66,7 @@ impl ResourceCommand {
         match self {
             Fetch { args } => fetch(args, flags).await,
             List { args } => list(args, flags).await,
+            Read { module, urls } => read(urls, module, flags).await,
             Track { urls } => track(urls, flags).await,
             Untrack { urls } => untrack(urls, flags).await,
             Search { query } => search(query, flags).await,
@@ -68,6 +79,9 @@ pub use fetch::*;
 
 mod list;
 pub use list::*;
+
+mod read;
+pub use read::*;
 
 mod search;
 pub use search::*;

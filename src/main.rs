@@ -113,7 +113,7 @@ enum Command {
     #[clap(subcommand)]
     Resource(ResourceCommand),
 
-    /// Manage data sources, reading/snapshotting them
+    /// Manage data source snapshots
     #[cfg(feature = "source")]
     #[clap(subcommand)]
     Source(SourceCommand),
@@ -333,7 +333,7 @@ pub async fn main() -> SysexitsError {
             #[cfg(feature = "module")]
             Command::Module(_) => true,
             #[cfg(feature = "resource")]
-            Command::Resource(ResourceCommand::Fetch { .. }) => true,
+            Command::Resource(ResourceCommand::Fetch { .. } | ResourceCommand::Read { .. }) => true,
             #[cfg(feature = "resource")]
             Command::Resource(ResourceCommand::List { args }) => !args.urls.is_empty(),
             #[cfg(feature = "source")]
@@ -575,17 +575,26 @@ mod tests {
 
     #[test]
     #[cfg(any(feature = "resource", feature = "source"))]
-    fn fetching_requires_the_resource_command_group() {
+    fn fetching_and_reading_require_the_resource_command_group() {
         let url = "https://example.com/";
-        for operation in ["fetch", "extract", "get", "import", "ingest", "parse"] {
+        for operation in [
+            "fetch", "extract", "get", "import", "ingest", "parse", "read",
+        ] {
             #[cfg(feature = "resource")]
             {
                 let options =
                     Options::try_parse_from(["asimov", "resource", operation, url]).unwrap();
-                assert!(matches!(
-                    options.command,
-                    Some(Command::Resource(ResourceCommand::Fetch { .. }))
-                ));
+                if operation == "read" {
+                    assert!(matches!(
+                        options.command,
+                        Some(Command::Resource(ResourceCommand::Read { .. }))
+                    ));
+                } else {
+                    assert!(matches!(
+                        options.command,
+                        Some(Command::Resource(ResourceCommand::Fetch { .. }))
+                    ));
+                }
                 let error = Options::try_parse_from(["asimov", "resource", operation]).unwrap_err();
                 assert_eq!(
                     error.kind(),
