@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Support `asimov config` as an alias of `asimov configure`
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
 - Verify remotes with `asimov remote check`; use `-v` to report round-trip time
 ### Changed
+- Rename `asimov configure` to `asimov config`, keeping `configure` as an alias
 - Use ASIMOV SDK from GitHub HEAD
 ### Fixed
 - Warn and retry rate-limited relay fetches and listings after `Retry-After`

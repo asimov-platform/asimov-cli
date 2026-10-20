@@ -79,7 +79,7 @@ struct Options {
 enum Command {
     /// Configure the CLI itself
     #[cfg(feature = "telemetry")]
-    #[clap(alias = "config")]
+    #[clap(name = "config", alias = "configure")]
     #[clap(subcommand)]
     Configure(ConfigureCommand),
 
