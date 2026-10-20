@@ -24,8 +24,5 @@ pub mod remote;
 #[cfg(feature = "resource")]
 pub mod resource;
 
-#[cfg(feature = "source")]
-pub mod source;
-
 #[cfg(feature = "unstable")]
 pub mod unstable;

@@ -34,6 +34,16 @@ pub enum ResourceCommand {
         urls: Vec<String>,
     },
 
+    /// Manage snapshots stored on disk
+    #[cfg(feature = "unstable")]
+    Snap {
+        #[clap(subcommand)]
+        command: Option<SnapCommand>,
+
+        #[clap(flatten)]
+        args: SnapSaveArgs,
+    },
+
     /// Track the given resource URLs
     #[clap(alias = "add")]
     Track {
@@ -67,6 +77,13 @@ impl ResourceCommand {
             Fetch { args } => fetch(args, flags).await,
             List { args } => list(args, flags).await,
             Read { module, urls } => read(urls, module, flags).await,
+            #[cfg(feature = "unstable")]
+            Snap { command, args } => {
+                command
+                    .unwrap_or(SnapCommand::Save { args })
+                    .run(flags)
+                    .await
+            },
             Track { urls } => track(urls, flags).await,
             Untrack { urls } => untrack(urls, flags).await,
             Search { query } => search(query, flags).await,
@@ -85,6 +102,11 @@ pub use read::*;
 
 mod search;
 pub use search::*;
+
+#[cfg(feature = "unstable")]
+pub mod snap;
+#[cfg(feature = "unstable")]
+pub use snap::{SnapCommand, SnapSaveArgs};
 
 mod track;
 pub use track::*;

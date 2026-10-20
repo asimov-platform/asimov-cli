@@ -30,7 +30,7 @@ fn external_summaries_are_collected_only_for_root_long_help()
         #[cfg(any(
             feature = "module",
             feature = "proxy",
-            feature = "source",
+            feature = "resource",
             feature = "telemetry"
         ))]
         (vec!["help"], true),
@@ -64,7 +64,7 @@ fn external_summaries_are_collected_only_for_root_long_help()
 #[cfg(any(
     feature = "module",
     feature = "proxy",
-    feature = "source",
+    feature = "resource",
     feature = "telemetry"
 ))]
 fn nested_external_help_places_the_help_flag_after_subcommands()

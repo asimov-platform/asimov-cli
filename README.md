@@ -206,33 +206,6 @@ asimov help module
 $ asimov
 ```
 
-<details>
-<summary><code>asimov resource fetch</code></summary>
-
-```shellsession
-$ asimov resource fetch --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov resource list</code></summary>
-
-```shellsession
-$ asimov resource list --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov resource read</code></summary>
-
-```shellsession
-$ asimov resource read --help
-```
-
-</details>
-
 #### `asimov module`
 
 ```shellsession
@@ -317,17 +290,49 @@ $ asimov proxy install --help
 
 </details>
 
-#### `asimov source`
+#### `asimov resource`
+
+Alias: `asimov source`.
 
 ```shellsession
-$ asimov source --help
+$ asimov resource --help
 ```
 
 <details>
-<summary><code>asimov source snap</code></summary>
+<summary><code>asimov resource fetch</code></summary>
 
 ```shellsession
-$ asimov source snap --help
+$ asimov resource fetch --help
+```
+
+</details>
+
+<details>
+<summary><code>asimov resource list</code></summary>
+
+```shellsession
+$ asimov resource list --help
+```
+
+</details>
+
+<details>
+<summary><code>asimov resource read</code></summary>
+
+```shellsession
+$ asimov resource read --help
+```
+
+</details>
+
+<details>
+<summary><code>asimov resource snap</code> (unstable)</summary>
+
+Requires the `unstable` feature, e.g.
+`cargo install asimov-cli --locked --features unstable`.
+
+```shellsession
+$ asimov resource snap --help
 ```
 
 </details>
@@ -356,7 +361,7 @@ export ASIMOV_TELEMETRY=0   # or `false`
 
 # By building the CLI yourself, without the `telemetry` feature:
 cargo install asimov-cli --locked --no-default-features \
-  --features module,proxy,resource,source
+  --features module,proxy,resource
 ```
 
 Disabling telemetry also discards any events that haven't been sent yet.

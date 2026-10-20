@@ -8,15 +8,10 @@ pub mod options {}
 pub mod registry;
 pub mod shared;
 
-#[cfg(all(feature = "source", feature = "source-snap"))]
+#[cfg(all(feature = "resource", feature = "unstable"))]
 pub(crate) mod timestamps;
 
-#[cfg(any(
-    feature = "module",
-    feature = "proxy",
-    feature = "source",
-    feature = "unstable"
-))]
+#[cfg(any(feature = "module", feature = "proxy", feature = "unstable"))]
 use clientele::StandardOptions;
 use clientele::SysexitsError;
 

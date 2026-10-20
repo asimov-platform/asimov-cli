@@ -287,7 +287,11 @@ fn json_selection_preserves_literal_properties_nested_values_and_array_shape() -
         "#!/bin/sh\nprintf '%s\\r\\n' '{record}' '[{record},{{\"extra\":true}}]'\nprintf '%s' '[]'\n"
     ))?;
     for &command in OPERATIONS {
-        for path in [vec!["resource", command], vec![command]] {
+        for path in [
+            vec!["resource", command],
+            vec!["source", command],
+            vec![command],
+        ] {
             let output = sandbox
                 .command_path(
                     &path,

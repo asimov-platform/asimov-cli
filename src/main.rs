@@ -8,7 +8,6 @@
     feature = "proxy",
     feature = "remote",
     feature = "resource",
-    feature = "source",
     feature = "telemetry"
 ))]
 use asimov_cli::BoxError;
@@ -17,7 +16,6 @@ use asimov_cli::BoxError;
     feature = "proxy",
     feature = "remote",
     feature = "resource",
-    feature = "source",
     feature = "telemetry",
     feature = "unstable"
 ))]
@@ -50,9 +48,6 @@ use crate::commands::remote::RemoteCommand;
 
 #[cfg(feature = "resource")]
 use crate::commands::resource::ResourceCommand;
-
-#[cfg(feature = "source")]
-use crate::commands::source::SourceCommand;
 
 // #[cfg(feature = "handle")]
 // use crate::commands::unstable::handle::HandleCommand;
@@ -112,11 +107,6 @@ enum Command {
     #[cfg(feature = "resource")]
     #[clap(subcommand)]
     Resource(ResourceCommand),
-
-    /// Manage data source snapshots
-    #[cfg(feature = "source")]
-    #[clap(subcommand)]
-    Source(SourceCommand),
 
     #[cfg(feature = "unstable")]
     #[clap(flatten)]
@@ -336,8 +326,8 @@ pub async fn main() -> SysexitsError {
             Command::Resource(ResourceCommand::Fetch { .. } | ResourceCommand::Read { .. }) => true,
             #[cfg(feature = "resource")]
             Command::Resource(ResourceCommand::List { args }) => !args.urls.is_empty(),
-            #[cfg(feature = "source")]
-            Command::Source(_) => true,
+            #[cfg(all(feature = "resource", feature = "unstable"))]
+            Command::Resource(ResourceCommand::Snap { .. }) => true,
             _ => false,
         };
         if needs_modules {
@@ -350,8 +340,8 @@ pub async fn main() -> SysexitsError {
                 .ok();
         }
 
-        #[cfg(all(feature = "source", feature = "source-snap"))]
-        if matches!(&command, Command::Source(SourceCommand::Snap { .. }))
+        #[cfg(all(feature = "resource", feature = "unstable"))]
+        if matches!(&command, Command::Resource(ResourceCommand::Snap { .. }))
             && let Err(err) = std::fs::create_dir_all(
                 asimov_env::paths::asimov_root().join("snapshots"),
             )
@@ -385,9 +375,6 @@ pub async fn main() -> SysexitsError {
 
             #[cfg(feature = "resource")]
             Resource(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
-
-            #[cfg(feature = "source")]
-            Source(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
             External(args) => {
                 let cmd = ExternalSubcommand {
@@ -549,7 +536,6 @@ pub fn after_help(color: bool) -> String {
     feature = "proxy",
     feature = "remote",
     feature = "resource",
-    feature = "source",
     feature = "telemetry"
 ))]
 fn sysexits(err: BoxError) -> SysexitsError {
@@ -573,17 +559,24 @@ fn sysexits(err: BoxError) -> SysexitsError {
 mod tests {
     use super::*;
 
+    #[cfg(feature = "resource")]
+    fn parse(
+        args: impl IntoIterator<Item = impl Into<OsString>>,
+    ) -> core::result::Result<Options, clap::Error> {
+        let mut args = args.into_iter().map(Into::into).collect();
+        asimov_cli::aliases::resolve(&mut args);
+        Options::try_parse_from(args)
+    }
+
     #[test]
-    #[cfg(any(feature = "resource", feature = "source"))]
-    fn fetching_and_reading_require_the_resource_command_group() {
+    #[cfg(feature = "resource")]
+    fn resource_fetch_and_read_require_urls() {
         let url = "https://example.com/";
         for operation in [
             "fetch", "extract", "get", "import", "ingest", "parse", "read",
         ] {
-            #[cfg(feature = "resource")]
-            {
-                let options =
-                    Options::try_parse_from(["asimov", "resource", operation, url]).unwrap();
+            for group in ["resource", "source"] {
+                let options = parse(["asimov", group, operation, url]).unwrap();
                 if operation == "read" {
                     assert!(matches!(
                         options.command,
@@ -595,35 +588,23 @@ mod tests {
                         Some(Command::Resource(ResourceCommand::Fetch { .. }))
                     ));
                 }
-                let error = Options::try_parse_from(["asimov", "resource", operation]).unwrap_err();
+                let error = parse(["asimov", group, operation]).unwrap_err();
                 assert_eq!(
                     error.kind(),
                     clap::error::ErrorKind::MissingRequiredArgument
                 );
             }
-            #[cfg(feature = "source")]
-            {
-                let error =
-                    Options::try_parse_from(["asimov", "source", operation, url]).unwrap_err();
-                assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
-            }
-        }
-        #[cfg(feature = "source")]
-        {
-            let error = Options::try_parse_from(["asimov", "source", url]).unwrap_err();
-            assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
         }
     }
 
     #[test]
-    #[cfg(any(feature = "resource", feature = "source"))]
-    fn listing_uses_the_resource_group_with_optional_urls() {
+    #[cfg(feature = "resource")]
+    fn resource_listing_accepts_optional_urls() {
         for operation in ["list", "ls", "dir"] {
             for urls in [vec![], vec!["https://example.com/", "https://example.org/"]] {
-                #[cfg(feature = "resource")]
-                {
-                    let options = Options::try_parse_from(
-                        ["asimov", "resource", operation]
+                for group in ["resource", "source"] {
+                    let options = parse(
+                        ["asimov", group, operation]
                             .into_iter()
                             .chain(urls.iter().copied()),
                     )
@@ -634,17 +615,28 @@ mod tests {
                     };
                     assert_eq!(args.urls, urls);
                 }
-                #[cfg(feature = "source")]
-                {
-                    let error = Options::try_parse_from(
-                        ["asimov", "source", operation]
-                            .into_iter()
-                            .chain(urls.iter().copied()),
-                    )
-                    .unwrap_err();
-                    assert_eq!(error.kind(), clap::error::ErrorKind::InvalidSubcommand);
-                }
             }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "resource")]
+    fn resource_snap_requires_unstable() {
+        for group in ["resource", "source"] {
+            let result = parse(["asimov", group, "snap", "compact"]);
+            #[cfg(feature = "unstable")]
+            assert!(matches!(
+                result.unwrap().command,
+                Some(Command::Resource(ResourceCommand::Snap {
+                    command: Some(commands::resource::SnapCommand::Compact { .. }),
+                    ..
+                }))
+            ));
+            #[cfg(not(feature = "unstable"))]
+            assert_eq!(
+                result.unwrap_err().kind(),
+                clap::error::ErrorKind::InvalidSubcommand
+            );
         }
     }
 

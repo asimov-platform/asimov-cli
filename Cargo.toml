@@ -18,7 +18,7 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["module", "proxy", "remote", "resource", "source", "telemetry"]
+all = ["module", "proxy", "remote", "resource", "telemetry"]
 unstable = [
   "agent",
   "cache",
@@ -31,6 +31,7 @@ unstable = [
   "message",
   "package",
   "protocol",
+  "resource-snap",
   "vault",
 ]
 
@@ -46,8 +47,6 @@ proxy = [
 ]
 remote = ["dep:asimov-remote", "asimov-remote/fs", "asimov-remote/http"]
 resource = ["dep:asimov-remote", "asimov-remote/http", "dep:infer"]
-source = ["source-snap"]
-source-snap = ["dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 telemetry = ["dep:asimov-telemetry"]
 
 # Unstable/experimental commands:
@@ -62,6 +61,8 @@ message = []
 package = ["package-scaffold", "dep:distrib", "dep:treelog"]
 package-scaffold = ["dep:asimov-module-kit"]                 # fka module-new
 protocol = ["dep:asimov-protocol"]
+# Snapshot command visibility requires `unstable`.
+resource-snap = ["resource", "dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 vault = []
 
 [build-dependencies]

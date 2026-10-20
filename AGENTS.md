@@ -56,17 +56,18 @@
 - Single Rust 2024 package: `asimov_cli` library and `asimov` binary.
 - `src/aliases.rs` rewrites argv before Clap parsing in `src/main.rs`.
   Preserve aliases, help behavior, and external `asimov-*` command dispatch.
-- `src/commands/{module,proxy,source}.rs` define command enums and dispatch;
+- `src/commands/{module,proxy,remote,resource}.rs` define enums and dispatch;
   handlers live in matching directories. Wire new commands through the group,
   `src/commands.rs`, `src/main.rs`, and Cargo feature gates as applicable.
 - Handlers under `src/commands/`: `module/` wraps SDK installation/config;
-  `source/` wraps SDK runners and snapshots (`source/snap/`); `proxy/` serves
+  `resource/` wraps SDK runners and snapshots (`resource/snap/`); `proxy/` serves
   an OpenAI-compatible endpoint (Axum/Hyper/rustls) and app config templates.
 - `src/shared.rs` holds module selection, HTTP, and jq/Jev filtering helpers.
   `src/registry.rs::fetch_modules()` is disabled; active module management
   uses the SDK's `asimov-registry` crate.
-- `all = ["module", "proxy", "source"]`; `source` includes `source-snap`.
-  `--all-features` also enables incomplete `unstable` commands.
+- `all = ["module", "proxy", "remote", "resource", "telemetry"]`.
+  `source` aliases `resource`. `unstable` enables `resource-snap`; snapshot
+  commands and the `snap` alias are visible only with `unstable`.
 - Root `README.md` comes from `.config/readmer/README.md.liquid`, with snippets
   in `etc/readmer/`. Regenerate with `make -B README.md` at the project root.
 

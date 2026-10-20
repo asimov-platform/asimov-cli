@@ -1,9 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, SysexitsError::*};
+use alloc::{string::String, vec::Vec};
 use asimov_env::paths::asimov_root;
 use asimov_module::normalization::normalize_url;
-use clientele::crates::clap::Args;
+use clientele::{StandardOptions, crates::clap::Args};
 use color_print::ceprintln;
 use miette::Result;
 

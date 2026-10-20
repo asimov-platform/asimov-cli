@@ -23,8 +23,10 @@ pub static ALIASES: &[(&str, &[&str])] = &[
     ("read", &["resource", "read"]),
     #[cfg(feature = "module")]
     ("resolve", &["module", "resolve"]),
-    #[cfg(all(feature = "source", feature = "source-snap"))]
-    ("snap", &["source", "snap"]),
+    #[cfg(all(feature = "resource", feature = "unstable"))]
+    ("snap", &["resource", "snap"]),
+    #[cfg(feature = "resource")]
+    ("source", &["resource"]),
     #[cfg(feature = "module")]
     ("uninstall", &["module", "uninstall"]),
     #[cfg(feature = "module")]
@@ -128,9 +130,26 @@ mod tests {
     }
 
     #[test]
-    #[cfg(all(feature = "source", feature = "source-snap"))]
+    #[cfg(feature = "resource")]
+    fn expands_source_group_alias() {
+        assert_eq!(resolved(&["asimov", "source"]), ["asimov", "resource"]);
+        assert_eq!(
+            resolved(&["asimov", "source", "snap", "list"]),
+            ["asimov", "resource", "snap", "list"]
+        );
+        assert_eq!(
+            resolved(&["asimov", "help", "source", "read"]),
+            ["asimov", "help", "resource", "read"]
+        );
+    }
+
+    #[test]
+    #[cfg(all(feature = "resource", feature = "unstable"))]
     fn expands_snap() {
-        assert_eq!(resolved(&["asimov", "snap"]), ["asimov", "source", "snap"]);
+        assert_eq!(
+            resolved(&["asimov", "snap"]),
+            ["asimov", "resource", "snap"]
+        );
     }
 
     #[test]
@@ -194,8 +213,9 @@ mod tests {
             ("read", cfg!(feature = "resource")),
             (
                 "snap",
-                cfg!(all(feature = "source", feature = "source-snap")),
+                cfg!(all(feature = "resource", feature = "unstable")),
             ),
+            ("source", cfg!(feature = "resource")),
             ("install", cfg!(feature = "module")),
             ("uninstall", cfg!(feature = "module")),
             ("upgrade", cfg!(feature = "module")),

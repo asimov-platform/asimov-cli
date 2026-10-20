@@ -1,10 +1,12 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions};
+use crate::BoxError;
+use alloc::string::String;
 use asimov_env::paths::asimov_root;
 use asimov_module::normalization::normalize_url;
 use asimov_registry::Registry;
 use asimov_snapshot::{Options, Snapshotter};
+use clientele::StandardOptions;
 
 pub async fn create(urls: &[String], _flags: &StandardOptions) -> Result<(), BoxError> {
     let storage = asimov_snapshot::storage::Fs::for_dir(asimov_root().join("snapshots"))?;

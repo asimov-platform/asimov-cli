@@ -17,8 +17,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   tests pass with `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
-  Individual `module`, `proxy`, `source`, `telemetry`, and `source-snap` feature
-  checks also pass without warnings.
 - `cargo test --locked --no-default-features`: 32 tests pass.
 - `cargo clippy --locked --all-targets --all-features -- -D warnings`: passes.
 - `cargo doc --locked --no-deps`: passes without warnings, including with
@@ -64,7 +62,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   context to filesystem errors at their origin.
 
 - [ ] Apply standard color and verbosity options to remaining module and
-  snapshot handlers (`src/commands/module/`, `src/commands/source/snap/`).
+  snapshot handlers (`src/commands/module/`, `src/commands/resource/snap/`).
   Reuse shared color-aware rendering across stdout/stderr and test redirected
   output as well as help output.
 
@@ -141,7 +139,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   dependencies rely on std. Design a real std boundary for portable library
   APIs versus process/network/filesystem commands, adopt
   `default = ["all", "std"]`, and verify the portable subset on a no_std target.
-  Clarify feature behavior: `source-snap` alone exposes no built-in commands.
 
 - [ ] Check the MSRV and current stable Rust against the locked dependency graph
   in CI.
@@ -170,7 +167,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   waits, and guaranteed node termination on errors.
 
 - [ ] Add deterministic snapshot lifecycle coverage
-  (`src/commands/source/snap/`, `src/timestamps.rs`). Exercise save/list/log/
+  (`src/commands/resource/snap/`, `src/timestamps.rs`). Exercise save/list/log/
   compact with temporary storage, normalized URLs, corruption, and failures.
   Cover multi-day DST differences and fallible timestamp errors. Consolidate
   the unused parallel `create` implementation with the dispatched `save` path.
