@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Support `asimov config` as an alias of `asimov configure`
+- Add `asimov remote` with stubs for `list`, `add`, `rename`, `remove`, and `check`
+### Changed
+- Use ASIMOV SDK from GitHub HEAD
 ### Fixed
 - Warn and retry rate-limited relay fetches and listings after `Retry-After`
 

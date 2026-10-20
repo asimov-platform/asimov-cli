@@ -6,6 +6,7 @@
     test,
     feature = "module",
     feature = "proxy",
+    feature = "remote",
     feature = "source",
     feature = "telemetry"
 ))]
@@ -13,6 +14,7 @@ use asimov_cli::BoxError;
 #[cfg(any(
     feature = "module",
     feature = "proxy",
+    feature = "remote",
     feature = "source",
     feature = "telemetry",
     feature = "unstable"
@@ -40,6 +42,9 @@ use crate::commands::module::ModuleCommand;
 
 #[cfg(feature = "proxy")]
 use crate::commands::proxy::ProxyCommand;
+
+#[cfg(feature = "remote")]
+use crate::commands::remote::RemoteCommand;
 
 #[cfg(feature = "source")]
 use crate::commands::source::SourceCommand;
@@ -92,6 +97,11 @@ enum Command {
         #[clap(flatten)]
         args: commands::proxy::ProxyServeArgs,
     },
+
+    /// Manage the set of tracked remotes
+    #[cfg(feature = "remote")]
+    #[clap(subcommand)]
+    Remote(RemoteCommand),
 
     /// Manage data sources, fetching/listing/snapshotting them
     #[cfg(feature = "source")]
@@ -366,6 +376,9 @@ pub async fn main() -> SysexitsError {
                 .map_err(sysexits)
                 .map(|_| EX_OK),
 
+            #[cfg(feature = "remote")]
+            Remote(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+
             #[cfg(feature = "source")]
             Source { command, args } => command
                 .unwrap_or(SourceCommand::Fetch { args: *args })
@@ -532,6 +545,7 @@ pub fn after_help(color: bool) -> String {
     test,
     feature = "module",
     feature = "proxy",
+    feature = "remote",
     feature = "source",
     feature = "telemetry"
 ))]
