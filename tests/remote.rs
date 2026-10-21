@@ -72,7 +72,7 @@ fn remote_lifecycle_and_aliases_use_the_selected_state_directory() {
                 .is_empty()
         );
         assert_eq!(
-            sandbox.state.remotes().unwrap().read(name).unwrap(),
+            std::fs::read_to_string(sandbox.state.join(format!("remotes/{name}.uri"))).unwrap(),
             format!("{url}\n")
         );
     }
@@ -87,7 +87,7 @@ fn remote_lifecycle_and_aliases_use_the_selected_state_directory() {
     sandbox.run(&["remote", "rename", "origin", "upstream"], EX_OK);
     sandbox.run(&["remote", "mv", "upstream", "backup"], EX_OK);
     assert_eq!(
-        sandbox.state.remotes().unwrap().read("backup").unwrap(),
+        std::fs::read_to_string(sandbox.state.join("remotes/backup.uri")).unwrap(),
         "https://example.com\n"
     );
     sandbox.run(&["remote", "remove", "backup"], EX_OK);
@@ -119,16 +119,23 @@ fn failures_preserve_existing_remotes_and_report_exit_codes() {
     sandbox.run(&["remote", "rename", "absent", "new"], EX_NOINPUT);
     sandbox.run(&["remote", "remove", "absent"], EX_NOINPUT);
     assert_eq!(
-        sandbox.state.remotes().unwrap().read("origin").unwrap(),
+        std::fs::read_to_string(sandbox.state.join("remotes/origin.uri")).unwrap(),
         "https://example.com\n"
     );
     assert_eq!(
-        sandbox.state.remotes().unwrap().read("backup").unwrap(),
+        std::fs::read_to_string(sandbox.state.join("remotes/backup.uri")).unwrap(),
         "http://other.example\n"
     );
     assert!(!sandbox.state.join("escape").exists());
-    std::fs::write(sandbox.state.join("remotes/origin"), "https://example.com").unwrap();
-    sandbox.run(&["remote", "list"], EX_DATAERR);
+    for contents in [
+        "https://example.com",
+        "https://example.com\r\n",
+        "# comment\nhttps://example.com\n",
+        "https://example.com\nhttps://other.example\n",
+    ] {
+        std::fs::write(sandbox.state.join("remotes/origin.uri"), contents).unwrap();
+        sandbox.run(&["remote", "list"], EX_DATAERR);
+    }
     sandbox.run(&["remote", "remove", "origin"], EX_OK);
 }
 
@@ -150,7 +157,7 @@ fn remotes_default_to_the_home_state_directory() {
     let home = StateDirectory::open(sandbox.home.path()).unwrap();
     let state = StateDirectory::open(home.join(".asimov")).unwrap();
     assert_eq!(
-        state.remotes().unwrap().read("origin").unwrap(),
+        std::fs::read_to_string(state.join("remotes/origin.uri")).unwrap(),
         "https://example.com\n"
     );
     assert!(!sandbox.state.join("remotes").exists());

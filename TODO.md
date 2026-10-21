@@ -107,8 +107,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P2: Verification and delivery
 
 - [ ] Replace the SDK Git and local path patches with the next release containing
-  the `Retry-After`, tracked-remote, streaming URI-list resource-collection, and
-  plural directory APIs before publishing the CLI.
+  the `Retry-After`, async `.uri` tracked-remote, streaming URI-list
+  resource-collection, and plural directory APIs before publishing the CLI.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.

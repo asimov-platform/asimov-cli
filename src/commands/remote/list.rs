@@ -8,6 +8,7 @@ use std::io::Write;
 pub async fn list(flags: &StandardOptions) -> Result<(), BoxError> {
     let remotes = super::open()?
         .list()
+        .await
         .map_err(|e| super::report("list remotes", e))?;
     let mut stdout = std::io::stdout().lock();
     for remote in remotes {

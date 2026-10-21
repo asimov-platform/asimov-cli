@@ -14,6 +14,7 @@ use std::io::Write;
 pub async fn check(name: String, flags: &StandardOptions) -> Result<(), BoxError> {
     let remote = super::open()?
         .get(&name)
+        .await
         .map_err(|error| super::report(&format!("read remote {name:?}"), error))?;
     let user = whoami::username().unwrap_or_else(|_| "default".into());
     // Repair the public-key cache before selecting the default bearer identity.
