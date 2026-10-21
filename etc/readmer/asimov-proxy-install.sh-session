@@ -1,1 +1,0 @@
-$ asimov proxy install --help

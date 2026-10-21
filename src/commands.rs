@@ -15,7 +15,7 @@ pub use help_cmd::*;
 #[cfg(feature = "module")]
 pub mod module;
 
-#[cfg(feature = "proxy")]
+#[cfg(all(feature = "proxy", feature = "unstable"))]
 pub mod proxy;
 
 #[cfg(feature = "remote")]

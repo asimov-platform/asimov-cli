@@ -11,7 +11,7 @@ pub mod shared;
 #[cfg(all(feature = "resource", feature = "unstable"))]
 pub(crate) mod timestamps;
 
-#[cfg(any(feature = "module", feature = "proxy", feature = "unstable"))]
+#[cfg(any(feature = "module", feature = "unstable"))]
 use clientele::StandardOptions;
 use clientele::SysexitsError;
 

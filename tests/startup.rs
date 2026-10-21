@@ -2,22 +2,30 @@
 
 #![cfg(any(
     all(unix, feature = "module"),
-    feature = "proxy",
+    all(feature = "proxy", feature = "unstable"),
     feature = "resource",
     feature = "telemetry"
 ))]
 
-#[cfg(any(feature = "proxy", feature = "resource", feature = "telemetry"))]
+#[cfg(any(
+    all(feature = "proxy", feature = "unstable"),
+    feature = "resource",
+    feature = "telemetry"
+))]
 use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};
 
 #[test]
-#[cfg(any(feature = "proxy", feature = "resource", feature = "telemetry"))]
+#[cfg(any(
+    all(feature = "proxy", feature = "unstable"),
+    feature = "resource",
+    feature = "telemetry"
+))]
 fn independent_commands_do_not_initialize_module_or_snapshot_storage()
 -> Result<(), Box<dyn core::error::Error>> {
     for blocked in [false, true] {
         for (args, expected) in [
-            #[cfg(feature = "proxy")]
+            #[cfg(all(feature = "proxy", feature = "unstable"))]
             (vec!["proxy", "url"], EX_OK),
             #[cfg(feature = "resource")]
             (vec!["resource", "list"], EX_OK),

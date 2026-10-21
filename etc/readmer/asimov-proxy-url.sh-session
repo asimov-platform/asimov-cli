@@ -1,1 +1,0 @@
-$ asimov proxy url --help

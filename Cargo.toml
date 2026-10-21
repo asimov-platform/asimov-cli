@@ -18,7 +18,7 @@ publish = true
 
 [features]
 default = ["all"]
-all = ["module", "proxy", "remote", "resource", "telemetry"]
+all = ["module", "remote", "resource", "telemetry"]
 unstable = [
   "agent",
   "cache",
@@ -31,20 +31,13 @@ unstable = [
   "message",
   "package",
   "protocol",
+  "proxy",
   "resource-snap",
   "vault",
 ]
 
 # Stable commands:
 module = ["dep:dialoguer", "dep:tempfile"]
-proxy = [
-  "dep:asimov-proxy",
-  "dep:dirs",
-  "dep:edikt-core",
-  "dep:edikt-jsonc",
-  "dep:jsonc-parser",
-  "dep:tempfile",
-]
 remote = ["dep:asimov-remote", "asimov-remote/fs", "asimov-remote/http"]
 resource = ["dep:asimov-remote", "asimov-remote/http", "dep:infer"]
 telemetry = ["dep:asimov-telemetry"]
@@ -61,6 +54,15 @@ message = []
 package = ["package-scaffold", "dep:distrib", "dep:treelog"]
 package-scaffold = ["dep:asimov-module-kit"]                 # fka module-new
 protocol = ["dep:asimov-protocol"]
+# Proxy command visibility requires `unstable`.
+proxy = [
+  "dep:asimov-proxy",
+  "dep:dirs",
+  "dep:edikt-core",
+  "dep:edikt-jsonc",
+  "dep:jsonc-parser",
+  "dep:tempfile",
+]
 # Snapshot command visibility requires `unstable`.
 resource-snap = ["resource", "dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 vault = []

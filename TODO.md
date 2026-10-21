@@ -106,6 +106,12 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P2: Verification and delivery
 
+- [ ] Align `src/aliases.rs` tests with the Clap-only `source` alias.
+  `expands_source_group_alias` and
+  `unavailable_aliases_remain_available_for_external_dispatch` still expect
+  `source` in the argv-rewrite table; both fail with default features and
+  `unstable` (also reproduced from unmodified HEAD).
+
 - [ ] Replace the SDK Git and local path patches with the next release containing
   the `Retry-After`, async `.uri` tracked-remote, streaming URI-list
   resource-collection, plural directory APIs, and `hf-hub` 0.5 upgrade before

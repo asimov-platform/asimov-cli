@@ -17,9 +17,9 @@ pub(crate) mod execution;
 #[cfg(feature = "resource")]
 pub(crate) mod filter;
 
-#[cfg(any(feature = "module", feature = "proxy"))]
+#[cfg(any(feature = "module", all(feature = "proxy", feature = "unstable")))]
 mod files;
-#[cfg(any(feature = "module", feature = "proxy"))]
+#[cfg(any(feature = "module", all(feature = "proxy", feature = "unstable")))]
 pub(crate) use files::atomic_write;
 
 #[cfg(test)]

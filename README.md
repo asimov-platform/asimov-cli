@@ -221,75 +221,6 @@ $ asimov module install --help
 
 </details>
 
-#### `asimov proxy`
-
-```shellsession
-$ asimov proxy --help
-```
-
-<details>
-<summary><code>asimov proxy serve</code></summary>
-
-```shellsession
-$ asimov proxy serve --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy url</code></summary>
-
-```shellsession
-$ asimov proxy url --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy host</code></summary>
-
-```shellsession
-$ asimov proxy host --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy port</code></summary>
-
-```shellsession
-$ asimov proxy port --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy models</code></summary>
-
-```shellsession
-$ asimov proxy models --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy config</code></summary>
-
-```shellsession
-$ asimov proxy config --help
-```
-
-</details>
-
-<details>
-<summary><code>asimov proxy install</code></summary>
-
-```shellsession
-$ asimov proxy install --help
-```
-
-</details>
-
 #### `asimov resource`
 
 Alias: `asimov source`.
@@ -361,7 +292,7 @@ export ASIMOV_TELEMETRY=0   # or `false`
 
 # By building the CLI yourself, without the `telemetry` feature:
 cargo install asimov-cli --locked --no-default-features \
-  --features module,proxy,resource
+  --features module,resource
 ```
 
 Disabling telemetry also discards any events that haven't been sent yet.

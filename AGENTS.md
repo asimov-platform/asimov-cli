@@ -65,9 +65,9 @@
 - `src/shared.rs` holds module selection, HTTP, and jq/Jev filtering helpers.
   `src/registry.rs::fetch_modules()` is disabled; active module management
   uses the SDK's `asimov-registry` crate.
-- `all = ["module", "proxy", "remote", "resource", "telemetry"]`.
-  `source` aliases `resource`. `unstable` enables `resource-snap`; snapshot
-  commands and the `snap` alias are visible only with `unstable`.
+- `all = ["module", "remote", "resource", "telemetry"]`.
+  `source` aliases `resource`. `unstable` enables `proxy` and `resource-snap`;
+  proxy/snapshot commands and the `snap` alias require `unstable`.
 - Root `README.md` comes from `.config/readmer/README.md.liquid`, with snippets
   in `etc/readmer/`. Regenerate with `make -B README.md` at the project root.
 

@@ -5,7 +5,7 @@
 #[cfg(any(
     test,
     feature = "module",
-    feature = "proxy",
+    all(feature = "proxy", feature = "unstable"),
     feature = "remote",
     feature = "resource",
     feature = "telemetry"
@@ -13,7 +13,6 @@
 use asimov_cli::BoxError;
 #[cfg(any(
     feature = "module",
-    feature = "proxy",
     feature = "remote",
     feature = "resource",
     feature = "telemetry",
@@ -40,7 +39,7 @@ use crate::commands::configure::{ConfigureCommand, TelemetryCommand};
 #[cfg(feature = "module")]
 use crate::commands::module::ModuleCommand;
 
-#[cfg(feature = "proxy")]
+#[cfg(all(feature = "proxy", feature = "unstable"))]
 use crate::commands::proxy::ProxyCommand;
 
 #[cfg(feature = "remote")]
@@ -89,7 +88,7 @@ enum Command {
     Module(ModuleCommand),
 
     /// Run a local OpenAI-compatible proxy endpoint
-    #[cfg(feature = "proxy")]
+    #[cfg(all(feature = "proxy", feature = "unstable"))]
     Proxy {
         #[clap(subcommand)]
         command: Option<ProxyCommand>,
@@ -363,7 +362,7 @@ pub async fn main() -> SysexitsError {
             #[cfg(feature = "module")]
             Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
 
-            #[cfg(feature = "proxy")]
+            #[cfg(all(feature = "proxy", feature = "unstable"))]
             Proxy { command, args } => command
                 .unwrap_or(ProxyCommand::Serve { args })
                 .run(flags)
@@ -534,7 +533,7 @@ pub fn after_help(color: bool) -> String {
 #[cfg(any(
     test,
     feature = "module",
-    feature = "proxy",
+    all(feature = "proxy", feature = "unstable"),
     feature = "remote",
     feature = "resource",
     feature = "telemetry"

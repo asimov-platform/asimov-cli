@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(feature = "proxy")]
+#![cfg(all(feature = "proxy", feature = "unstable"))]
 
 use clientele::SysexitsError::*;
 use std::process::{Command, Stdio};

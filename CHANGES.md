@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
 - Verify remotes with `asimov remote check`; use `-v` to report round-trip time
 ### Changed
+- Require the `unstable` feature for `asimov proxy`
 - Store tracked remotes in `~/.asimov/remotes/NAME.uri`, with LF line endings
 - Process tracked-resource files incrementally; malformed lines are reported
   after any preceding listing output

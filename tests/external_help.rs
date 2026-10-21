@@ -29,7 +29,7 @@ fn external_summaries_are_collected_only_for_root_long_help()
         (vec!["--color", "never", "--help"], true),
         #[cfg(any(
             feature = "module",
-            feature = "proxy",
+            all(feature = "proxy", feature = "unstable"),
             feature = "resource",
             feature = "telemetry"
         ))]
@@ -63,7 +63,7 @@ fn external_summaries_are_collected_only_for_root_long_help()
 #[test]
 #[cfg(any(
     feature = "module",
-    feature = "proxy",
+    all(feature = "proxy", feature = "unstable"),
     feature = "resource",
     feature = "telemetry"
 ))]
