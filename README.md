@@ -223,8 +223,6 @@ $ asimov module install --help
 
 #### `asimov resource`
 
-Alias: `asimov source`.
-
 ```shellsession
 $ asimov resource --help
 ```

@@ -1,0 +1,1 @@
+$ asimov resource track --help

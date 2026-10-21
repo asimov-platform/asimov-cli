@@ -1,0 +1,1 @@
+$ asimov resource search --help

@@ -1,0 +1,1 @@
+$ asimov remote rename --help

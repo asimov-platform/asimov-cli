@@ -1,0 +1,1 @@
+$ asimov remote remove --help
