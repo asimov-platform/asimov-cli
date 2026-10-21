@@ -105,6 +105,7 @@ enum Command {
 
     /// Manage the set of tracked resources
     #[cfg(feature = "resource")]
+    #[clap(alias = "source")]
     #[clap(subcommand)]
     Resource(ResourceCommand),
 

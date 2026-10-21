@@ -25,8 +25,6 @@ pub static ALIASES: &[(&str, &[&str])] = &[
     ("resolve", &["module", "resolve"]),
     #[cfg(all(feature = "resource", feature = "unstable"))]
     ("snap", &["resource", "snap"]),
-    #[cfg(feature = "resource")]
-    ("source", &["resource"]),
     #[cfg(feature = "module")]
     ("uninstall", &["module", "uninstall"]),
     #[cfg(feature = "module")]
