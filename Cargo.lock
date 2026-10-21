@@ -284,7 +284,6 @@ dependencies = [
 [[package]]
 name = "asimov-config"
 version = "25.8.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#2aba3bb6a40c928b5c341b4d625294b68dcb8b38"
 dependencies = [
  "asimov-core",
 ]
@@ -668,7 +667,6 @@ dependencies = [
 [[package]]
 name = "asimov-snapshot"
 version = "25.8.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git#2aba3bb6a40c928b5c341b4d625294b68dcb8b38"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -1166,7 +1164,7 @@ dependencies = [
  "cap-primitives",
  "cap-std",
  "io-lifetimes 3.0.1",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

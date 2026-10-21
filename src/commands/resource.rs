@@ -3,7 +3,7 @@
 use crate::BoxError;
 use alloc::{string::String, vec::Vec};
 use asimov_directory::{
-    UrlsFile,
+    UrisFile,
     fs::{ResourcesDirectory, StateDirectory},
 };
 use asimov_module::ModuleName;
@@ -126,10 +126,10 @@ fn resources() -> Result<ResourcesDirectory, BoxError> {
         .map_err(|e| report("open resource storage", e))
 }
 
-fn parse_urls(urls: Vec<String>) -> Result<UrlsFile, BoxError> {
-    UrlsFile::new(urls).map_err(|error| {
+fn parse_uris(uris: Vec<String>) -> Result<UrisFile, BoxError> {
+    UrisFile::new(uris).map_err(|error| {
         report(
-            "validate resource URLs",
+            "validate resource IRIs",
             io::Error::new(io::ErrorKind::InvalidInput, error),
         )
     })

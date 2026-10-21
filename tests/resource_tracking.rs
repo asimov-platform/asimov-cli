@@ -88,7 +88,7 @@ fn tracking_lifecycle_and_aliases_preserve_url_order() {
         EX_OK,
     );
     let expected = b"HTTPS://B.example\nhttps://a.example\nhttps://c.example\nhttps://d.example\n";
-    let path = sandbox.root.join("resources/tracked.urls");
+    let path = sandbox.root.join("resources/tracked.uris");
     assert_eq!(std::fs::read(&path).unwrap(), expected);
     for args in [&["resource", "ls"][..], &["source", "dir"], &["list"]] {
         assert_eq!(sandbox.run(args, EX_OK).stdout, expected);
@@ -156,7 +156,7 @@ fn invalid_batches_and_corrupt_storage_fail_without_partial_changes() {
         sandbox.run(&["list"], EX_OK).stdout,
         b"https://valid.example\n"
     );
-    let path = sandbox.root.join("resources/tracked.urls");
+    let path = sandbox.root.join("resources/tracked.uris");
     let malformed = b"https://valid.example\nnot a URL\n";
     std::fs::write(&path, malformed).unwrap();
     let output = sandbox
@@ -182,7 +182,7 @@ fn default_storage_is_under_the_home_state_directory() {
     let output = sandbox
         .command()
         .env_remove("ASIMOV_ROOT")
-        .args(["resource", "track", "https://example.com"])
+        .args(["resource", "track", "https://例え.テスト/🦀#片"])
         .output()
         .unwrap();
     assert!(
@@ -191,8 +191,8 @@ fn default_storage_is_under_the_home_state_directory() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert_eq!(
-        std::fs::read(sandbox.home.child(".asimov/resources/tracked.urls")).unwrap(),
-        b"https://example.com\n"
+        std::fs::read(sandbox.home.child(".asimov/resources/tracked.uris")).unwrap(),
+        "https://例え.テスト/🦀#片\n".as_bytes()
     );
     assert!(!sandbox.root.join("resources").exists());
 }
@@ -203,7 +203,7 @@ fn symlinked_storage_cannot_expose_or_modify_other_state() {
     let sandbox = Sandbox::new();
     let private = sandbox.root.join("private");
     std::fs::create_dir(&private).unwrap();
-    std::fs::write(private.join("tracked.urls"), "https://private.example\n").unwrap();
+    std::fs::write(private.join("tracked.uris"), "https://private.example\n").unwrap();
     std::os::unix::fs::symlink(&private, sandbox.root.join("resources")).unwrap();
     for args in [
         &["resource", "list"][..],
@@ -216,7 +216,7 @@ fn symlinked_storage_cannot_expose_or_modify_other_state() {
         assert!(!output.stderr.is_empty(), "{args:?}");
     }
     assert_eq!(
-        std::fs::read(private.join("tracked.urls")).unwrap(),
+        std::fs::read(private.join("tracked.uris")).unwrap(),
         b"https://private.example\n"
     );
 }

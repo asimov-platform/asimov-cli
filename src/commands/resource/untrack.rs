@@ -5,11 +5,11 @@ use alloc::{string::String, vec::Vec};
 use asimov_directory::fs::ResourcesDirectory;
 use clientele::StandardOptions;
 
-/// Removes URLs from the default collection, silently ignoring absent URLs.
+/// Removes IRIs from the default collection, silently ignoring absent IRIs.
 pub async fn untrack(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
-    let urls = super::parse_urls(urls)?;
+    let uris = super::parse_uris(urls)?;
     super::resources()?
-        .remove_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .remove_uris(ResourcesDirectory::DEFAULT_COLLECTION, &uris)
         .await
         .map_err(|e| super::report("untrack resources", e))?;
     Ok(())

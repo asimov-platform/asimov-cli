@@ -10,25 +10,25 @@ pub use urls::ResourceListArgs;
 
 /// Lists tracked resources, or uses module/relay listers for the given URLs.
 ///
-/// Without URLs, prints the default collection in stored order, one URL per line.
-/// A malformed file is reported after any preceding valid URLs have been printed.
+/// Without URLs, prints the default collection in stored order, one IRI per line.
+/// A malformed file is reported after any preceding valid IRIs have been printed.
 pub async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(), BoxError> {
     if !args.urls.is_empty() {
         return urls::list(args, flags).await;
     }
 
     let mut tracked = super::resources()?
-        .read_urls(ResourcesDirectory::DEFAULT_COLLECTION)
+        .read_uris(ResourcesDirectory::DEFAULT_COLLECTION)
         .map_err(|e| super::report("list tracked resources", e))?;
     let mut stdout = BufWriter::new(tokio::io::stdout());
     let result = async {
-        while let Some(url) = tracked
-            .next_url()
+        while let Some(uri) = tracked
+            .next_uri()
             .await
             .map_err(|e| super::report("list tracked resources", e))?
         {
             stdout
-                .write_all(url.as_bytes())
+                .write_all(uri.as_bytes())
                 .await
                 .map_err(|e| super::report("write resource listing", e))?;
             stdout
@@ -39,7 +39,7 @@ pub async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(),
         Ok(())
     }
     .await;
-    // Flush preceding URLs even when a later record fails validation.
+    // Flush preceding IRIs even when a later record fails validation.
     let flushed = stdout
         .flush()
         .await

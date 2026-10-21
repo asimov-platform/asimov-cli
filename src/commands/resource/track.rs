@@ -5,11 +5,11 @@ use alloc::{string::String, vec::Vec};
 use asimov_directory::fs::ResourcesDirectory;
 use clientele::StandardOptions;
 
-/// Appends new URLs to the default tracked collection in input order.
+/// Appends new IRIs to the default tracked collection in input order.
 pub async fn track(urls: Vec<String>, _flags: &StandardOptions) -> Result<(), BoxError> {
-    let urls = super::parse_urls(urls)?;
+    let uris = super::parse_uris(urls)?;
     super::resources()?
-        .append_urls(ResourcesDirectory::DEFAULT_COLLECTION, &urls)
+        .append_uris(ResourcesDirectory::DEFAULT_COLLECTION, &uris)
         .await
         .map_err(|e| super::report("track resources", e))?;
     Ok(())
