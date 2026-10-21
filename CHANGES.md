@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `asimov configure` to `asimov config`, keeping `configure` as an alias
 - Use ASIMOV SDK from GitHub HEAD
 ### Fixed
+- Update TLS certificate verification and trusted roots for CA security fixes
 - Warn and retry rate-limited relay fetches and listings after `Retry-After`
 
 ## 25.8.1 - 2026-10-18

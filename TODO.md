@@ -108,7 +108,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Replace the SDK Git and local path patches with the next release containing
   the `Retry-After`, async `.uri` tracked-remote, streaming URI-list
-  resource-collection, and plural directory APIs before publishing the CLI.
+  resource-collection, plural directory APIs, and `hf-hub` 0.5 upgrade before
+  publishing the CLI.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
