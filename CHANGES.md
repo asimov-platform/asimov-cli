@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move `asimov source fetch` to `asimov resource fetch`; update `asimov fetch`
 - Require an explicit subcommand for `asimov source`
 - Rename `asimov configure` to `asimov config`, keeping `configure` as an alias
-- Use ASIMOV SDK from GitHub HEAD
+- Update to ASIMOV SDK 25.9.0
 ### Fixed
 - Update TLS certificate verification and trusted roots for CA security fixes
 - Warn and retry rate-limited relay fetches and listings after `Retry-After`

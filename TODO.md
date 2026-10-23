@@ -111,11 +111,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   `unavailable_aliases_remain_available_for_external_dispatch` still expect
   `source` in the argv-rewrite table; both fail with default features and
   `unstable` (also reproduced from unmodified HEAD).
-
-- [ ] Replace the SDK Git and local path patches with the next release containing
-  the `Retry-After`, async `.uri` tracked-remote, streaming URI-list
-  resource-collection, plural directory APIs, and `hf-hub` 0.5 upgrade before
-  publishing the CLI.
+  These remain the only test failures with SDK 25.9.0 (default/all features).
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
