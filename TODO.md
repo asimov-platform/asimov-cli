@@ -90,6 +90,12 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   useful, credential-safe status/body-generation errors, and test HTTP failures
   and upload cancellation against an injectable local endpoint.
 
+- [ ] Adopt SDK shared proxy routing for CLI-local HTTP requests
+  (`src/commands/module/install.rs::fetch_all_module_names` and
+  `src/shared.rs::http_client`). `module install all` enumeration and Jev still
+  use raw reqwest clients, missing SDK 25.9.0's native proxy discovery fixes.
+  Preserve per-origin proxy policy across redirects.
+
 ## P2: Proxy reliability and interoperability
 
 - [ ] Bound graceful proxy shutdown waits for stalled streamed responses
@@ -112,6 +118,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   `source` in the argv-rewrite table; both fail with default features and
   `unstable` (also reproduced from unmodified HEAD).
   These remain the only test failures with SDK 25.9.0 (default/all features).
+  Release prep (2026-10-23): default tests report 116 passed and these two
+  failures with an isolated home and file-backed keyring; all binary and
+  integration tests pass.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.

@@ -5,29 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 25.9.0 - 2026-10-23
 ### Added
-- Track, untrack, and list resource IRIs in `~/.asimov/resources/tracked.uris`
-- Add an `asimov resource search` command stub
+- Track and untrack resource IRIs with `asimov resource {track,untrack}`,
+  stored in `~/.asimov/resources/tracked.uris`
 - Manage named HTTP(S) remotes with `asimov remote {list,add,rename,remove}`
-- Verify remotes with `asimov remote check`; use `-v` to report round-trip time
+  in `~/.asimov/remotes/NAME.uri`
+- Verify authenticated remote connectivity with `asimov remote check`;
+  use `-v` to report round-trip time
+- Discover GNOME/KDE desktop proxies and macOS SOCKS proxies for relay access
 ### Changed
-- Require the `unstable` feature for `asimov proxy`
-- Store tracked remotes in `~/.asimov/remotes/NAME.uri`, with LF line endings
-- Process tracked-resource files incrementally; malformed lines are reported
-  after any preceding listing output
-- Move snapshots to `asimov resource snap` (`asimov snap`); require `unstable`
-- Make `asimov source` an alias for `asimov resource`
-- Move `asimov source read` to `asimov resource read`; update `asimov read`
-- Move `asimov source list` to `asimov resource list`; update `asimov list`.
-  With no URLs, list tracked resources.
-- Move `asimov source fetch` to `asimov resource fetch`; update `asimov fetch`
-- Require an explicit subcommand for `asimov source`
+- Rename `asimov source` to `asimov resource`, retaining `source` as an alias
+  and retaining also the top-level `fetch`, `list`, and `read` shortcuts
+- Require an explicit subcommand for `asimov source`; use `asimov fetch URL`
+  instead of `asimov source URL`
+- With no URLs, `asimov list` now lists tracked resources in stored order
 - Rename `asimov configure` to `asimov config`, keeping `configure` as an alias
+- Require the `unstable` build feature for `asimov proxy`,
+  `asimov resource search`, and `asimov resource snap` (`asimov snap`)
+- Make `asimov proxy` honor native proxy settings and prefer uppercase proxy
+  environment variables over lowercase variants, including empty values
+- Use system certificate trust for Hugging Face model downloads
+- Reject redirects when downloading the public module index
 - Update to ASIMOV SDK 25.9.0
 ### Fixed
 - Update TLS certificate verification and trusted roots for CA security fixes
 - Warn and retry rate-limited relay fetches and listings after `Retry-After`
+- Honor system proxies for module installation and upgrades, module searches,
+  model downloads, and telemetry
+- Fix Windows proxy bypass rules, `NO_PROXY=*` for IP addresses, and SOCKS4
+  relay connectivity
+- Reuse Hugging Face models from `HF_HOME` correctly, reject incomplete model
+  downloads, and keep tokens scoped to the configured Hub
+- Report module-index and installer HTTP setup errors instead of crashing
+- Prevent data loss in upstream HTTP proxy tunnels for `asimov proxy`
+- Preserve queued telemetry when uploads are redirected
 
 ## 25.8.1 - 2026-10-18
 ### Added
