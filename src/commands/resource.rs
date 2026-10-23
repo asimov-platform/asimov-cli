@@ -66,6 +66,7 @@ pub enum ResourceCommand {
     },
 
     /// Search all tracked resources
+    #[cfg(feature = "unstable")]
     #[clap(alias = "find")]
     Search {
         /// The terms to search for
@@ -91,6 +92,7 @@ impl ResourceCommand {
             },
             Track { urls } => track(urls, flags).await,
             Untrack { urls } => untrack(urls, flags).await,
+            #[cfg(feature = "unstable")]
             Search { query } => search(query, flags).await,
         }
     }
@@ -105,7 +107,9 @@ pub use list::*;
 mod read;
 pub use read::*;
 
+#[cfg(feature = "unstable")]
 mod search;
+#[cfg(feature = "unstable")]
 pub use search::*;
 
 #[cfg(feature = "unstable")]
