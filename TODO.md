@@ -9,12 +9,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## Verification baseline
 
-- Rust/Cargo 1.98.1 on aarch64 macOS.
+- Rust/Cargo 1.99.1 on aarch64 macOS, with
+  `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked`: 109 tests pass; one doctest is ignored.
-- `cargo test --locked --all-features`: 112 tests pass; one doctest is ignored.
-- Rust 1.99.1 (2026-10-16): formatting, locked check, and all 102 default-feature
-  tests pass with `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
+- `cargo test --locked --no-fail-fast` (2026-10-25): 116 pass, 2 fail (the
+  `src/aliases.rs` item below); without `--no-fail-fast` it stops at the lib.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
 - `cargo test --locked --no-default-features`: 32 tests pass.
@@ -116,11 +115,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   `expands_source_group_alias` and
   `unavailable_aliases_remain_available_for_external_dispatch` still expect
   `source` in the argv-rewrite table; both fail with default features and
-  `unstable` (also reproduced from unmodified HEAD).
-  These remain the only test failures with SDK 25.9.0 (default/all features).
-  Release prep (2026-10-23): default tests report 116 passed and these two
-  failures with an isolated home and file-backed keyring; all binary and
-  integration tests pass.
+  `unstable`. These are the only test failures with SDK 25.9.0.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
@@ -141,7 +136,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P3: Portability, maintenance, and further coverage
 
 - [ ] Implement tracked-resource search in `src/commands/resource/search.rs`;
-  it currently returns `EX_UNAVAILABLE`.
+  it currently returns `EX_UNAVAILABLE` and is gated behind `unstable`.
 
 - [ ] Add Iroh remote URL support when the corresponding SDK transport is
   available.
