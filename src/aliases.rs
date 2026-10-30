@@ -128,20 +128,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature = "resource")]
-    fn expands_source_group_alias() {
-        assert_eq!(resolved(&["asimov", "source"]), ["asimov", "resource"]);
-        assert_eq!(
-            resolved(&["asimov", "source", "snap", "list"]),
-            ["asimov", "resource", "snap", "list"]
-        );
-        assert_eq!(
-            resolved(&["asimov", "help", "source", "read"]),
-            ["asimov", "help", "resource", "read"]
-        );
-    }
-
-    #[test]
     #[cfg(all(feature = "resource", feature = "unstable"))]
     fn expands_snap() {
         assert_eq!(
@@ -213,7 +199,6 @@ mod tests {
                 "snap",
                 cfg!(all(feature = "resource", feature = "unstable")),
             ),
-            ("source", cfg!(feature = "resource")),
             ("install", cfg!(feature = "module")),
             ("uninstall", cfg!(feature = "module")),
             ("upgrade", cfg!(feature = "module")),

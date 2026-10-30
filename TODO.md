@@ -12,8 +12,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - Rust/Cargo 1.99.1 on aarch64 macOS, with
   `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked --no-fail-fast` (2026-10-25): 116 pass, 2 fail (the
-  `src/aliases.rs` item below); without `--no-fail-fast` it stops at the lib.
+- `cargo test --locked` (2026-10-30): 117 tests pass.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
 - `cargo test --locked --no-default-features`: 32 tests pass.
@@ -110,12 +109,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/commands/proxy/config.rs`).
 
 ## P2: Verification and delivery
-
-- [ ] Align `src/aliases.rs` tests with the Clap-only `source` alias.
-  `expands_source_group_alias` and
-  `unavailable_aliases_remain_available_for_external_dispatch` still expect
-  `source` in the argv-rewrite table; both fail with default features and
-  `unstable`. These are the only test failures with SDK 25.9.0.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
