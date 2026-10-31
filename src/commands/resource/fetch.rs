@@ -6,7 +6,7 @@ use crate::shared::{
     filter::OutputFilter,
     telemetry::{ModuleMetadata, Operation},
 };
-use alloc::{format, string::String, vec::Vec};
+use alloc::{collections::VecDeque, format, string::String, vec::Vec};
 use asimov_module::{ModuleName, normalization::normalize_url};
 use asimov_patterns::{CachingOptions, FilteringOptions, TimingOptions};
 use asimov_remote::{FetcherRequest, http};
@@ -108,15 +108,24 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
 
     let verbose = flags.verbose;
 
-    let tasks: Vec<_> = fetchers
-        .into_iter()
-        .map(|(url, metadata, remote, fetcher)| {
-            (url, metadata.start(), remote, tokio::spawn(fetcher))
-        })
-        .collect();
+    // Start fetchers in input order, keeping at most one per CPU running,
+    // including the one whose output is being written.
+    let jobs = std::thread::available_parallelism().map_or(1, core::num::NonZero::get);
+    let mut pending = fetchers.into_iter();
+    let mut tasks = AbortOnDrop(VecDeque::with_capacity(jobs));
+    let mut start_next = |tasks: &mut AbortOnDrop<_, _>| {
+        if let Some((url, metadata, remote, fetcher)) = pending.next() {
+            tasks
+                .0
+                .push_back((url, metadata.start(), remote, tokio::spawn(fetcher)));
+        }
+    };
+    for _ in 0..jobs {
+        start_next(&mut tasks);
+    }
 
     let mut failure = None;
-    for (url, telemetry, remote, task) in tasks {
+    while let Some((url, telemetry, remote, task)) = tasks.0.pop_front() {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
@@ -165,11 +174,25 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
         telemetry.finish(result.is_ok() && succeeded);
 
         result?;
+        start_next(&mut tasks);
     }
 
     match failure {
         Some(error) => Err(error.exit_code().into()),
         None => Ok(()),
+    }
+}
+
+/// Fetcher tasks still queued for output. Dropping a task's handle would
+/// detach it, so on an early return these are aborted instead; dropping
+/// their output streams in turn kills the fetcher processes.
+struct AbortOnDrop<T, O>(VecDeque<(String, T, bool, tokio::task::JoinHandle<O>)>);
+
+impl<T, O> Drop for AbortOnDrop<T, O> {
+    fn drop(&mut self) {
+        for (_, _, _, task) in &self.0 {
+            task.abort();
+        }
     }
 }
 

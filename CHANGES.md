@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
+- Run at most one fetcher module per CPU at a time in `asimov fetch`, rather
+  than one per URL all at once
 - Print the verbose progress of `asimov module` commands that install,
   upgrade, uninstall, enable, or disable modules, and of
   `asimov config telemetry`, to stderr rather than stdout
