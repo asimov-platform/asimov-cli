@@ -24,8 +24,15 @@ permissions:
 
 jobs:
   ci:
-    uses: asimov-platform/actions/.github/workflows/ci-rust.yaml@master
-    secrets: inherit
+    # Pinned to an audited revision; review its nested `@master` references
+    # (`ci-rust-job.yaml`, `set-env-vars`) before updating.
+    uses: asimov-platform/actions/.github/workflows/ci-rust.yaml@2ff9f75cfbd6d790273dbb3e3a038048916dfef1
+    # Pass only the PR review job's app credentials. That job runs no PR code,
+    # whereas the shared workflow exports `ENV` to the jobs that build and test
+    # the PR head, where its build scripts and tests could read it.
+    secrets:
+      ASIMOV_APP_ID: ${{ secrets.ASIMOV_APP_ID }}
+      ASIMOV_APP_PRIVATE_KEY: ${{ secrets.ASIMOV_APP_PRIVATE_KEY }}
     permissions:
       actions: read
       contents: read

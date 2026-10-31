@@ -92,12 +92,14 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   file keyring, `DO_NOT_TRACK`); Windows fixtures still use `USERPROFILE`
   and the native keyring.
 
-- [ ] Pin and constrain delegated workflow execution
-  (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable
-  `@master` refs and inherit all secrets; CI runs on `pull_request_target` with
-  pull-request write permission. Audit the shared workflow's PR-code execution
-  boundary, pin reviewed revisions, and pass only necessary secrets/permissions.
-  Add automated updates for pinned Actions dependencies.
+- [ ] Finish constraining delegated workflow execution. `ci.yaml` now pins
+  `ci-rust.yaml` and passes only the review job's app secrets, but that
+  pinned revision still calls `ci-rust-job.yaml@master` and
+  `set-env-vars@master`, which build and test fork PR heads under
+  `pull_request_target` after exporting the `ENV` secret. Fix that in
+  asimov-platform/actions (no secrets for PR-head jobs; pin nested refs).
+  Then pin `release.yaml` and pass explicit secrets, and add automated
+  updates for pinned Actions dependencies.
 
 ## P3: Portability, maintenance, and further coverage
 
