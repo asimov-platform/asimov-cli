@@ -1,9 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::BoxError;
+use crate::{BoxError, shared};
 use asimov_directory::fs::ResourcesDirectory;
 use clientele::StandardOptions;
-use tokio::io::{AsyncWriteExt, BufWriter};
+use std::io::{BufWriter, Write};
 
 mod urls;
 pub use urls::ResourceListArgs;
@@ -20,21 +20,14 @@ pub async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(),
     let mut tracked = super::resources()?
         .read_uris(ResourcesDirectory::DEFAULT_COLLECTION)
         .map_err(|e| super::report("list tracked resources", e))?;
-    let mut stdout = BufWriter::new(tokio::io::stdout());
+    let mut stdout = BufWriter::new(shared::stdout());
     let result = async {
         while let Some(uri) = tracked
             .next_uri()
             .await
             .map_err(|e| super::report("list tracked resources", e))?
         {
-            stdout
-                .write_all(uri.as_bytes())
-                .await
-                .map_err(|e| super::report("write resource listing", e))?;
-            stdout
-                .write_all(b"\n")
-                .await
-                .map_err(|e| super::report("write resource listing", e))?;
+            writeln!(stdout, "{uri}").map_err(|e| super::report("write resource listing", e))?;
         }
         Ok(())
     }
@@ -42,7 +35,6 @@ pub async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Result<(),
     // Flush preceding IRIs even when a later record fails validation.
     let flushed = stdout
         .flush()
-        .await
         .map_err(|e| super::report("write resource listing", e));
     result.and(flushed)
 }

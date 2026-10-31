@@ -1,11 +1,11 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::BoxError;
+use crate::{BoxError, shared::outln};
 use asimov_env::paths::asimov_root;
 use asimov_registry::Registry;
 use asimov_snapshot::{Options, Snapshotter};
 use clientele::StandardOptions;
-use color_print::cprintln;
+use color_print::cformat;
 use jiff::{Zoned, tz::TimeZone};
 
 use crate::timestamps::format_ts_diff;
@@ -24,9 +24,9 @@ pub async fn list(flags: &StandardOptions) -> Result<(), BoxError> {
             .expect("Unexpectedly failed to format timestamp difference");
 
         if flags.verbose > 0 {
-            cprintln!("<s>{url}</> (last updated {diff})");
+            outln!("{}", cformat!("<s>{url}</> (last updated {diff})"))?;
         } else {
-            println!("{url}");
+            outln!("{url}")?;
         }
     }
     Ok(())

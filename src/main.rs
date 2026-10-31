@@ -564,7 +564,7 @@ fn sysexits(err: BoxError) -> clientele::SysexitsError {
         return *code;
     }
     // A reader closing stdout early (e.g., `| head -1`) isn't a failure.
-    if err.is::<asimov_cli::shared::StdoutClosed>() {
+    if asimov_cli::shared::is_stdout_closed(&*err) {
         return EX_OK;
     }
     use std::io::Write;

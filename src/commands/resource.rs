@@ -140,6 +140,9 @@ fn parse_uris(uris: Vec<String>) -> Result<UrisFile, BoxError> {
 }
 
 fn report(operation: &str, error: io::Error) -> BoxError {
+    if crate::shared::is_stdout_closed(&error) {
+        return error.into();
+    }
     let _ = writeln!(
         io::stderr().lock(),
         "asimov: failed to {operation}: {error}"

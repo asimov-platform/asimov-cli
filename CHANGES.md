@@ -16,8 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exit with a reader module's own sysexits code from `asimov read`, rather
   than always `EX_UNAVAILABLE`
 - Stop quietly when stdout is closed early (e.g., `asimov module list | head`)
-  instead of panicking, for `asimov module {doc,inspect,list,search}` and
-  `asimov module config {get,show}`
+  instead of panicking or failing, for `asimov module`
+  `{doc,inspect,list,search}`, `asimov module config {get,show}`,
+  `asimov resource {fetch,list}`, `asimov resource snap {list,log}`, and
+  `asimov remote list`
 
 ## 25.9.0 - 2026-10-23
 ### Added

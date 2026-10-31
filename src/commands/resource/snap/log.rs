@@ -1,13 +1,13 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::BoxError;
 use crate::timestamps::format_ts_diff;
+use crate::{BoxError, shared::outln};
 use asimov_env::paths::asimov_root;
 use asimov_module::normalization::normalize_url;
 use asimov_registry::Registry;
 use asimov_snapshot::{Options, Snapshotter};
 use clientele::StandardOptions;
-use color_print::cprintln;
+use color_print::cformat;
 use jiff::{Zoned, tz::TimeZone};
 
 pub async fn log(url: &str, _flags: &StandardOptions) -> Result<(), BoxError> {
@@ -40,7 +40,7 @@ pub async fn log(url: &str, _flags: &StandardOptions) -> Result<(), BoxError> {
         let diff = format_ts_diff(&now, &ts.to_zoned(TimeZone::UTC))
             .expect("Unexpectedly failed to format timestamp difference");
 
-        cprintln!("<s>{hash}</> ({diff:#})");
+        outln!("{}", cformat!("<s>{hash}</> ({diff:#})"))?;
     }
     Ok(())
 }

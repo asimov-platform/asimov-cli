@@ -10,7 +10,7 @@ pub async fn list(flags: &StandardOptions) -> Result<(), BoxError> {
         .list()
         .await
         .map_err(|e| super::report("list remotes", e))?;
-    let mut stdout = std::io::stdout().lock();
+    let mut stdout = crate::shared::stdout();
     for remote in remotes {
         if flags.verbose > 0 {
             writeln!(stdout, "{}\t{}", remote.name, remote.url)?;

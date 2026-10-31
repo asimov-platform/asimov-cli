@@ -28,21 +28,53 @@ pub(crate) mod test_http;
 /// Stdout was closed by its reader, as when piping into `head -1`.
 ///
 /// Commands stop writing and propagate this error, which the `asimov` binary
-/// treats as a quiet, successful exit.
+/// treats as a quiet, successful exit; see [`is_stdout_closed`].
 #[derive(Debug, thiserror::Error)]
 #[error("stdout was closed")]
 pub struct StdoutClosed;
 
-/// Writes formatted output to stdout, returning [`StdoutClosed`] if the
-/// reader has closed the pipe. Prefer the crate's `outln!` macro.
-pub fn write_stdout(args: core::fmt::Arguments<'_>) -> core::result::Result<(), BoxError> {
-    std::io::stdout()
-        .lock()
-        .write_fmt(args)
-        .map_err(|error| match error.kind() {
-            std::io::ErrorKind::BrokenPipe => StdoutClosed.into(),
-            _ => error.into(),
+/// Returns whether `error` is, or is an I/O error wrapping, [`StdoutClosed`].
+pub fn is_stdout_closed(error: &(dyn core::error::Error + 'static)) -> bool {
+    error.is::<StdoutClosed>()
+        || error
+            .downcast_ref::<std::io::Error>()
+            .and_then(std::io::Error::get_ref)
+            .is_some_and(|inner| inner.is::<StdoutClosed>())
+}
+
+/// A locked stdout handle whose `BrokenPipe` errors wrap [`StdoutClosed`].
+pub struct Stdout(std::io::StdoutLock<'static>);
+
+/// Locks stdout for writing; see [`Stdout`].
+pub fn stdout() -> Stdout {
+    Stdout(std::io::stdout().lock())
+}
+
+impl Stdout {
+    fn check<T>(result: std::io::Result<T>) -> std::io::Result<T> {
+        result.map_err(|error| match error.kind() {
+            std::io::ErrorKind::BrokenPipe => {
+                std::io::Error::new(std::io::ErrorKind::BrokenPipe, StdoutClosed)
+            },
+            _ => error,
         })
+    }
+}
+
+impl Write for Stdout {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        Self::check(self.0.write(buf))
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Self::check(self.0.flush())
+    }
+}
+
+/// Writes formatted output to stdout; see [`Stdout`]. Prefer the crate's
+/// `outln!` macro.
+pub fn write_stdout(args: core::fmt::Arguments<'_>) -> core::result::Result<(), BoxError> {
+    Ok(stdout().write_fmt(args)?)
 }
 
 /// Like `println!`, but returns an error rather than panicking if stdout

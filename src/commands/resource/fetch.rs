@@ -138,7 +138,7 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
                             },
                         };
 
-                        let mut stdout = std::io::stdout().lock();
+                        let mut stdout = crate::shared::stdout();
                         if remote {
                             execution::write_remote_batch(&batch, &mut stdout)?;
                         } else {
