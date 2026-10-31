@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared::outln};
 use color_print::cformat;
 
 #[derive(serde::Serialize)]
@@ -40,7 +40,7 @@ pub async fn list(output: String, flags: &StandardOptions) -> Result<(), BoxErro
                     enabled: is_enabled,
                     version: module.version.as_deref().unwrap_or_default(),
                 };
-                println!("{}", serde_json::to_string(&record)?);
+                outln!("{}", serde_json::to_string(&record)?)?;
             },
             _ => {
                 let line = if is_enabled {
@@ -48,14 +48,14 @@ pub async fn list(output: String, flags: &StandardOptions) -> Result<(), BoxErro
                 } else {
                     cformat!("<s,r>✗</> {}", name)
                 };
-                println!(
+                outln!(
                     "{}",
                     if color {
                         line
                     } else {
                         clientele::strip_ansi(&line)
                     }
-                );
+                )?;
             },
         }
     }

@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::open;
-use crate::BoxError;
+use crate::{BoxError, shared::outln};
 use asimov_module::ModuleName;
 use clientele::{StandardOptions, SysexitsError::*};
 use color_print::ceprintln;
@@ -21,10 +21,7 @@ pub async fn get(
 
     if stored {
         return match tokio::fs::read_to_string(module.var_file(key)).await {
-            Ok(value) => {
-                println!("{value}");
-                Ok(())
-            },
+            Ok(value) => outln!("{value}"),
             Err(e) if e.kind() == tokio::io::ErrorKind::NotFound => {
                 ceprintln!("<s,r>error:</> no value is stored for variable `{key}`");
                 Err(EX_CONFIG.into())
@@ -37,10 +34,7 @@ pub async fn get(
     }
 
     match module.manifest.variable(key, Some(module.profile)) {
-        Ok(value) => {
-            println!("{value}");
-            Ok(())
-        },
+        Ok(value) => outln!("{value}"),
         Err(e @ asimov_module::ReadVarError::UnconfiguredVar(_)) => {
             ceprintln!("<s,r>error:</> {e}");
             Err(EX_CONFIG.into())

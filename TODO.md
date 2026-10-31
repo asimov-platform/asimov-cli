@@ -12,7 +12,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - Rust/Cargo 1.99.1 on aarch64 macOS, with
   `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 119 tests pass; 137 with
+- `cargo test --locked` (2026-10-30): 120 tests pass; 138 with
   `--all-features`, 33 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -49,10 +49,12 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
 
-- [ ] Handle broken pipes deliberately in command output paths. `println!` on
-  a closed pipe panics with exit 101 (reproduced). Introduce fallible output
-  handling, preserving existing explicit sysexits, and add operation/path
-  context to filesystem errors at their origin.
+- [ ] Handle broken pipes in remaining command output paths. `println!` on a
+  closed pipe panics with exit 101 (reproduced). Convert remaining stdout
+  writes to `shared::outln!` (done: `module {list,search}`,
+  `module config {get,show}`); resource output writers still report
+  `BrokenPipe` as `EX_IOERR` with a diagnostic. Add operation/path context
+  to filesystem errors at their origin.
 
 - [ ] Apply standard color and verbosity options to remaining module and
   snapshot handlers (`src/commands/module/`, `src/commands/resource/snap/`).

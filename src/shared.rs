@@ -25,6 +25,40 @@ pub(crate) use files::atomic_write;
 #[cfg(test)]
 pub(crate) mod test_http;
 
+/// Stdout was closed by its reader, as when piping into `head -1`.
+///
+/// Commands stop writing and propagate this error, which the `asimov` binary
+/// treats as a quiet, successful exit.
+#[derive(Debug, thiserror::Error)]
+#[error("stdout was closed")]
+pub struct StdoutClosed;
+
+/// Writes formatted output to stdout, returning [`StdoutClosed`] if the
+/// reader has closed the pipe. Prefer the crate's `outln!` macro.
+pub fn write_stdout(args: core::fmt::Arguments<'_>) -> core::result::Result<(), BoxError> {
+    std::io::stdout()
+        .lock()
+        .write_fmt(args)
+        .map_err(|error| match error.kind() {
+            std::io::ErrorKind::BrokenPipe => StdoutClosed.into(),
+            _ => error.into(),
+        })
+}
+
+/// Like `println!`, but returns an error rather than panicking if stdout
+/// can't be written to; see [`write_stdout`].
+#[allow(unused_macros)]
+macro_rules! outln {
+    () => {
+        $crate::shared::write_stdout(format_args!("\n"))
+    };
+    ($($arg:tt)*) => {
+        $crate::shared::write_stdout(format_args!("{}\n", format_args!($($arg)*)))
+    };
+}
+#[allow(unused_imports)]
+pub(crate) use outln;
+
 /// Resolves the standard color option for stdout, including redirected output.
 #[cfg(feature = "module")]
 pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {

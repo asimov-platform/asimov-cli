@@ -1,7 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
-use color_print::{ceprintln, cprintln};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared::outln};
+use color_print::{ceprintln, cformat};
 
 pub async fn search(
     query: Vec<String>,
@@ -36,12 +36,12 @@ pub async fn search(
                     tracing::error!("failed to serialize module manifest: {e}");
                     EX_SOFTWARE
                 })?;
-                println!("{json}");
+                outln!("{json}")?;
             },
             _ => {
                 let name = format!("{:width$}", module.name);
                 let summary = module.summary.as_deref().unwrap_or_default();
-                cprintln!("<s,c>{name}</>  {summary}");
+                outln!("{}", cformat!("<s,c>{name}</>  {summary}"))?;
             },
         }
     }

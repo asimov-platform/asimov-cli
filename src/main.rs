@@ -563,6 +563,10 @@ fn sysexits(err: BoxError) -> clientele::SysexitsError {
     if let Some(code) = err.downcast_ref::<clientele::SysexitsError>() {
         return *code;
     }
+    // A reader closing stdout early (e.g., `| head -1`) isn't a failure.
+    if err.is::<asimov_cli::shared::StdoutClosed>() {
+        return EX_OK;
+    }
     use std::io::Write;
     let _ = writeln!(std::io::stderr().lock(), "asimov: {err}");
     if let Some(error) = err.downcast_ref::<std::io::Error>() {

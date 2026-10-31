@@ -1,10 +1,10 @@
 // This is free and unencumbered software released into the public domain.
 
 use super::{MASK, open};
-use crate::BoxError;
+use crate::{BoxError, shared::outln};
 use asimov_module::ModuleName;
 use clientele::StandardOptions;
-use color_print::{cformat, cprintln};
+use color_print::cformat;
 
 /// Shows every declared configuration variable, where its effective value
 /// comes from, and the value itself unless it is secret.
@@ -39,14 +39,17 @@ pub async fn show(
                 })
                 .collect();
 
-            println!("{}", serde_json::to_string_pretty(&vars)?);
+            outln!("{}", serde_json::to_string_pretty(&vars)?)?;
         },
         _ => {
             if rows.is_empty() {
-                cprintln!(
-                    "<s,dim>note:</> module <s>{}</> has no configuration variables",
-                    module.name
-                );
+                outln!(
+                    "{}",
+                    cformat!(
+                        "<s,dim>note:</> module <s>{}</> has no configuration variables",
+                        module.name
+                    )
+                )?;
                 return Ok(());
             }
 
@@ -77,13 +80,16 @@ pub async fn show(
 
             for ((var, source, _), (plain, colored)) in rows.iter().zip(&shown) {
                 let padding = " ".repeat(value_width - plain.chars().count());
-                cprintln!(
-                    "<s>{:<name_width$}</>  {}{}  <dim>{}</>",
-                    var.name,
-                    colored,
-                    padding,
-                    source.as_str(),
-                );
+                outln!(
+                    "{}",
+                    cformat!(
+                        "<s>{:<name_width$}</>  {}{}  <dim>{}</>",
+                        var.name,
+                        colored,
+                        padding,
+                        source.as_str(),
+                    )
+                )?;
             }
         },
     }
