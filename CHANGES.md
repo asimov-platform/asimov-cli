@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   upgrade, uninstall, enable, or disable modules, and of
   `asimov config telemetry`, to stderr rather than stdout
 ### Fixed
+- Keep module config values private when the module's config directory is a
+  symlink, as for a regular directory
 - Read module config values through symlinked config directories in
   `asimov module config get` and `asimov module inspect`
 - Refuse to read module config values through symlinks that lead outside the

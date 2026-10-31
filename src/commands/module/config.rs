@@ -296,18 +296,19 @@ impl Module {
         Ok(())
     }
 
+    /// Makes the module's configuration directory and its contents private.
+    ///
+    /// The directory itself may be a symlink, whose target is then repaired;
+    /// symlinks within it are skipped, so that their targets are untouched.
     #[cfg(unix)]
     pub async fn set_permissions(&self) -> tokio::io::Result<()> {
         async {
             use std::os::unix::fs::PermissionsExt;
 
-            let metadata = match tokio::fs::symlink_metadata(&self.conf_dir).await {
-                Ok(metadata) => metadata,
+            match tokio::fs::metadata(&self.conf_dir).await {
+                Ok(_) => {},
                 Err(e) if e.kind() == tokio::io::ErrorKind::NotFound => return Ok(()),
                 Err(e) => return Err(e),
-            };
-            if metadata.is_symlink() {
-                return Ok(());
             }
 
             let mut directories = vec![self.conf_dir.clone()];

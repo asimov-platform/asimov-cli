@@ -20,12 +20,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - `cargo doc --locked --no-deps`: passes without warnings, including with
   `--all-features`.
 
-## P1: Data integrity and confidentiality
-
-- [ ] Repair permissions behind a symlinked module config directory.
-  `Module::set_permissions` skips the directory when it is a symlink, leaving
-  stored secrets with whatever modes its target has.
-
 ## P2: CLI behavior and process lifecycle
 
 - [ ] Make argument-file expansion aware of literal option values.

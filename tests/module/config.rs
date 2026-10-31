@@ -701,21 +701,39 @@ fn config_readers_do_not_follow_value_symlinks_out_of_the_directory() -> Result 
 #[cfg(unix)]
 #[test]
 fn config_values_may_live_behind_symlinked_directories() -> Result {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    let mode = |path: &Path| -> Result<u32> {
+        Ok(std::fs::symlink_metadata(path)?.permissions().mode() & 0o777)
+    };
     for component in ["", "configs", "configs/default", "configs/default/demo"] {
         let sandbox = Sandbox::new()?;
         let outside = TempDir::new()?;
         // A symlinked state root is used through its link, like `~/.asimov`.
         let root = if component.is_empty() {
             let link = outside.child("root");
-            std::os::unix::fs::symlink(sandbox.root(), &link)?;
+            symlink(sandbox.root(), &link)?;
             link
         } else {
             let link = sandbox.root().join(component);
             std::fs::create_dir_all(link.parent().expect("has a parent"))?;
-            std::os::unix::fs::symlink(outside.path(), &link)?;
+            symlink(outside.path(), &link)?;
             sandbox.root().to_path_buf()
         };
         let env = [("ASIMOV_ROOT", root.to_str().expect("path should be UTF-8"))];
+
+        // Loose permissions behind the links are repaired, but not those of
+        // an unrelated file that a link inside the directory points to.
+        let demo_dir = root.join("configs/default/demo");
+        std::fs::create_dir_all(&demo_dir)?;
+        std::fs::write(demo_dir.join("stale"), "old")?;
+        let unrelated = TempDir::new()?;
+        let unrelated_file = unrelated.child("file");
+        std::fs::write(&unrelated_file, "unrelated")?;
+        symlink(&unrelated_file, demo_dir.join("link"))?;
+        std::fs::set_permissions(&demo_dir, std::fs::Permissions::from_mode(0o755))?;
+        for file in [&demo_dir.join("stale"), &unrelated_file] {
+            std::fs::set_permissions(file, std::fs::Permissions::from_mode(0o644))?;
+        }
 
         let run = sandbox.config_env(
             &[
@@ -728,9 +746,18 @@ fn config_values_may_live_behind_symlinked_directories() -> Result {
         )?;
         assert_eq!(run.code, EX_OK as i32, "{component:?}: {}", run.stderr);
         assert_eq!(
-            std::fs::read_to_string(root.join("configs/default/demo/host"))?,
+            std::fs::read_to_string(demo_dir.join("host"))?,
             "linked.example"
         );
+        assert_eq!(
+            mode(&std::fs::canonicalize(&demo_dir)?)?,
+            0o700,
+            "{component:?}"
+        );
+        assert_eq!(mode(&demo_dir.join("stale"))?, 0o600, "{component:?}");
+        assert_eq!(mode(&demo_dir.join("host"))?, 0o600, "{component:?}");
+        assert_eq!(mode(&unrelated_file)?, 0o644, "{component:?}");
+
         for args in [
             vec!["config", "get", "demo", "host"],
             vec!["config", "get", "demo", "host", "--stored"],
