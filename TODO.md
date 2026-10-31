@@ -84,9 +84,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P2: Verification and delivery
 
 - [ ] Replace the SDK git pin (`[patch.crates-io]` in `Cargo.toml`, at
-  64c3861 for symlinked config directories and
-  `OriginProxy::client_builder()`) with the next SDK release before
-  publishing the CLI; published crates ignore patches.
+  0be8161 for symlinked config directories,
+  `OriginProxy::client_builder()`, and the `asimov_http::reqwest`
+  re-export) with the next SDK release before publishing the CLI;
+  published crates ignore patches.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.

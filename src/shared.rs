@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{BoxError, Result};
+use asimov_http::reqwest;
 use asimov_module::{ModuleManifest, resolve::Module};
 use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};

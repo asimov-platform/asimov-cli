@@ -1,6 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
 use crate::{BoxError, StandardOptions, SysexitsError::*};
+use asimov_http::reqwest;
 use asimov_installer::InstallOptions;
 use asimov_module::{ModuleManifest, ModuleName, ReadVarError};
 use color_print::ceprintln;

@@ -106,11 +106,6 @@ jq = "0.3.1"
 miette = { version = "7.5", features = ["fancy"] }
 open = "5"
 rayon = "1.11"
-reqwest = { version = "0.13.5", default-features = false, features = [
-  "json",
-  "stream",
-  "rustls",
-] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yml = { version = "0.0.13", default-features = false }
@@ -208,25 +203,25 @@ pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-arm{ arch
 pkg-url = "{ repo }/releases/download/{ version }/{ name }-{ os-name }-x64{ archive-suffix }"
 
 [patch.crates-io]
-asimov-config = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-core = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-directory = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-env = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-flow = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-http = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-huggingface = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-id = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-installer = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-kb = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-module = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-module-kit = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-patterns = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-prompt = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
-asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "64c3861e354af840da3a51f50cd4b20603aea1c3" }
+asimov-config = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-core = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-directory = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-env = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-flow = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-http = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-huggingface = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-id = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-installer = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-kb = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-keyring = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-module = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-module-kit = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-patterns = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-prompt = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-protocol = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-proxy = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-registry = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-remote = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-runner = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-snapshot = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
+asimov-telemetry = { git = "https://github.com/asimov-platform/asimov-sdk.git", rev = "0be8161e3962045f83684913f1633b6ce03fddab" }
