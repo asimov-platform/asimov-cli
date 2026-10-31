@@ -1,8 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions};
+use crate::{BoxError, StandardOptions, shared::outln};
 
 pub async fn host(_flags: &StandardOptions) -> Result<(), BoxError> {
-    println!("{}", super::endpoint::bind_address(None, None)?.ip());
+    outln!("{}", super::endpoint::bind_address(None, None)?.ip())?;
     Ok(())
 }

@@ -81,6 +81,23 @@ fn resource_output_stops_quietly() {
 }
 
 #[test]
+#[cfg(all(feature = "proxy", feature = "unstable"))]
+fn proxy_output_stops_quietly() {
+    let home = TempDir::new().unwrap();
+    for args in [
+        &["proxy", "host"][..],
+        &["proxy", "port"],
+        &["proxy", "url"],
+        &["proxy", "models"],
+        &["proxy", "config", "bash"],
+        &["proxy", "config", "goose"],
+        &["proxy", "config", "zed"],
+    ] {
+        run(&home, args, true);
+    }
+}
+
+#[test]
 #[cfg(feature = "remote")]
 fn remote_output_stops_quietly() {
     let home = TempDir::new().unwrap();

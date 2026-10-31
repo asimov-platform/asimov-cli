@@ -12,7 +12,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - Rust/Cargo 1.99.1 on aarch64 macOS, with
   `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 124 tests pass; 142 with
+- `cargo test --locked` (2026-10-30): 124 tests pass; 143 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -52,7 +52,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Handle broken pipes in remaining command output paths. `println!` on a
   closed pipe panics with exit 101 (reproduced). Convert remaining stdout
   writes to `shared::outln!` (done: `module`, `resource`, `remote list`,
-  `--version`, `--license`; remaining: `proxy`, `unstable` commands). Add operation/path context to filesystem errors
+  `proxy`, `--version`, `--license`; remaining: `unstable` commands). Add operation/path context to filesystem errors
   at their origin.
 
 - [ ] Apply standard color and verbosity options to remaining module and

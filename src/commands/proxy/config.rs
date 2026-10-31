@@ -1,6 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions};
+use crate::{
+    BoxError, StandardOptions,
+    shared::{out, outln},
+};
 use clap::ValueEnum;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
@@ -66,11 +69,11 @@ pub async fn config(
         Aider => match format.as_deref() {
             None => {
                 if cfg!(windows) {
-                    println!("setx OPENAI_API_BASE \"{base_url}\"");
-                    println!("setx OPENAI_API_KEY \"aider\"");
+                    outln!("setx OPENAI_API_BASE \"{base_url}\"")?;
+                    outln!("setx OPENAI_API_KEY \"aider\"")?;
                 } else {
-                    println!("export OPENAI_API_BASE={base_url}");
-                    println!("export OPENAI_API_KEY=aider");
+                    outln!("export OPENAI_API_BASE={base_url}")?;
+                    outln!("export OPENAI_API_KEY=aider")?;
                 }
             },
             Some(format) => return unsupported_format(app, format),
@@ -78,8 +81,8 @@ pub async fn config(
 
         Bash | Zsh => match format.as_deref() {
             Some("export") | None => {
-                println!("export OPENAI_API_BASE={base_url}");
-                println!("export OPENAI_API_KEY=sh");
+                outln!("export OPENAI_API_BASE={base_url}")?;
+                outln!("export OPENAI_API_KEY=sh")?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -92,8 +95,8 @@ pub async fn config(
 
         Dotenv => match format.as_deref() {
             Some("env") | None => {
-                println!("OPENAI_API_BASE={base_url}");
-                println!("OPENAI_API_KEY=dotenv");
+                outln!("OPENAI_API_BASE={base_url}")?;
+                outln!("OPENAI_API_KEY=dotenv")?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -103,13 +106,13 @@ pub async fn config(
         // See: <https://github.com/aaif-goose/goose/blob/main/crates/goose-providers/src/openai_compatible.rs>
         Goose => match format.as_deref() {
             Some("json") => {
-                print!("{}", include_str!("config/goose.json"));
+                out!("{}", include_str!("config/goose.json"))?;
             },
             Some("jsonc") | None => {
-                print!(
+                out!(
                     "// ~/.config/goose/custom_providers/asimov.json\n{}",
                     include_str!("config/goose.json")
-                );
+                )?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -118,10 +121,10 @@ pub async fn config(
         // See: <https://reference.langchain.com/javascript/langchain-openai/ChatOpenAI>
         Langchain => match format.as_deref() {
             Some("py") | None => {
-                print!("{}", include_str!("config/langchain.py"));
+                out!("{}", include_str!("config/langchain.py"))?;
             },
             Some("js") | Some("ts") => {
-                print!("{}", include_str!("config/langchain.js"));
+                out!("{}", include_str!("config/langchain.js"))?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -129,13 +132,13 @@ pub async fn config(
         // See: <https://docs.litellm.ai/docs/contributing/adding_openai_compatible_providers>
         Litellm => match format.as_deref() {
             Some("json") => {
-                print!("{}", include_str!("config/litellm.json"));
+                out!("{}", include_str!("config/litellm.json"))?;
             },
             Some("jsonc") | None => {
-                print!(
+                out!(
                     "// litellm/llms/openai_like/providers.json\n{}",
                     include_str!("config/litellm.json")
-                );
+                )?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -143,7 +146,7 @@ pub async fn config(
         // See: <https://developers.llamaindex.ai/python/framework-api-reference/llms/openai_like/>
         Llamaindex => match format.as_deref() {
             Some("py") | None => {
-                print!("{}", include_str!("config/llamaindex.py"));
+                out!("{}", include_str!("config/llamaindex.py"))?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -151,13 +154,13 @@ pub async fn config(
         // See: <https://opencode.ai/docs/providers/#custom-provider>
         Opencode => match format.as_deref() {
             Some("json") => {
-                print!("{}", include_str!("config/opencode.json"));
+                out!("{}", include_str!("config/opencode.json"))?;
             },
             Some("jsonc") | None => {
-                print!(
+                out!(
                     "// ~/.config/opencode/opencode.json\n{}",
                     include_str!("config/opencode.json")
-                );
+                )?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -166,35 +169,35 @@ pub async fn config(
         // See: <https://docs.openhands.dev/openhands/usage/v0/advanced/V0_configuration-options#llm-configuration>
         Openhands => match format.as_deref() {
             Some("env") => {
-                println!("LLM_BASE_URL={base_url}");
-                println!("LLM_API_KEY=openhands");
-                println!("LLM_MODEL={default_model}");
+                outln!("LLM_BASE_URL={base_url}")?;
+                outln!("LLM_API_KEY=openhands")?;
+                outln!("LLM_MODEL={default_model}")?;
             },
             Some("toml") | None => {
-                println!("[llm.asimov]");
-                println!("base_url = \"{}\"", base_url);
-                println!("api_key = \"openhands\"");
-                println!("model = \"{}\"", default_model);
+                outln!("[llm.asimov]")?;
+                outln!("base_url = \"{}\"", base_url)?;
+                outln!("api_key = \"openhands\"")?;
+                outln!("model = \"{}\"", default_model)?;
             },
             Some(format) => return unsupported_format(app, format),
         },
 
         Powershell => match format.as_deref() {
             Some("dotnet") | None => {
-                println!(
+                outln!(
                     r#"[Environment]::SetEnvironmentVariable("OPENAI_API_BASE", "{base_url}", "User")"#
-                );
-                println!(
+                )?;
+                outln!(
                     r#"[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "powershell", "User")"#
-                );
+                )?;
             },
             Some("set") => {
-                println!("set \"OPENAI_API_BASE={base_url}\"");
-                println!("set \"OPENAI_API_KEY=powershell\"");
+                outln!("set \"OPENAI_API_BASE={base_url}\"")?;
+                outln!("set \"OPENAI_API_KEY=powershell\"")?;
             },
             Some("setx") => {
-                println!("setx OPENAI_API_BASE \"{base_url}\"");
-                println!("setx OPENAI_API_KEY \"powershell\"");
+                outln!("setx OPENAI_API_BASE \"{base_url}\"")?;
+                outln!("setx OPENAI_API_KEY \"powershell\"")?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -203,13 +206,13 @@ pub async fn config(
         // See: <https://pi.dev/docs/latest/models>
         Pi => match format.as_deref() {
             Some("json") => {
-                print!("{}", include_str!("config/pi.json"));
+                out!("{}", include_str!("config/pi.json"))?;
             },
             Some("jsonc") | None => {
-                print!(
+                out!(
                     "// ~/.pi/agent/models.json\n{}",
                     include_str!("config/pi.json")
-                );
+                )?;
             },
             Some(format) => return unsupported_format(app, format),
         },
@@ -217,10 +220,10 @@ pub async fn config(
         // See: <https://zed.dev/docs/reference/all-settings#language-models>
         Zed => match format.as_deref() {
             Some("json") => {
-                println!("{}", zed_asimov_config()?);
+                outln!("{}", zed_asimov_config()?)?;
             },
             Some("jsonc") | None => {
-                println!("// ~/.config/zed/settings.json\n{}", zed_asimov_config()?);
+                outln!("// ~/.config/zed/settings.json\n{}", zed_asimov_config()?)?;
             },
             Some(format) => return unsupported_format(app, format),
         },

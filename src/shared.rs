@@ -91,6 +91,17 @@ macro_rules! outln {
 #[allow(unused_imports)]
 pub(crate) use outln;
 
+/// Like `print!`, but returns an error rather than panicking if stdout
+/// can't be written to; see [`write_stdout`].
+#[allow(unused_macros)]
+macro_rules! out {
+    ($($arg:tt)*) => {
+        $crate::shared::write_stdout(format_args!($($arg)*))
+    };
+}
+#[allow(unused_imports)]
+pub(crate) use out;
+
 /// Resolves the standard color option for stdout, including redirected output.
 #[cfg(feature = "module")]
 pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
