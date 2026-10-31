@@ -1,8 +1,8 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared::outln};
 use asimov_module::ModuleName;
-use color_print::{ceprintln, cprintln};
+use color_print::{ceprintln, cformat};
 
 pub async fn inspect(
     module_name: ModuleName,
@@ -79,53 +79,59 @@ pub async fn inspect(
                 }
             }
 
-            println!(
+            outln!(
                 "{}",
                 serde_json::to_string_pretty(&serde_json::json!({
                     "manifest": serde_json::to_value(&redacted)?,
                     "enabled": is_enabled,
                     "config": config,
                 }))?
-            );
+            )?;
         },
         _ => {
             if is_enabled {
-                cprintln!("<s,g>✓</> <s>{}</> (enabled)", manifest.name);
+                outln!(
+                    "{}",
+                    cformat!("<s,g>✓</> <s>{}</> (enabled)", manifest.name)
+                )?;
             } else {
-                cprintln!("<s,r>✗</> <s>{}</> (disabled)", manifest.name);
+                outln!(
+                    "{}",
+                    cformat!("<s,r>✗</> <s>{}</> (disabled)", manifest.name)
+                )?;
             }
 
             if let Some(label) = &manifest.label {
-                cprintln!("<s>Label:</> {label}");
+                outln!("{}", cformat!("<s>Label:</> {label}"))?;
             }
             if let Some(title) = &manifest.title {
-                cprintln!("<s>Title:</> {title}");
+                outln!("{}", cformat!("<s>Title:</> {title}"))?;
             }
             if let Some(summary) = &manifest.summary {
-                cprintln!("<s>Summary:</> {summary}");
+                outln!("{}", cformat!("<s>Summary:</> {summary}"))?;
             }
             if let Some(version) = &installed.version {
-                cprintln!("<s>Version:</> {version}");
+                outln!("{}", cformat!("<s>Version:</> {version}"))?;
             }
 
             if !manifest.links.is_empty() {
                 let mut links = manifest.links.clone();
                 crate::sort_links(&manifest.name, &mut links);
-                cprintln!("<s>Links:</>");
+                outln!("{}", cformat!("<s>Links:</>"))?;
                 for link in links {
-                    println!("  {link}");
+                    outln!("  {link}")?;
                 }
             }
 
             if !manifest.provides.is_empty() {
-                cprintln!("<s>Programs:</>");
+                outln!("{}", cformat!("<s>Programs:</>"))?;
                 for program in &manifest.provides.programs {
-                    println!("  {program}");
+                    outln!("  {program}")?;
                 }
             }
 
             if !manifest.handles.is_empty() {
-                cprintln!("<s>Handles:</>");
+                outln!("{}", cformat!("<s>Handles:</>"))?;
                 for (kind, values) in [
                     ("URL protocols", &manifest.handles.url_protocols),
                     ("URL prefixes", &manifest.handles.url_prefixes),
@@ -134,31 +140,31 @@ pub async fn inspect(
                     ("content types", &manifest.handles.content_types),
                 ] {
                     if !values.is_empty() {
-                        println!("  {kind}: {}", values.join(", "));
+                        outln!("  {kind}: {}", values.join(", "))?;
                     }
                 }
             }
 
-            cprintln!("<s>Configuration:</>");
+            outln!("{}", cformat!("<s>Configuration:</>"))?;
             if conf_vars.is_empty() {
-                println!("  no configuration variables declared");
+                outln!("  no configuration variables declared")?;
             } else {
                 for (var, is_set) in conf_vars.iter().zip(&conf_status) {
                     if *is_set {
-                        cprintln!("  <s,g>✓</> <s>{}</> (set)", var.name);
+                        outln!("{}", cformat!("  <s,g>✓</> <s>{}</> (set)", var.name))?;
                     } else if var.is_required() {
-                        cprintln!("  <s,r>✗</> <s>{}</> (required)", var.name);
+                        outln!("{}", cformat!("  <s,r>✗</> <s>{}</> (required)", var.name))?;
                     } else {
-                        cprintln!("  <dim>-</> <s>{}</> (unset)", var.name);
+                        outln!("{}", cformat!("  <dim>-</> <s>{}</> (unset)", var.name))?;
                     }
                     if let Some(description) = &var.description {
-                        println!("      {description}");
+                        outln!("      {description}")?;
                     }
                     if let Some(default_value) = &var.default_value {
                         if var.secret {
-                            println!("      default: ******");
+                            outln!("      default: ******")?;
                         } else {
-                            println!("      default: {default_value}");
+                            outln!("      default: {default_value}")?;
                         }
                     }
                 }

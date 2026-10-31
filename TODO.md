@@ -51,7 +51,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Handle broken pipes in remaining command output paths. `println!` on a
   closed pipe panics with exit 101 (reproduced). Convert remaining stdout
-  writes to `shared::outln!` (done: `module {list,search}`,
+  writes to `shared::outln!` (done: `module {doc,inspect,list,search}`,
   `module config {get,show}`); resource output writers still report
   `BrokenPipe` as `EX_IOERR` with a diagnostic. Add operation/path context
   to filesystem errors at their origin.

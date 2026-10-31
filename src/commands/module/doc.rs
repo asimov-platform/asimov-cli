@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared};
 use asimov_module::ModuleName;
 use color_print::ceprintln;
 
@@ -32,9 +32,9 @@ pub async fn doc(module_name: ModuleName, _flags: &StandardOptions) -> Result<()
         },
     };
 
-    print!("{readme}");
+    shared::write_stdout(format_args!("{readme}"))?;
     if !readme.ends_with('\n') {
-        println!();
+        shared::outln!()?;
     }
 
     Ok(())
