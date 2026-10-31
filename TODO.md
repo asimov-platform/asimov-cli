@@ -22,13 +22,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P1: Data integrity and confidentiality
 
-- [ ] Finish module config symlink policy. `~/.asimov` and the `configs`,
-  profile, and module directories may be symlinks; value files must not
-  escape the module directory. CLI-local reads enforce this
-  (`Module::read_value`). Remaining: after the SDK releases a80f178, bump it
-  and extend `config_values_may_live_behind_symlinked_directories` to `get`
-  without `--stored` and `inspect`. Decide whether `set_permissions` should
-  repair a symlinked module directory (it currently skips it).
+- [ ] Repair permissions behind a symlinked module config directory.
+  `Module::set_permissions` skips the directory when it is a symlink, leaving
+  stored secrets with whatever modes its target has.
 
 ## P2: CLI behavior and process lifecycle
 
@@ -94,6 +90,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`src/commands/proxy/config.rs`).
 
 ## P2: Verification and delivery
+
+- [ ] Replace the SDK git pin (`[patch.crates-io]` in `Cargo.toml`, at
+  a80f178 for symlinked config directories) with the next SDK release
+  before publishing the CLI; published crates ignore patches.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.

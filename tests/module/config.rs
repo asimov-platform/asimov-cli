@@ -717,19 +717,26 @@ fn config_values_may_live_behind_symlinked_directories() -> Result {
         };
         let env = [("ASIMOV_ROOT", root.to_str().expect("path should be UTF-8"))];
 
-        let run = sandbox.config_env(&["set", "demo", "host=linked.example"], &env)?;
+        let run = sandbox.config_env(
+            &[
+                "set",
+                "demo",
+                "api-key=linked-secret",
+                "host=linked.example",
+            ],
+            &env,
+        )?;
         assert_eq!(run.code, EX_OK as i32, "{component:?}: {}", run.stderr);
         assert_eq!(
             std::fs::read_to_string(root.join("configs/default/demo/host"))?,
             "linked.example"
         );
-        // TODO: add `get` without `--stored` and `inspect`, which read through
-        // the SDK, once it releases support for symlinked directories.
         for args in [
-            vec!["get", "demo", "host", "--stored"],
-            vec!["show", "demo"],
+            vec!["config", "get", "demo", "host"],
+            vec!["config", "get", "demo", "host", "--stored"],
+            vec!["config", "show", "demo"],
         ] {
-            let run = sandbox.config_env(&args, &env)?;
+            let run = sandbox.module_env(&args, &env)?;
             assert_eq!(
                 run.code, EX_OK as i32,
                 "{component:?} {args:?}: {}",
@@ -740,6 +747,8 @@ fn config_values_may_live_behind_symlinked_directories() -> Result {
                 "{component:?} {args:?}"
             );
         }
+        let run = sandbox.module_env(&["inspect", "demo"], &env)?;
+        assert_eq!(run.code, EX_OK as i32, "{component:?}: {}", run.stderr);
     }
     Ok(())
 }
