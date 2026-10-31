@@ -103,8 +103,6 @@ clientele = { version = "0.5.0", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
 derive_more = { version = "2", features = ["display"] }
 jq = "0.3.1"
-known-types-pypi = { version = "0.1.5", features = ["serde"] }
-known-types-rubygems = { version = "0.1.5", features = ["serde"] }
 miette = { version = "7.5", features = ["fancy"] }
 open = "5"
 rayon = "1.11"

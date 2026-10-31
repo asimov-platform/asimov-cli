@@ -5,7 +5,6 @@ extern crate alloc;
 pub mod aliases;
 pub mod commands;
 pub mod options {}
-pub mod registry;
 pub mod shared;
 
 #[cfg(all(feature = "resource", feature = "unstable"))]

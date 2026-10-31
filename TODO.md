@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 131 tests pass; 150 with
+- `cargo test --locked` (2026-10-30): 126 tests pass; 145 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -132,13 +132,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   source consumers. Gate experimental SDK dependencies and narrow broad
   Tokio/default features where practical. Measure clean-build time and binary
   size, checking feature unification before removing dependencies.
-
-- [ ] Retire or explicitly deprecate the legacy registry API
-  (`src/registry.rs`, `src/registry/`). Public `fetch_modules` always returns an
-  empty list and `is_enabled` always returns true, while active CLI handlers use
-  the SDK registry. Migrate consumers before removal. If retained, repair HTTP
-  status handling, hardcoded package versions/endpoints, dependency-kind and
-  requirement parsing, and the use of parent-package versions for modules.
 
 - [ ] Establish readiness contracts before wiring experimental commands
   (`src/commands/unstable.rs`, `src/commands/unstable/`). The root enum is

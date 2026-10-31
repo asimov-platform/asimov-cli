@@ -63,8 +63,7 @@
   `resource/` wraps SDK runners and snapshots (`resource/snap/`); `proxy/` serves
   an OpenAI-compatible endpoint (Axum/Hyper/rustls) and app config templates.
 - `src/shared.rs` holds module selection, HTTP, and jq/Jev filtering helpers.
-  `src/registry.rs::fetch_modules()` is disabled; active module management
-  uses the SDK's `asimov-registry` crate.
+  Module management uses the SDK's `asimov-registry` crate.
 - `all = ["module", "remote", "resource", "telemetry"]`.
   `source` aliases `resource`. `unstable` enables `proxy` and `resource-snap`;
   proxy/snapshot commands and the `snap` alias require `unstable`.

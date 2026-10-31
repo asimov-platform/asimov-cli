@@ -269,8 +269,6 @@ dependencies = [
  "jq",
  "json-escape",
  "jsonc-parser",
- "known-types-pypi",
- "known-types-rubygems",
  "miette",
  "mime",
  "open",
@@ -4836,30 +4834,8 @@ checksum = "4fac2b23649fa863ff29eb1cd778060303e37827b1210c19e382f32156771799"
 dependencies = [
  "bincode",
  "borsh",
- "musli 0.0.131",
+ "musli",
  "rasn",
- "serde",
-]
-
-[[package]]
-name = "known-types-pypi"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eed4280749e514eac922454b91de1c9839344b5df787833967ec766d357cdb85"
-dependencies = [
- "borsh",
- "musli 0.1.9",
- "serde",
-]
-
-[[package]]
-name = "known-types-rubygems"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f1df92bf4624c3b3cdd61c558d898c573f530ff864586f762ca7e90a815fff8"
-dependencies = [
- "borsh",
- "musli 0.1.9",
  "serde",
 ]
 
@@ -5254,19 +5230,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73db912f61beab22204a8d3a908b4bc6903ae86e05f614bb418b2f45ef4549df"
 dependencies = [
  "loom",
- "musli-core 0.0.131",
- "serde",
- "simdutf8",
-]
-
-[[package]]
-name = "musli"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b78952134c9c19fa4f7006f7f2a7c31fa7a1eb83fabc326bb5455bb39e8b3ab7"
-dependencies = [
- "loom",
- "musli-core 0.1.9",
+ "musli-core",
  "serde",
  "simdutf8",
 ]
@@ -5277,16 +5241,7 @@ version = "0.0.131"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e57ddb0fac1b85c4aa0f46526eb2d1c07295ef9f5f25ced9e93fda4a1b8adb0"
 dependencies = [
- "musli-macros 0.0.131",
-]
-
-[[package]]
-name = "musli-core"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b35216815865f811fc5d39b2164a1aa6071ca2eee5dfa587ac2fba8ae39506eb"
-dependencies = [
- "musli-macros 0.1.9",
+ "musli-macros",
 ]
 
 [[package]]
@@ -5298,17 +5253,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "musli-macros"
-version = "0.1.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8392bf99d3af026789519f2bd08e412d387d8c6a8c3b2c181c8e1dea50c5bc5c"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 3.0.9",
 ]
 
 [[package]]
