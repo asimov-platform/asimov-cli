@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 132 tests pass; 151 with
+- `cargo test --locked` (2026-10-30): 131 tests pass; 150 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -80,8 +80,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P2: Verification and delivery
 
 - [ ] Replace the SDK git pin (`[patch.crates-io]` in `Cargo.toml`, at
-  a80f178 for symlinked config directories) with the next SDK release
-  before publishing the CLI; published crates ignore patches.
+  64c3861 for symlinked config directories and
+  `OriginProxy::client_builder()`) with the next SDK release before
+  publishing the CLI; published crates ignore patches.
 
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.

@@ -22,9 +22,6 @@ mod files;
 #[cfg(any(feature = "module", all(feature = "proxy", feature = "unstable")))]
 pub(crate) use files::atomic_write;
 
-#[cfg(test)]
-pub(crate) mod test_http;
-
 /// Stdout was closed by its reader, as when piping into `head -1`.
 ///
 /// Commands stop writing and propagate this error, which the `asimov` binary
@@ -111,18 +108,6 @@ pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
         clap::ColorChoice::Never => false,
         clap::ColorChoice::Auto => std::io::stdout().is_terminal(),
     }
-}
-
-/// Starts an HTTP client with a 10-second connect limit and the given read
-/// and total limits. Callers must still install a proxy policy.
-fn http_client_builder(
-    read_timeout: std::time::Duration,
-    timeout: std::time::Duration,
-) -> reqwest::ClientBuilder {
-    reqwest::Client::builder()
-        .connect_timeout(std::time::Duration::from_secs(10))
-        .read_timeout(read_timeout)
-        .timeout(timeout)
 }
 
 /// Locates the given subcommand or prints an error.
@@ -380,10 +365,8 @@ where
     let url = reqwest::Url::parse(url)?;
     let proxy = asimov_http::proxy::OriginProxy::resolve(&url, proxy)?;
     let client = proxy
-        .configure_reqwest(http_client_builder(
-            std::time::Duration::from_secs(30),
-            std::time::Duration::from_secs(120),
-        ))?
+        .client_builder()?
+        .timeout(std::time::Duration::from_secs(120))
         .build()?;
     proxy.check_origin(&url)?;
 
@@ -609,51 +592,6 @@ mod tests {
             request.contains("authorization: Bearer token\r\n"),
             "{request}"
         );
-    }
-
-    #[tokio::test]
-    async fn http_deadlines_bound_stalled_headers_and_bodies() {
-        use std::time::Duration;
-        use tokio::io::AsyncWriteExt;
-        for headers in [false, true] {
-            for (read_timeout, total_timeout) in [
-                (Duration::from_millis(50), Duration::from_secs(5)),
-                (Duration::from_secs(5), Duration::from_millis(50)),
-            ] {
-                let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-                let address = listener.local_addr().unwrap();
-                let server = tokio::spawn(async move {
-                    let (mut socket, _) = listener.accept().await.unwrap();
-                    test_http::read_request_headers(&mut socket).await;
-                    if headers {
-                        socket
-                            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\n")
-                            .await
-                            .unwrap();
-                    }
-                    core::future::pending::<()>().await;
-                });
-                let client = http_client_builder(read_timeout, total_timeout)
-                    .no_proxy()
-                    .build()
-                    .unwrap();
-                let result = tokio::time::timeout(Duration::from_secs(2), async {
-                    client
-                        .get(format!("http://{address}/"))
-                        .send()
-                        .await?
-                        .bytes()
-                        .await
-                })
-                .await;
-                server.abort();
-                let _ = server.await;
-                let error = result
-                    .expect("the configured deadline must fire")
-                    .unwrap_err();
-                assert!(error.is_timeout(), "{error}");
-            }
-        }
     }
 
     #[test]

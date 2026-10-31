@@ -183,11 +183,10 @@ async fn fetch_module_names(
 ) -> Result<Vec<String>, Box<dyn core::error::Error>> {
     let url = reqwest::Url::parse(url)?;
     let proxy = asimov_http::proxy::OriginProxy::resolve(&url, proxy)?;
-    let builder = reqwest::Client::builder()
+    let client = proxy
+        .client_builder()?
         .user_agent("asimov-module-cli")
-        .connect_timeout(std::time::Duration::from_secs(10))
-        .read_timeout(std::time::Duration::from_secs(30));
-    let client = proxy.configure_reqwest(builder)?.build()?;
+        .build()?;
     proxy.check_origin(&url)?;
 
     let response = client
