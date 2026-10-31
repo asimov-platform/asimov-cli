@@ -98,7 +98,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   `set-env-vars@master`, which build and test fork PR heads under
   `pull_request_target` after exporting the `ENV` secret. Fix that in
   asimov-platform/actions (no secrets for PR-head jobs; pin nested refs).
-  Then pin `release.yaml` and pass explicit secrets, and add automated
+  `release.yaml` is likewise pinned with explicit secrets. Add automated
   updates for pinned Actions dependencies.
 
 ## P3: Portability, maintenance, and further coverage

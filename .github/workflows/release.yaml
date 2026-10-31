@@ -11,11 +11,17 @@ on:
 jobs:
   build-and-release:
     name: Build and release
-    uses: asimov-platform/actions/.github/workflows/build-and-release-rust-package.yaml@master
+    # Pinned like `ci.yaml`; its nested workflows still use `@master`.
+    uses: asimov-platform/actions/.github/workflows/build-and-release-rust-package.yaml@2ff9f75cfbd6d790273dbb3e3a038048916dfef1
     permissions:
       contents: read
       packages: write
-    secrets: inherit
+    # Only what this workflow declares; `CRATES_TOKEN` stays unused while
+    # `update_crates_io` is false.
+    secrets:
+      ASIMOV_APP_ID: ${{ secrets.ASIMOV_APP_ID }}
+      ASIMOV_APP_PRIVATE_KEY: ${{ secrets.ASIMOV_APP_PRIVATE_KEY }}
+      ENV: ${{ secrets.ENV }}
     with:
       create_release: true
       update_homebrew_tap: true
@@ -26,9 +32,13 @@ jobs:
         openssl@3
 
   tweet:
-    uses: asimov-platform/.github/.github/workflows/tweet.yaml@master
+    uses: asimov-platform/.github/.github/workflows/tweet.yaml@7de453a87e51b4005ab3ee5fe00d817a98ed29c2
     needs: build-and-release
-    secrets: inherit
+    secrets:
+      X_APP_KEY: ${{ secrets.X_APP_KEY }}
+      X_APP_SECRET: ${{ secrets.X_APP_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
     with:
       message: |
         📦 ASIMOV Command-Line Interface (CLI) ${{ github.ref_name }} has been released:
