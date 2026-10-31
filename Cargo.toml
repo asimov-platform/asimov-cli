@@ -67,13 +67,6 @@ proxy = [
 resource-snap = ["resource", "dep:asimov-snapshot", "dep:jiff", "dep:hex", "dep:sha2"]
 vault = []
 
-[build-dependencies]
-cfg_aliases = "0.2"
-shadow-rs = { version = "2.0", features = [
-  "build",
-], default-features = false }
-cc = "1.2"
-
 [dev-dependencies]
 asimov-http = { version = "25.9.0", default-features = false, features = [
   "integrity",

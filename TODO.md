@@ -127,12 +127,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Check the MSRV and current stable Rust against the locked dependency graph
   in CI.
 
-- [ ] Reduce unused and unnecessarily unconditional dependencies
-  (`Cargo.toml`, `build.rs`). Audit `cc`, `iroh-base`, `secrecy`,
-  optional `mime`, and generated shadow metadata, which have no corresponding
-  source consumers. Gate experimental SDK dependencies and narrow broad
-  Tokio/default features where practical. Measure clean-build time and binary
-  size, checking feature unification before removing dependencies.
+- [ ] Reduce unnecessarily unconditional dependencies (`Cargo.toml`). Gate
+  experimental SDK dependencies and narrow broad Tokio/default features
+  where practical, measuring binary size (11.8 MB on aarch64 macOS) and
+  clean release-build time, which varied from 71 to 100 seconds between
+  identical runs here, and checking feature unification.
 
 - [ ] Establish readiness contracts before wiring experimental commands
   (`src/commands/unstable.rs`, `src/commands/unstable/`). The root enum is
