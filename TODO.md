@@ -59,9 +59,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   useful, credential-safe status/body-generation errors, and test HTTP failures
   and upload cancellation against an injectable local endpoint.
 
-- [ ] Deprecate the public `shared::http_client()`, now unused and
-  proxy-unaware; CLI requests use `asimov_http::proxy::OriginProxy`.
-
 - [ ] Fix `module install all`, which installs nothing: the upstream `all`
   manifest (asimov-modules `all/.asimov/module.yaml`) declares
   `requires.modules: []`. Populate it or enumerate modules another way.

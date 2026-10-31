@@ -6,7 +6,7 @@ use clientele::{Subcommand, SubcommandsProvider, SysexitsError::*};
 use color_print::{ceprintln, cstr};
 use core::pin::Pin;
 use std::io::Write;
-use std::{rc::Rc, sync::LazyLock};
+use std::rc::Rc;
 
 #[cfg_attr(not(feature = "telemetry"), path = "shared/telemetry_disabled.rs")]
 pub mod telemetry;
@@ -113,22 +113,8 @@ pub(crate) fn stdout_color(flags: &clientele::StandardOptions) -> bool {
     }
 }
 
-/// Returns a lazily initialized HTTP client with a shared connection pool.
-///
-/// Clones are cheap and reuse the same underlying client and connection pool.
-/// Requests have a 10-second connect, 30-second read, and 120-second total limit.
-pub fn http_client() -> reqwest::Client {
-    static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
-        http_client_builder(
-            std::time::Duration::from_secs(30),
-            std::time::Duration::from_secs(120),
-        )
-        .build()
-        .expect("failed to initialize HTTP client")
-    });
-    CLIENT.clone()
-}
-
+/// Starts an HTTP client with a 10-second connect limit and the given read
+/// and total limits. Callers must still install a proxy policy.
 fn http_client_builder(
     read_timeout: std::time::Duration,
     timeout: std::time::Duration,
