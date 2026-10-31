@@ -3,7 +3,7 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
 use asimov_module::{ModuleManifest, ModuleName, ReadVarError};
-use color_print::{ceprintln, cprintln};
+use color_print::ceprintln;
 
 pub async fn install(
     module_names: Vec<ModuleName>,
@@ -52,13 +52,13 @@ pub async fn install(
             };
 
             if flags.verbose > 0 {
-                cprintln!(
+                ceprintln!(
                     "<s,g>✓</> Found version <s>{target_version}</> for module <s>{module_name}</>."
                 );
             }
 
             if flags.verbose > 1 {
-                cprintln!("<s,c>»</> Installing module <s>{module_name}</>...");
+                ceprintln!("<s,c>»</> Installing module <s>{module_name}</>...");
             }
 
             let install_options = InstallOptions::builder()
@@ -74,10 +74,10 @@ pub async fn install(
                 })?;
 
             if flags.verbose > 0 {
-                cprintln!("<s,g>✓</> Installed module <s>{module_name}</>.");
+                ceprintln!("<s,g>✓</> Installed module <s>{module_name}</>.");
             }
         } else if flags.verbose > 0 {
-            cprintln!("<s,g>✓</> Module <s>{module_name}</> is already installed.");
+            ceprintln!("<s,g>✓</> Module <s>{module_name}</> is already installed.");
         }
 
         if registry

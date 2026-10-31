@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
-use color_print::cprintln;
+use color_print::ceprintln;
 
 pub async fn uninstall(
     module_names: Vec<ModuleName>,
@@ -11,7 +11,7 @@ pub async fn uninstall(
     let installer = asimov_installer::Installer::default();
     for module_name in module_names {
         if flags.verbose > 1 {
-            cprintln!("<s,c>»</> Uninstalling the module <s>{module_name}</>...");
+            ceprintln!("<s,c>»</> Uninstalling the module <s>{module_name}</>...");
         }
 
         installer
@@ -23,7 +23,7 @@ pub async fn uninstall(
             })?;
 
         if flags.verbose > 0 {
-            cprintln!("<s,g>✓</> Uninstalled the module <s>{module_name}</>.");
+            ceprintln!("<s,g>✓</> Uninstalled the module <s>{module_name}</>.");
         }
     }
     Ok(())

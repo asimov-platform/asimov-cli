@@ -2,7 +2,7 @@
 
 use crate::{BoxError, SysexitsError::*, shared::telemetry};
 use clientele::{StandardOptions, crates::clap::Subcommand};
-use color_print::{ceprintln, cprintln};
+use color_print::ceprintln;
 
 #[derive(Debug, Subcommand)]
 pub enum ConfigureCommand {
@@ -35,8 +35,8 @@ impl ConfigureCommand {
         })?;
         if flags.verbose > 0 {
             match command {
-                TelemetryCommand::Enable {} => cprintln!("<s,g>✓</> Enabled telemetry."),
-                TelemetryCommand::Disable {} => cprintln!("<s,g>✓</> Disabled telemetry."),
+                TelemetryCommand::Enable {} => ceprintln!("<s,g>✓</> Enabled telemetry."),
+                TelemetryCommand::Disable {} => ceprintln!("<s,g>✓</> Disabled telemetry."),
             }
         }
         Ok(())

@@ -3,7 +3,7 @@
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_installer::InstallOptions;
 use asimov_module::ModuleName;
-use color_print::cprintln;
+use color_print::ceprintln;
 
 pub async fn upgrade(
     module_names: Vec<ModuleName>,
@@ -57,7 +57,7 @@ pub async fn upgrade(
                     "latest version"
                 };
 
-                cprintln!(
+                ceprintln!(
                     "<s,g>✓</> Module <s>{module_name}</> already has {vers_txt} <s>{target_version}</> installed."
                 );
             }
@@ -65,7 +65,7 @@ pub async fn upgrade(
         }
 
         if flags.verbose > 1 {
-            cprintln!("<s,c>»</> Upgrading module <s>{module_name}</>...");
+            ceprintln!("<s,c>»</> Upgrading module <s>{module_name}</>...");
         }
 
         let install_options = InstallOptions::builder()
@@ -81,7 +81,7 @@ pub async fn upgrade(
             })?;
 
         if flags.verbose > 0 {
-            cprintln!(
+            ceprintln!(
                 "<s,g>✓</> Upgraded module <s>{module_name}</> to version <s>{target_version}</>."
             );
         }

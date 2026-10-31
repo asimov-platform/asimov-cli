@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Print the verbose progress of `asimov module` commands that install,
+  upgrade, uninstall, enable, or disable modules, and of
+  `asimov config telemetry`, to stderr rather than stdout
 ### Fixed
 - Exit with the actual exit status of external `asimov-*` commands, rather
   than `EX_SOFTWARE`; signal terminations exit with 128 plus the signal number

@@ -58,3 +58,20 @@ fn closed_stdout_stops_output_quietly() -> Result {
     }
     Ok(())
 }
+
+#[test]
+fn progress_output_does_not_depend_on_stdout() -> Result {
+    let root = TempDir::new()?;
+    let module_dir = root.child("modules/installed/demo");
+    std::fs::create_dir_all(&module_dir)?;
+    std::fs::write(module_dir.join("manifest.json"), MANIFEST)?;
+    let enabled = root.child("modules/enabled/demo");
+
+    for (command, expect_enabled) in [("enable", true), ("disable", false)] {
+        let (code, stderr) = run_with_closed_stdout(&root, &[command, "-v", "demo"])?;
+        assert_eq!(code, EX_OK as i32, "{command}: {stderr}");
+        assert!(stderr.contains("demo"), "{command}: {stderr}");
+        assert_eq!(enabled.exists(), expect_enabled, "{command}");
+    }
+    Ok(())
+}

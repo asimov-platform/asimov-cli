@@ -2,7 +2,7 @@
 
 use crate::{BoxError, StandardOptions, SysexitsError::*};
 use asimov_module::ModuleName;
-use color_print::cprintln;
+use color_print::ceprintln;
 
 pub async fn enable(
     module_names: Vec<ModuleName>,
@@ -11,7 +11,7 @@ pub async fn enable(
     let registry = asimov_registry::Registry::default();
     for module_name in module_names {
         if flags.verbose > 1 {
-            cprintln!("<s,c>»</> Enabling module <s>{module_name}</>...");
+            ceprintln!("<s,c>»</> Enabling module <s>{module_name}</>...");
         }
 
         registry.enable_module(&module_name).await.map_err(|e| {
@@ -20,7 +20,7 @@ pub async fn enable(
         })?;
 
         if flags.verbose > 0 {
-            cprintln!("<s,g>✓</> Enabled module <s>{module_name}</>.");
+            ceprintln!("<s,g>✓</> Enabled module <s>{module_name}</>.");
         }
     }
     Ok(())
