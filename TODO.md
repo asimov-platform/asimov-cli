@@ -12,7 +12,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - Rust/Cargo 1.99.1 on aarch64 macOS, with
   `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 117 tests pass.
+- `cargo test --locked` (2026-10-30): 118 tests pass; 136 with
+  `--all-features`, 33 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
 - `cargo test --locked --no-default-features`: 32 tests pass.
@@ -47,12 +48,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   without waiting; explicit external help has no timeout. Drain stdout/stderr
   concurrently, bound output, apply per-child deadlines, and always reap
   children. Exercise large help output, hangs, failed spawns, and termination.
-
-- [ ] Preserve external command exit statuses
-  (`src/main.rs::Command::External`, `src/commands/external.rs`). An external
-  exit status of 42 becomes `EX_SOFTWARE` (reproduced), and signal statuses are
-  similarly forced into `SysexitsError`. Carry raw process exit status across
-  this boundary. Test normal failures and Unix signals.
 
 - [ ] Handle broken pipes deliberately in command output paths. `println!` on
   a closed pipe panics with exit 101 (reproduced). Introduce fallible output

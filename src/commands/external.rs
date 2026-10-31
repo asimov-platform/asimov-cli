@@ -1,14 +1,16 @@
 // This is free and unencumbered software released into the public domain.
 
-use clientele::SysexitsError::{self, *};
+use clientele::SysexitsError::*;
 use std::ffi::OsString;
 use std::process::Stdio;
 
 use crate::{Result, shared::locate_subcommand};
 
 pub struct ExternalResult {
-    /// Return code of the executed command.
-    pub code: SysexitsError,
+    /// Exit code of the executed command, or 128 plus the signal number if
+    /// it was terminated by a signal. Codes that don't fit in a byte (e.g.,
+    /// Windows NTSTATUS values) are reported as `EX_SOFTWARE`.
+    pub code: u8,
 
     /// If `pipe_output` is `true`, this field contains stdout, otherwise its None.
     pub stdout: Option<Vec<u8>>,
@@ -73,8 +75,7 @@ impl ExternalSubcommand {
                         }
 
                         return Ok(ExternalResult {
-                            code: SysexitsError::try_from((signal | 0x80) & 0xff)
-                                .unwrap_or(EX_SOFTWARE),
+                            code: u8::try_from(128 + signal).unwrap_or(EX_SOFTWARE.as_u8()),
                             stdout: result.1,
                             stderr: result.2,
                         });
@@ -82,12 +83,12 @@ impl ExternalSubcommand {
                 }
 
                 Ok(ExternalResult {
-                    // unwrap_or should never happen because we are handling signal above.
+                    // `code()` is only `None` for signals, handled above.
                     code: result
                         .0
                         .code()
-                        .and_then(|code| SysexitsError::try_from(code).ok())
-                        .unwrap_or(EX_SOFTWARE),
+                        .and_then(|code| u8::try_from(code).ok())
+                        .unwrap_or(EX_SOFTWARE.as_u8()),
                     stdout: result.1,
                     stderr: result.2,
                 })

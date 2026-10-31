@@ -26,7 +26,7 @@ use asimov_cli::{
 use asimov_keyring::{Keyring, KeyringError};
 use clientele::{
     ColorChoiceExt, StandardOptions, SubcommandsProvider,
-    SysexitsError::{self, *},
+    SysexitsError::*,
     crates::clap::{CommandFactory, FromArgMatches, Parser, Subcommand},
     strip_ansi,
 };
@@ -117,14 +117,22 @@ enum Command {
 }
 
 #[tokio::main]
-pub async fn main() -> SysexitsError {
+pub async fn main() -> std::process::ExitCode {
+    std::process::ExitCode::from(run().await)
+}
+
+/// Runs the given command line, returning the process exit code.
+///
+/// Built-in commands exit with `sysexits(3)` codes, but external commands'
+/// exit codes are passed through as is.
+async fn run() -> u8 {
     // Load `$ASIMOV_ROOT/.env` before the nearest `.env`:
     clientele::crates::dotenvy::from_path(asimov_env::paths::asimov_root().join(".env")).ok();
     clientele::dotenv().ok();
 
     // Expand wildcards and @argfiles:
     let Ok(mut args) = clientele::args_os() else {
-        return EX_USAGE;
+        return EX_USAGE.as_u8();
     };
 
     // Resolve command aliases (e.g. `asimov fetch` -> `asimov resource fetch`):
@@ -211,7 +219,7 @@ pub async fn main() -> SysexitsError {
                 .map(OsString::into_string)
                 .collect::<Result<Vec<_>, _>>()
             else {
-                return EX_USAGE;
+                return EX_USAGE.as_u8();
             };
 
             // Skip the program, leading global options, and the help command.
@@ -235,7 +243,7 @@ pub async fn main() -> SysexitsError {
                 if result.success {
                     let mut stdout = std::io::stdout().lock();
                     if std::io::copy(&mut result.output.as_slice(), &mut stdout).is_err() {
-                        return EX_IOERR;
+                        return EX_IOERR.as_u8();
                     }
                 } else {
                     eprintln!("asimov: {} doesn't provide help", cmd_name);
@@ -245,13 +253,16 @@ pub async fn main() -> SysexitsError {
 
                         let mut stdout = std::io::stdout().lock();
                         if std::io::copy(&mut result.output.as_slice(), &mut stdout).is_err() {
-                            return EX_IOERR;
+                            return EX_IOERR.as_u8();
                         }
                     }
                 }
             }
 
-            return result.map(|result| result.code).unwrap_or(EX_UNAVAILABLE);
+            return result
+                .map(|result| result.code)
+                .unwrap_or(EX_UNAVAILABLE)
+                .as_u8();
         },
 
         // VARIANT 3
@@ -271,13 +282,13 @@ pub async fn main() -> SysexitsError {
     // Print the version, if requested:
     if flags.version {
         println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
-        return EX_OK;
+        return EX_OK.as_u8();
     }
 
     // Print the license, if requested:
     if flags.license {
         print!("{}", include_str!("../UNLICENSE"));
-        return EX_OK;
+        return EX_OK.as_u8();
     }
 
     // Configure debug output:
@@ -294,7 +305,7 @@ pub async fn main() -> SysexitsError {
             .after_help(after_help(use_color))
             .print_help()
             .ok();
-        return EX_USAGE;
+        return EX_USAGE.as_u8();
     };
 
     // Read the local public identity, initializing keys only if it is absent.
@@ -307,7 +318,8 @@ pub async fn main() -> SysexitsError {
             KeyringError::UserNotFound => EX_NOUSER,
             KeyringError::InvalidUser(_) => EX_CONFIG,
             KeyringError::LockPoisoned => EX_SOFTWARE,
-        };
+        }
+        .as_u8();
     }
 
     match command {
@@ -350,31 +362,31 @@ pub async fn main() -> SysexitsError {
                 EX_IOERR
             })
         {
-            return err;
+            return err.as_u8();
         }
 
         // Execute the given command:
         use Command::*;
-        let result = match command {
+        match command {
             #[cfg(feature = "telemetry")]
-            Configure(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+            Configure(command) => exit_code(command.run(flags).await),
 
             #[cfg(feature = "module")]
-            Module(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+            Module(command) => exit_code(command.run(flags).await),
 
             #[cfg(all(feature = "proxy", feature = "unstable"))]
-            Proxy { command, args } => command
-                .unwrap_or(ProxyCommand::Serve { args })
-                .run(flags)
-                .await
-                .map_err(sysexits)
-                .map(|_| EX_OK),
+            Proxy { command, args } => exit_code(
+                command
+                    .unwrap_or(ProxyCommand::Serve { args })
+                    .run(flags)
+                    .await,
+            ),
 
             #[cfg(feature = "remote")]
-            Remote(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+            Remote(command) => exit_code(command.run(flags).await),
 
             #[cfg(feature = "resource")]
-            Resource(command) => command.run(flags).await.map_err(sysexits).map(|_| EX_OK),
+            Resource(command) => exit_code(command.run(flags).await),
 
             External(args) => {
                 let cmd = ExternalSubcommand {
@@ -383,21 +395,18 @@ pub async fn main() -> SysexitsError {
                 };
                 let Some(name) = args.first().and_then(|name| name.to_str()) else {
                     eprintln!("asimov: external command name must be valid UTF-8");
-                    return EX_USAGE;
+                    return EX_USAGE.as_u8();
                 };
-                cmd.execute_os(name, &args[1..]).map(|result| result.code)
+                match cmd.execute_os(name, &args[1..]) {
+                    Ok(result) => result.code,
+                    Err(err) => err.as_u8(),
+                }
             },
-        };
-
-        // Return whatever status code we got.
-        // NOTE: We could return Result<...> here, however
-        // in that case we would get an annoying `Error: ...` message,
-        // which is not what we want. So we just return an error like this.
-        result.unwrap_or_else(|e| e)
+        }
     }
     .await;
 
-    telemetry.finish(result as i32);
+    telemetry.finish(result.into());
     telemetry::shutdown();
 
     result
@@ -528,6 +537,18 @@ pub fn after_help(color: bool) -> String {
     if color { help } else { strip_ansi(&help) }
 }
 
+/// Maps a built-in command's result to its `sysexits(3)` exit code.
+#[cfg(any(
+    feature = "module",
+    all(feature = "proxy", feature = "unstable"),
+    feature = "remote",
+    feature = "resource",
+    feature = "telemetry"
+))]
+fn exit_code<T>(result: Result<T, BoxError>) -> u8 {
+    result.map_or_else(sysexits, |_| EX_OK).as_u8()
+}
+
 // `From<Box<dyn Error>> for SysexitsError` discards the original code,
 // mapping everything to EX_SOFTWARE; recover it by downcasting instead.
 #[cfg(any(
@@ -538,8 +559,8 @@ pub fn after_help(color: bool) -> String {
     feature = "resource",
     feature = "telemetry"
 ))]
-fn sysexits(err: BoxError) -> SysexitsError {
-    if let Some(code) = err.downcast_ref::<SysexitsError>() {
+fn sysexits(err: BoxError) -> clientele::SysexitsError {
+    if let Some(code) = err.downcast_ref::<clientele::SysexitsError>() {
         return *code;
     }
     use std::io::Write;

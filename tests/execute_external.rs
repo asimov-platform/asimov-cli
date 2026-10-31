@@ -32,7 +32,7 @@ fn check_execute_external(_dir: &std::path::Path) -> Result<()> {
         let stderr = result.stderr.expect("captured stderr");
         assert_eq!(
             result.code,
-            EX_OK,
+            EX_OK.as_u8(),
             "{}: {}",
             file.name,
             String::from_utf8_lossy(&stderr)
