@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 131 tests pass; 150 with
+- `cargo test --locked` (2026-10-30): 132 tests pass; 151 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -59,11 +59,12 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   useful, credential-safe status/body-generation errors, and test HTTP failures
   and upload cancellation against an injectable local endpoint.
 
-- [ ] Adopt SDK shared proxy routing for `module install all` enumeration
-  (`src/commands/module/install.rs::fetch_all_module_names`), which still
-  uses a raw reqwest client and follows a cross-origin redirect. Jev uploads
-  already use `asimov_http::proxy::OriginProxy`. The public
-  `shared::http_client()` is now unused and proxy-unaware; deprecate it.
+- [ ] Deprecate the public `shared::http_client()`, now unused and
+  proxy-unaware; CLI requests use `asimov_http::proxy::OriginProxy`.
+
+- [ ] Fix `module install all`, which installs nothing: the upstream `all`
+  manifest (asimov-modules `all/.asimov/module.yaml`) declares
+  `requires.modules: []`. Populate it or enumerate modules another way.
 
 ## P2: Proxy reliability and interoperability
 

@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   upgrade, uninstall, enable, or disable modules, and of
   `asimov config telemetry`, to stderr rather than stdout
 ### Fixed
-- Use system proxy settings, as discovered by the SDK, for Jev filtering
+- Use system proxy settings, as discovered by the SDK, for Jev filtering and
+  for listing modules in `asimov module install all`
 - Keep module config values private when the module's config directory is a
   symlink, as for a regular directory
 - Read module config values through symlinked config directories in

@@ -165,15 +165,30 @@ pub async fn install(
     Ok(())
 }
 
-pub async fn fetch_all_module_names() -> Result<Vec<String>, Box<dyn core::error::Error>> {
-    let url = "https://github.com/asimov-modules/asimov-modules/raw/master/all/.asimov/module.yaml";
+/// The manifest of the `all` meta-module, which requires every module. This
+/// is GitHub's raw content origin directly, as the client won't redirect.
+const ALL_MODULES_URL: &str = "https://raw.githubusercontent.com/asimov-modules/asimov-modules/master/all/.asimov/module.yaml";
 
-    let client = reqwest::Client::builder()
+/// Fetches the names of all published modules, using the environment and
+/// system proxy settings for the manifest's origin, as resolved by the SDK.
+pub async fn fetch_all_module_names() -> Result<Vec<String>, Box<dyn core::error::Error>> {
+    let proxy = asimov_http::proxy::ProxyOptions::default();
+    fetch_module_names(ALL_MODULES_URL, &proxy).await
+}
+
+/// Implements [`fetch_all_module_names`] for any URL and proxy options.
+async fn fetch_module_names(
+    url: &str,
+    proxy: &asimov_http::proxy::ProxyOptions,
+) -> Result<Vec<String>, Box<dyn core::error::Error>> {
+    let url = reqwest::Url::parse(url)?;
+    let proxy = asimov_http::proxy::OriginProxy::resolve(&url, proxy)?;
+    let builder = reqwest::Client::builder()
         .user_agent("asimov-module-cli")
         .connect_timeout(std::time::Duration::from_secs(10))
-        .read_timeout(std::time::Duration::from_secs(30))
-        .build()
-        .expect("Failed to build HTTP client");
+        .read_timeout(std::time::Duration::from_secs(30));
+    let client = proxy.configure_reqwest(builder)?.build()?;
+    proxy.check_origin(&url)?;
 
     let response = client
         .get(url)
@@ -198,4 +213,46 @@ pub async fn fetch_all_module_names() -> Result<Vec<String>, Box<dyn core::error
         .map_err(|e| format!("unable to deserialize GitHub response: {e}"))?;
 
     Ok(manifest.requires.modules)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn module_names_are_fetched_through_the_resolved_proxy() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let proxy = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0; 4096];
+            while !request.ends_with(b"\r\n\r\n") {
+                let count = socket.read(&mut buffer).await.unwrap();
+                assert_ne!(count, 0, "EOF before the request ended");
+                request.extend_from_slice(&buffer[..count]);
+            }
+            let body = "name: all\nrequires:\n  modules: [alpha, beta]\n";
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{body}",
+                body.len()
+            );
+            socket.write_all(response.as_bytes()).await.unwrap();
+            String::from_utf8(request).unwrap()
+        });
+        let options = asimov_http::proxy::ProxyOptions {
+            mode: asimov_http::proxy::ProxyMode::Explicit(format!("http://{address}")),
+            no_proxy: Some(String::new()),
+        };
+        let names = fetch_module_names("http://modules.invalid/module.yaml", &options)
+            .await
+            .unwrap();
+        assert_eq!(names, ["alpha", "beta"]);
+        let request = proxy.await.unwrap();
+        assert!(
+            request.starts_with("GET http://modules.invalid/module.yaml HTTP/1.1\r\n"),
+            "{request}"
+        );
+    }
 }
