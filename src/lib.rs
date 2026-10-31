@@ -26,7 +26,7 @@ pub(crate) fn sort_links(module_name: &str, links: &mut [impl AsRef<str>]) {
     use core::cmp::Reverse;
 
     links.sort_by_cached_key(|link| {
-        let Ok(url) = reqwest::Url::parse(link.as_ref()) else {
+        let Ok(url) = url::Url::parse(link.as_ref()) else {
             // it's not even a valid url? put it last
             return Reverse(0);
         };
