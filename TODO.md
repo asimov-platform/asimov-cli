@@ -9,8 +9,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## Verification baseline
 
-- Rust/Cargo 1.99.1 on aarch64 macOS, with
-  `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
+- Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
 - `cargo test --locked` (2026-10-30): 124 tests pass; 143 with
   `--all-features`, 34 with `--no-default-features`.
@@ -105,11 +104,10 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Exercise default, all-features, and supported reduced-feature builds in
   CI, including the feature-gated module and resource integration suites.
 
-- [ ] Strengthen and isolate remaining CLI fixtures (`tests/module/` and
-  operational CLI tests). Include stderr in remaining status assertions.
-  Isolate cwd, dotenv, telemetry, and keyring state.
-  Set `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1` in operational fixtures and
-  keep file-backed identity storage within each test sandbox, including `HOME`.
+- [ ] Include stderr in remaining CLI fixture status assertions (e.g.,
+  `tests/module/install.rs`). Unix fixtures are isolated (cwd, `HOME`,
+  file keyring, `DO_NOT_TRACK`); Windows fixtures still use `USERPROFILE`
+  and the native keyring.
 
 - [ ] Pin and constrain delegated workflow execution
   (`.github/workflows/{ci,release}.yaml`). Reusable workflows use mutable

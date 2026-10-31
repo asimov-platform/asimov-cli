@@ -93,8 +93,9 @@
 - Targeted tests: `cargo test --locked --lib` or
   `cargo test --locked --test module` (`tests/module/main.rs`).
 - CLI test fixtures use `env!("CARGO_BIN_EXE_asimov")` and temporary
-  `ASIMOV_ROOT` directories. Startup loads `.env`; operational CLI tests require
-  a working OS keyring. `tests/shared.rs` creates fake executables and reruns
+  `ASIMOV_ROOT` directories. Startup loads `.env` from cwd, so also set
+  `current_dir`, `HOME`, `ASIMOV_KEYRING_BACKEND=file`, and `DO_NOT_TRACK=1`
+  to a sandbox. `tests/shared.rs` creates fake executables and reruns
   PATH-dependent library checks in children with private environments.
 
 # Baseline alignment to review

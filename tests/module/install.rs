@@ -24,6 +24,10 @@ fn install_reports_registry_state_errors() -> Result {
         let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
             .args(["module", "install", "demo"])
             .env("ASIMOV_ROOT", root.path())
+            .env("HOME", root.path())
+            .env("ASIMOV_KEYRING_BACKEND", "file")
+            .env("DO_NOT_TRACK", "1")
+            .current_dir(root.path())
             .stdin(Stdio::null())
             .output()?;
         assert_eq!(
@@ -56,6 +60,10 @@ fn install_enables_a_module_with_an_unset_optional_variable() -> Result {
     let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
         .args(["module", "install", "demo"])
         .env("ASIMOV_ROOT", root.path())
+        .env("HOME", root.path())
+        .env("ASIMOV_KEYRING_BACKEND", "file")
+        .env("DO_NOT_TRACK", "1")
+        .current_dir(root.path())
         .stdin(Stdio::null())
         .output()?;
 

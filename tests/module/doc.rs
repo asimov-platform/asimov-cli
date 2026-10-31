@@ -16,6 +16,10 @@ fn doc(root: &TempDir) -> Result<Run> {
     let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
         .args(["module", "doc", "demo"])
         .env("ASIMOV_ROOT", root.path())
+        .env("HOME", root.path())
+        .env("ASIMOV_KEYRING_BACKEND", "file")
+        .env("DO_NOT_TRACK", "1")
+        .current_dir(root.path())
         .stdin(Stdio::null())
         .output()?;
 

@@ -109,6 +109,10 @@ impl Sandbox {
             .arg("module")
             .args(args)
             .env("ASIMOV_ROOT", self.root())
+            .env("HOME", self.root())
+            .env("ASIMOV_KEYRING_BACKEND", "file")
+            .env("DO_NOT_TRACK", "1")
+            .current_dir(self.root())
             // start from a known environment, whatever the developer's shell has
             .env_remove(KEY_ENV)
             .env_remove(HOST_ENV)
@@ -446,6 +450,9 @@ fn module_list_respects_color_and_redirected_output() -> Result {
         let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
             .args(["--color", color, "module", "list", "--output", format])
             .env("ASIMOV_ROOT", sandbox.root())
+            .env("HOME", sandbox.root())
+            .env("ASIMOV_KEYRING_BACKEND", "file")
+            .env("DO_NOT_TRACK", "1")
             .current_dir(sandbox.root())
             .stdin(Stdio::null())
             .output()?;
