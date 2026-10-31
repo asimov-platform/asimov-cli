@@ -55,9 +55,13 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Add fake-runner tests for debug/cache/deadline option forwarding in
   `resource {fetch,list}` and for inherited reader I/O in `resource read`.
 
-- [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). Expose
-  useful, credential-safe status/body-generation errors, and test HTTP failures
-  and upload cancellation against an injectable local endpoint.
+- [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). HTTP
+  failures surface as raw reqwest errors with one exit code. Using the
+  private `post_json()` against a local endpoint, first test 401, 429, and
+  500 responses, malformed JSON, body-generation failure, and cancellation;
+  then report each distinctly (401/403: rejected `TYPESAFE_API_TOKEN`,
+  `EX_NOPERM` or `EX_CONFIG`; 429/5xx: `EX_UNAVAILABLE`; malformed:
+  `EX_PROTOCOL`), never including the token or request body.
 
 - [ ] Fix `module install all`, which installs nothing: the upstream `all`
   manifest (asimov-modules `all/.asimov/module.yaml`) declares
@@ -97,7 +101,11 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   pinned revision still calls `ci-rust-job.yaml@master` and
   `set-env-vars@master`, which build and test fork PR heads under
   `pull_request_target` after exporting the `ENV` secret. Fix that in
-  asimov-platform/actions (no secrets for PR-head jobs; pin nested refs).
+  asimov-platform/actions (deferred): pass `ENV` to `ci-rust-job.yaml` only
+  for pushes and same-repository PRs; pin `ci-rust-job.yaml`,
+  `set-env-vars`, `dtolnay/rust-toolchain`, and `actions/checkout` to SHAs;
+  set `persist-credentials: false` on PR-head checkouts. Then move the
+  `ci.yaml` pin to the fixed revision.
   `release.yaml` is likewise pinned with explicit secrets. Add automated
   updates for pinned Actions dependencies.
 
