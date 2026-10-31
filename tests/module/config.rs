@@ -664,3 +664,82 @@ fn setup_without_a_terminal_fails_rather_than_waiting() -> Result {
 
     Ok(())
 }
+
+#[cfg(unix)]
+#[test]
+fn config_readers_do_not_follow_value_symlinks_out_of_the_directory() -> Result {
+    let sandbox = Sandbox::new()?;
+    let outside = TempDir::new()?;
+    let target = outside.child("secret");
+    std::fs::write(&target, "outside-secret")?;
+    std::fs::create_dir_all(sandbox.root().join("configs/default/demo"))?;
+    std::fs::write(sandbox.root().join("configs/default/sibling"), "sibling")?;
+    for link in [target.as_path(), Path::new("../sibling")] {
+        let path = sandbox.value_file("host");
+        std::os::unix::fs::symlink(link, &path)?;
+        for args in [
+            vec!["config", "get", "demo", "host"],
+            vec!["config", "get", "demo", "host", "--stored"],
+            vec!["config", "show", "demo"],
+            vec!["inspect", "demo"],
+        ] {
+            let run = sandbox.module(&args)?;
+            assert_eq!(run.code, EX_IOERR as i32, "{args:?}: {}", run.stderr);
+            assert!(!run.stdout.contains("outside-secret"), "{args:?}");
+            assert!(!run.stdout.contains("sibling"), "{args:?}");
+        }
+        // Setup shows the current value before prompting, then fails here.
+        let run = sandbox.config(&["setup", "demo"])?;
+        assert!(!run.stderr.contains("outside-secret"), "{}", run.stderr);
+        assert!(!run.stderr.contains("`sibling`"), "{}", run.stderr);
+        std::fs::remove_file(&path)?;
+    }
+    assert_eq!(std::fs::read_to_string(&target)?, "outside-secret");
+    Ok(())
+}
+
+#[cfg(unix)]
+#[test]
+fn config_values_may_live_behind_symlinked_directories() -> Result {
+    for component in ["", "configs", "configs/default", "configs/default/demo"] {
+        let sandbox = Sandbox::new()?;
+        let outside = TempDir::new()?;
+        // A symlinked state root is used through its link, like `~/.asimov`.
+        let root = if component.is_empty() {
+            let link = outside.child("root");
+            std::os::unix::fs::symlink(sandbox.root(), &link)?;
+            link
+        } else {
+            let link = sandbox.root().join(component);
+            std::fs::create_dir_all(link.parent().expect("has a parent"))?;
+            std::os::unix::fs::symlink(outside.path(), &link)?;
+            sandbox.root().to_path_buf()
+        };
+        let env = [("ASIMOV_ROOT", root.to_str().expect("path should be UTF-8"))];
+
+        let run = sandbox.config_env(&["set", "demo", "host=linked.example"], &env)?;
+        assert_eq!(run.code, EX_OK as i32, "{component:?}: {}", run.stderr);
+        assert_eq!(
+            std::fs::read_to_string(root.join("configs/default/demo/host"))?,
+            "linked.example"
+        );
+        // TODO: add `get` without `--stored` and `inspect`, which read through
+        // the SDK, once it releases support for symlinked directories.
+        for args in [
+            vec!["get", "demo", "host", "--stored"],
+            vec!["show", "demo"],
+        ] {
+            let run = sandbox.config_env(&args, &env)?;
+            assert_eq!(
+                run.code, EX_OK as i32,
+                "{component:?} {args:?}: {}",
+                run.stderr
+            );
+            assert!(
+                run.stdout.contains("linked.example"),
+                "{component:?} {args:?}"
+            );
+        }
+    }
+    Ok(())
+}

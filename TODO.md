@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 125 tests pass; 144 with
+- `cargo test --locked` (2026-10-30): 127 tests pass; 146 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -22,16 +22,13 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 ## P1: Data integrity and confidentiality
 
-- [ ] Constrain config reads/writes to the intended directory
-  (`src/commands/module/config.rs::set_permissions` and
-  `src/commands/module/config/{get,set,setup}.rs`). Permission repair skips
-  symlinks, while reads follow them and symlinked config directories can redirect
-  writes outside the config tree.
-  Define and enforce symlink handling for directories and files, including
-  replacement races, and test that external targets remain untouched.
-  SDK HEAD `713cff00` confines manifest/config reads, but CLI-local stored reads,
-  provenance resolution, and writes still bypass that confinement. Align these
-  paths with the SDK's directory-relative access policy.
+- [ ] Finish module config symlink policy. `~/.asimov` and the `configs`,
+  profile, and module directories may be symlinks; value files must not
+  escape the module directory. CLI-local reads enforce this
+  (`Module::read_value`). Remaining: after the SDK releases a80f178, bump it
+  and extend `config_values_may_live_behind_symlinked_directories` to `get`
+  without `--stored` and `inspect`. Decide whether `set_permissions` should
+  repair a symlinked module directory (it currently skips it).
 
 ## P2: CLI behavior and process lifecycle
 

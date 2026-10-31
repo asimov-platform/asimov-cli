@@ -81,6 +81,8 @@
 - Module config precedence is environment, stored value, then default.
   Preserve secret masking except for explicit `config get`, validate variable
   names before file access, and validate whole batches before writing.
+  Config directories (incl. `~/.asimov`) may be symlinks; read stored values
+  via `Module::read_value`, which keeps value files inside the module's dir.
   Keep module config directories/files at 0700/0600 on Unix.
 - Patch application configs through the existing JSONC/CST editing APIs to
   preserve comments and formatting.

@@ -223,6 +223,19 @@ impl Module {
         self.conf_dir.join(key)
     }
 
+    /// Reads a stored value. The configuration directory may be a symlink,
+    /// but the value file is read within it, so a symlinked value file can't
+    /// expose a file elsewhere; such links fail as I/O errors, not as absent.
+    pub async fn read_value(&self, key: &str) -> std::io::Result<String> {
+        let conf_dir = self.conf_dir.clone();
+        let key = key.to_owned();
+        tokio::task::spawn_blocking(move || {
+            cap_std::fs::Dir::open_ambient_dir(conf_dir, cap_std::ambient_authority())?
+                .read_to_string(key)
+        })
+        .await?
+    }
+
     /// Resolves a value and its provenance in one pass, using SDK precedence.
     pub async fn resolve(
         &self,
@@ -240,7 +253,7 @@ impl Module {
                 },
             }
         }
-        match tokio::fs::read_to_string(self.var_file(&var.name)).await {
+        match self.read_value(&var.name).await {
             Ok(value) => Ok((Source::Stored, Some(value))),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 Ok(match &var.default_value {

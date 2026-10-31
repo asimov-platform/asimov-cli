@@ -48,8 +48,7 @@ pub async fn setup(module_name: &ModuleName, _flags: &StandardOptions) -> Result
         let mut stderr = std::io::stderr().lock();
 
         for var in variables {
-            let var_file = module.var_file(&var.name);
-            let current_value = tokio::fs::read_to_string(&var_file).await.ok();
+            let current_value = module.read_value(&var.name).await.ok();
 
             let info_text = if current_value.is_some() {
                 "(press Enter to keep current)"

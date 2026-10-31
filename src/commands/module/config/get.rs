@@ -20,7 +20,7 @@ pub async fn get(
     module.variable(key)?;
 
     if stored {
-        return match tokio::fs::read_to_string(module.var_file(key)).await {
+        return match module.read_value(key).await {
             Ok(value) => outln!("{value}"),
             Err(e) if e.kind() == tokio::io::ErrorKind::NotFound => {
                 ceprintln!("<s,r>error:</> no value is stored for variable `{key}`");
