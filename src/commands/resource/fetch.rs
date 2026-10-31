@@ -2,7 +2,7 @@
 
 use crate::BoxError;
 use crate::shared::{
-    execution::{self, Source, SourceResolver},
+    execution::{self, AbortOnDrop, Source, SourceResolver},
     filter::OutputFilter,
     telemetry::{ModuleMetadata, Operation},
 };
@@ -110,14 +110,13 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
 
     // Start fetchers in input order, keeping at most one per CPU running,
     // including the one whose output is being written.
-    let jobs = std::thread::available_parallelism().map_or(1, core::num::NonZero::get);
+    let jobs = execution::max_jobs();
     let mut pending = fetchers.into_iter();
     let mut tasks = AbortOnDrop(VecDeque::with_capacity(jobs));
     let mut start_next = |tasks: &mut AbortOnDrop<_, _>| {
         if let Some((url, metadata, remote, fetcher)) = pending.next() {
-            tasks
-                .0
-                .push_back((url, metadata.start(), remote, tokio::spawn(fetcher)));
+            let context = (url, metadata.start(), remote);
+            tasks.0.push_back((context, tokio::spawn(fetcher)));
         }
     };
     for _ in 0..jobs {
@@ -125,7 +124,7 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
     }
 
     let mut failure = None;
-    while let Some((url, telemetry, remote, task)) = tasks.0.pop_front() {
+    while let Some(((url, telemetry, remote), task)) = tasks.0.pop_front() {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Fetching <s>{}</>...", url);
         }
@@ -180,19 +179,6 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
     match failure {
         Some(error) => Err(error.exit_code().into()),
         None => Ok(()),
-    }
-}
-
-/// Fetcher tasks still queued for output. Dropping a task's handle would
-/// detach it, so on an early return these are aborted instead; dropping
-/// their output streams in turn kills the fetcher processes.
-struct AbortOnDrop<T, O>(VecDeque<(String, T, bool, tokio::task::JoinHandle<O>)>);
-
-impl<T, O> Drop for AbortOnDrop<T, O> {
-    fn drop(&mut self) {
-        for (_, _, _, task) in &self.0 {
-            task.abort();
-        }
     }
 }
 

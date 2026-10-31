@@ -3,7 +3,7 @@
 //! Local-first source routing and a common execution stream for both transports.
 
 use crate::{BoxError, SysexitsError, SysexitsError::*, shared};
-use alloc::{boxed::Box, rc::Rc, string::String};
+use alloc::{boxed::Box, collections::VecDeque, rc::Rc, string::String};
 use asimov_keyring::Keyring;
 use asimov_module::resolve::{Module, Resolver};
 use asimov_patterns::Execute;
@@ -13,6 +13,24 @@ use asimov_runner::{ExecutorError, JsonlBatch, Stream, StreamExt};
 use color_print::ceprintln;
 use core::{future::Future, pin::Pin};
 use std::io::Write;
+
+/// The number of module subprocesses to run at once: one per CPU.
+pub(crate) fn max_jobs() -> usize {
+    std::thread::available_parallelism().map_or(1, core::num::NonZero::get)
+}
+
+/// Source tasks queued for output, with their context. Dropping a task's
+/// handle would detach it, so on an early return these are aborted instead;
+/// dropping their output streams in turn kills the module processes.
+pub(crate) struct AbortOnDrop<T, O>(pub VecDeque<(T, tokio::task::JoinHandle<O>)>);
+
+impl<T, O> Drop for AbortOnDrop<T, O> {
+    fn drop(&mut self) {
+        for (_, task) in &self.0 {
+            task.abort();
+        }
+    }
+}
 
 pub(crate) enum Source {
     Local(Rc<Module>),

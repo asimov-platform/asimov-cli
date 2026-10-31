@@ -52,10 +52,8 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
 
-- [ ] Bound lister concurrency in `src/commands/resource/list/urls.rs` as
-  `resource fetch` does (one per CPU, in input order, aborting queued tasks
-  on early return). Add fake-runner tests for debug/cache/deadline
-  forwarding and inherited reader I/O.
+- [ ] Add fake-runner tests for debug/cache/deadline option forwarding in
+  `resource {fetch,list}` and for inherited reader I/O in `resource read`.
 
 - [ ] Improve Jev transport errors (`src/shared.rs::post_typesafe`). Expose
   useful, credential-safe status/body-generation errors, and test HTTP failures
@@ -105,7 +103,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 ## P3: Portability, maintenance, and further coverage
 
 - [ ] Add `-j`/`--jobs=N` to override the per-CPU default of concurrent
-  module subprocesses in `resource fetch` (and `resource list` once bounded).
+  module subprocesses in `resource fetch` and `resource list`.
   Low priority.
 
 - [ ] Implement tracked-resource search in `src/commands/resource/search.rs`;

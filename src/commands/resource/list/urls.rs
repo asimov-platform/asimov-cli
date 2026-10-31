@@ -2,11 +2,12 @@
 
 use crate::BoxError;
 use crate::shared::{
-    execution::{self, Source, SourceResolver},
+    execution::{self, AbortOnDrop, Source, SourceResolver},
     filter::OutputFilter,
     telemetry::{ModuleMetadata, Operation},
 };
 use alloc::{
+    collections::VecDeque,
     format,
     string::{String, ToString},
     vec::Vec,
@@ -156,15 +157,23 @@ pub(super) async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Res
 
     let verbose = flags.verbose;
 
-    let tasks: Vec<_> = listers
-        .into_iter()
-        .map(|(url, metadata, remote, lister)| {
-            (url, metadata.start(), remote, tokio::spawn(lister))
-        })
-        .collect();
+    // Start listers in input order, keeping at most one per CPU running,
+    // including the one whose output is being written.
+    let jobs = execution::max_jobs();
+    let mut pending = listers.into_iter();
+    let mut tasks = AbortOnDrop(VecDeque::with_capacity(jobs));
+    let mut start_next = |tasks: &mut AbortOnDrop<_, _>| {
+        if let Some((url, metadata, remote, lister)) = pending.next() {
+            let context = (url, metadata.start(), remote);
+            tasks.0.push_back((context, tokio::spawn(lister)));
+        }
+    };
+    for _ in 0..jobs {
+        start_next(&mut tasks);
+    }
 
     let mut failure = None;
-    for (url, telemetry, remote, task) in tasks {
+    while let Some(((url, telemetry, remote), task)) = tasks.0.pop_front() {
         if verbose > 1 {
             ceprintln!("<s,c>»</> Listing <s>{}</>...", url);
         }
@@ -213,6 +222,7 @@ pub(super) async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Res
         telemetry.finish(result.is_ok() && succeeded);
 
         result?;
+        start_next(&mut tasks);
     }
 
     match failure {
