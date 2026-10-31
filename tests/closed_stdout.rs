@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-#![cfg(all(unix, any(feature = "remote", feature = "resource")))]
+#![cfg(unix)]
 
 use std::process::{Command, Stdio};
 use temp_dir::TempDir;
@@ -30,6 +30,13 @@ fn run(home: &TempDir, args: &[&str], closed_stdout: bool) {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(0), "{args:?}: {stderr}");
     assert!(stderr.is_empty(), "{args:?}: {stderr}");
+}
+
+#[test]
+fn informational_output_stops_quietly() {
+    let home = TempDir::new().unwrap();
+    run(&home, &["--version"], true);
+    run(&home, &["--license"], true);
 }
 
 #[test]

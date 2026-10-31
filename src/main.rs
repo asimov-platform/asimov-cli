@@ -281,14 +281,12 @@ async fn run() -> u8 {
 
     // Print the version, if requested:
     if flags.version {
-        println!("ASIMOV {}", env!("CARGO_PKG_VERSION"));
-        return EX_OK.as_u8();
+        return print_info(format_args!("ASIMOV {}\n", env!("CARGO_PKG_VERSION")));
     }
 
     // Print the license, if requested:
     if flags.license {
-        print!("{}", include_str!("../UNLICENSE"));
-        return EX_OK.as_u8();
+        return print_info(format_args!("{}", include_str!("../UNLICENSE")));
     }
 
     // Configure debug output:
@@ -410,6 +408,16 @@ async fn run() -> u8 {
     telemetry::shutdown();
 
     result
+}
+
+/// Writes informational output, such as for `--version`, to stdout.
+fn print_info(args: core::fmt::Arguments<'_>) -> u8 {
+    match asimov_cli::shared::write_stdout(args) {
+        Ok(()) => EX_OK,
+        Err(err) if asimov_cli::shared::is_stdout_closed(&*err) => EX_OK,
+        Err(_) => EX_IOERR,
+    }
+    .as_u8()
 }
 
 /// Builds the help template, inserting an "Aliases" section between the

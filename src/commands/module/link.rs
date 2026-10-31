@@ -1,6 +1,6 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared::outln};
 use asimov_module::ModuleName;
 
 pub async fn link(module_name: ModuleName, _flags: &StandardOptions) -> Result<(), BoxError> {
@@ -19,7 +19,7 @@ pub async fn link(module_name: ModuleName, _flags: &StandardOptions) -> Result<(
     crate::sort_links(&manifest.name, &mut links);
 
     for link in links {
-        println!("{link}");
+        outln!("{link}")?;
     }
 
     Ok(())

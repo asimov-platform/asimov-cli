@@ -1,8 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::{BoxError, StandardOptions, SysexitsError::*};
+use crate::{BoxError, StandardOptions, SysexitsError::*, shared::outln};
 use asimov_module::{normalization::normalize_url, resolve::Resolver};
-use color_print::cprintln;
 
 pub async fn resolve(url: impl AsRef<str>, _flags: &StandardOptions) -> Result<(), BoxError> {
     let registry = asimov_registry::Registry::default();
@@ -33,7 +32,7 @@ pub async fn resolve(url: impl AsRef<str>, _flags: &StandardOptions) -> Result<(
         .map_err(|_| EX_USAGE)?;
 
     for module in modules {
-        cprintln!("{}", module.name);
+        outln!("{}", module.name)?;
     }
 
     Ok(())
