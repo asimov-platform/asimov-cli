@@ -85,6 +85,9 @@ temp-dir = "0.2"
 
 [dependencies]
 asimov-directory = "25.9.0"
+asimov-http = { version = "25.9.0", default-features = false, features = [
+  "reqwest",
+] }
 asimov-env = "25.9.0"
 asimov-id = { version = "25.9.0", features = ["iroh"] }
 asimov-installer = "25.9.0"

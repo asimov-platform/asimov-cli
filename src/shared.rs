@@ -359,6 +359,9 @@ fn collect_jev_inputs(
         .collect()
 }
 
+/// TypeSafe's API endpoint for Jev filtering.
+const TYPESAFE_URL: &str = "https://api.typesafe.ai/v1/systemone";
+
 /// Posts caller-written JSON to TypeSafe's API without buffering the entire body.
 ///
 /// `write_json` runs on a blocking worker and must write a complete JSON value.
@@ -367,10 +370,37 @@ fn collect_jev_inputs(
 /// (`Send + 'static`). Upload buffering is bounded, with backpressure applied
 /// to the writer. The response body is returned unread; non-success HTTP status
 /// codes and errors generating the request body are reported as errors.
+///
+/// The request uses the environment and system proxy settings for TypeSafe's
+/// origin, as resolved by the SDK, and isn't redirected.
 pub async fn post_typesafe<F>(api_token: &str, write_json: F) -> Result<reqwest::Response, BoxError>
 where
     F: FnOnce(&mut dyn Write) -> std::io::Result<()> + Send + 'static,
 {
+    let proxy = asimov_http::proxy::ProxyOptions::default();
+    post_json(TYPESAFE_URL, &proxy, api_token, write_json).await
+}
+
+/// Implements [`post_typesafe`] for any URL and proxy options.
+async fn post_json<F>(
+    url: &str,
+    proxy: &asimov_http::proxy::ProxyOptions,
+    api_token: &str,
+    write_json: F,
+) -> Result<reqwest::Response, BoxError>
+where
+    F: FnOnce(&mut dyn Write) -> std::io::Result<()> + Send + 'static,
+{
+    let url = reqwest::Url::parse(url)?;
+    let proxy = asimov_http::proxy::OriginProxy::resolve(&url, proxy)?;
+    let client = proxy
+        .configure_reqwest(http_client_builder(
+            std::time::Duration::from_secs(30),
+            std::time::Duration::from_secs(120),
+        ))?
+        .build()?;
+    proxy.check_origin(&url)?;
+
     struct BodyWriter(tokio::sync::mpsc::Sender<Vec<u8>>);
 
     impl Write for BodyWriter {
@@ -412,8 +442,8 @@ where
         },
     );
 
-    Ok(http_client()
-        .post("https://api.typesafe.ai/v1/systemone")
+    Ok(client
+        .post(url)
         .bearer_auth(api_token)
         .header(reqwest::header::CONTENT_TYPE, "application/json")
         .body(reqwest::Body::wrap_stream(body))
@@ -552,6 +582,48 @@ pub fn filter_jq_value(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn uploads_use_the_resolved_proxy_for_their_origin() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let proxy = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0; 4096];
+            // Read until the end of the (chunked) body, `0\r\n\r\n`.
+            while !request.ends_with(b"0\r\n\r\n") {
+                let count = socket.read(&mut buffer).await.unwrap();
+                assert_ne!(count, 0, "EOF before the request ended");
+                request.extend_from_slice(&buffer[..count]);
+            }
+            socket
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                .await
+                .unwrap();
+            String::from_utf8(request).unwrap()
+        });
+        let options = asimov_http::proxy::ProxyOptions {
+            mode: asimov_http::proxy::ProxyMode::Explicit(format!("http://{address}")),
+            no_proxy: Some(String::new()),
+        };
+        let response = post_json("http://jev.invalid/v1", &options, "token", |out| {
+            out.write_all(b"{}")
+        })
+        .await
+        .unwrap();
+        assert!(response.status().is_success());
+        let request = proxy.await.unwrap();
+        assert!(
+            request.starts_with("POST http://jev.invalid/v1 HTTP/1.1\r\n"),
+            "{request}"
+        );
+        assert!(
+            request.contains("authorization: Bearer token\r\n"),
+            "{request}"
+        );
+    }
 
     #[tokio::test]
     async fn http_deadlines_bound_stalled_headers_and_bodies() {
