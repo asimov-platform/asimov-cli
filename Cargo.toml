@@ -101,7 +101,6 @@ cap-std = "4.0"
 clap = { version = "4.5", default-features = false }
 clientele = { version = "0.5.0", features = ["gofer", "serde-json", "tokio"] }
 color-print = "=0.3.7"
-derive_more = { version = "2", features = ["display"] }
 jq = "0.3.1"
 miette = { version = "7.5", features = ["fancy"] }
 open = "5"
@@ -113,9 +112,6 @@ json-escape = "0.3"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 tracing = { version = "0.1", default-features = false, features = ["std"] }
-tracing-subscriber = { version = "0.3", default-features = false, features = [
-  "fmt",
-] }
 url = "2.5"
 
 # Optional dependencies:
@@ -137,7 +133,6 @@ infer = { version = "0.22", optional = true }
 jiff = { version = "0.2", default-features = false, features = [
   "alloc",
 ], optional = true }
-mime = { version = "0.3", optional = true }
 sha2 = { version = "0.11", optional = true }
 treelog = { version = "0.0.6", default-features = false, features = [
   "transform",
@@ -154,11 +149,9 @@ distrib = { version = "0.0.4", default-features = false, features = [
 dirs = { version = "7", default-features = false, optional = true }
 edikt-core = { version = "0.6.1", optional = true }
 edikt-jsonc = { version = "0.5.1", optional = true }
-iroh-base = { version = "1.2", default-features = false, features = ["key"] }
 jsonc-parser = { version = "0.34", default-features = false, features = [
   "cst",
 ], optional = true }
-secrecy = "0.10"
 whoami = "2.1"
 
 [profile.release]

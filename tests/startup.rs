@@ -81,7 +81,9 @@ fn module_list_with_a_public_identity_does_not_access_the_secret_backend()
     let directory = root.join("keyring");
     std::fs::create_dir_all(&directory)?;
     let user = whoami::username().unwrap_or_else(|_| "default".into());
-    let public: asimov_id::PublicKey = iroh_base::SecretKey::from_bytes(&[42; 32]).public().into();
+    let public: asimov_id::PublicKey = asimov_http::SecretKey::from_bytes(&[42; 32])
+        .public()
+        .into();
     let contents = format!("{public}\n");
     std::fs::write(directory.join(&user), &contents)?;
 
