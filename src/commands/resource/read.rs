@@ -1,6 +1,9 @@
 // This is free and unencumbered software released into the public domain.
 
-use crate::shared::telemetry::{ModuleMetadata, Operation};
+use crate::shared::{
+    execution::ExecutionError,
+    telemetry::{ModuleMetadata, Operation},
+};
 use crate::{BoxError, SysexitsError::*, shared};
 use alloc::{format, string::String, vec::Vec};
 use asimov_module::{ModuleName, normalization::normalize_url, resolve::Resolver};
@@ -9,6 +12,11 @@ use clientele::StandardOptions;
 use color_print::ceprintln;
 use miette::Result;
 
+/// Reads each URL with a reader module, stopping at the first failure.
+///
+/// A reader's own sysexits code is preserved; unclassified failures use
+/// `EX_UNAVAILABLE`.
+///
 /// See: <https://asimov-specs.github.io/program-patterns/#reader%E2%91%A0>
 pub async fn read(
     input_urls: Vec<String>,
@@ -84,7 +92,7 @@ pub async fn read(
         let result: Result<(), BoxError> = async {
             let mut output = reader.execute().await.map_err(|e| {
                 ceprintln!("<s,r>error:</> reader execution failed: {e}");
-                EX_UNAVAILABLE
+                ExecutionError::from(e).exit_code()
             })?;
 
             // Inherited stdout yields no payload, but the stream must be drained to
@@ -92,7 +100,7 @@ pub async fn read(
             while let Some(result) = output.next().await {
                 result.map_err(|e| {
                     ceprintln!("<s,r>error:</> reader execution failed: {e}");
-                    EX_UNAVAILABLE
+                    ExecutionError::from(e).exit_code()
                 })?;
             }
 

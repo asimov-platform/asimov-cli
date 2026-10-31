@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Exit with the actual exit status of external `asimov-*` commands, rather
   than `EX_SOFTWARE`; signal terminations exit with 128 plus the signal number
+- Exit with a reader module's own sysexits code from `asimov read`, rather
+  than always `EX_UNAVAILABLE`
 
 ## 25.9.0 - 2026-10-23
 ### Added

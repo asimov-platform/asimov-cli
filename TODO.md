@@ -12,7 +12,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 - Rust/Cargo 1.99.1 on aarch64 macOS, with
   `ASIMOV_KEYRING_BACKEND=file DO_NOT_TRACK=1`.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 118 tests pass; 136 with
+- `cargo test --locked` (2026-10-30): 119 tests pass; 137 with
   `--all-features`, 33 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -67,10 +67,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - [ ] Test module installation/upgrade against changing release metadata using
   an injectable installer (`src/commands/module/{install,upgrade}.rs`).
-
-- [ ] Preserve reader subprocess sysexits (`src/commands/resource/read.rs`).
-  Execution and stream errors currently become `EX_UNAVAILABLE`. Align with
-  fetch/list while continuing to drain inherited-stdout streams.
 
 - [ ] Bound source subprocess concurrency and make cancellation explicit
   (`src/commands/resource/{fetch,list/urls}.rs`). All URL tasks
