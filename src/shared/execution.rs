@@ -14,11 +14,6 @@ use color_print::ceprintln;
 use core::{future::Future, pin::Pin};
 use std::io::Write;
 
-/// The number of module subprocesses to run at once: one per CPU.
-pub(crate) fn max_jobs() -> usize {
-    std::thread::available_parallelism().map_or(1, core::num::NonZero::get)
-}
-
 /// Source tasks queued for output, with their context. Dropping a task's
 /// handle would detach it, so on an early return these are aborted instead;
 /// dropping their output streams in turn kills the module processes.

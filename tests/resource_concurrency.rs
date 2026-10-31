@@ -55,11 +55,12 @@ impl Sandbox {
         Ok(Self(root))
     }
 
-    /// Runs `asimov resource <operation>` on the given URL segments.
-    fn run(&self, operation: &str, segments: &[String]) -> Command {
+    /// Runs `asimov resource <operation> <options>` on the URL segments.
+    fn run(&self, operation: &str, options: &[&str], segments: &[String]) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_asimov"));
         command
             .args(["resource", operation])
+            .args(options)
             .args(segments.iter().map(|s| format!("https://slow.example/{s}")))
             .env("ASIMOV_ROOT", self.0.path())
             .env("HOME", self.0.path())
@@ -78,6 +79,15 @@ impl Sandbox {
         let log = std::fs::read_to_string(self.0.child("log").join(name))?;
         Ok(log.lines().map(String::from).collect())
     }
+
+    /// The most modules seen running at once.
+    fn peak(&self) -> Result<usize> {
+        let mut peak = 0;
+        for line in self.log("peaks")? {
+            peak = peak.max(line.parse()?);
+        }
+        Ok(peak)
+    }
 }
 
 fn jobs() -> usize {
@@ -87,11 +97,11 @@ fn jobs() -> usize {
 const OPERATIONS: &[&str] = &["fetch", "list"];
 
 #[test]
-fn modules_run_at_most_one_per_cpu_in_input_order() -> Result {
+fn urls_are_processed_at_most_one_per_cpu_in_input_order() -> Result {
     for operation in OPERATIONS {
         let sandbox = Sandbox::new()?;
         let segments: Vec<String> = (0..2 * jobs() + 1).map(|n| n.to_string()).collect();
-        let output = sandbox.run(operation, &segments).output()?;
+        let output = sandbox.run(operation, &[], &segments).output()?;
         assert!(
             output.status.success(),
             "{operation}: {}",
@@ -106,16 +116,10 @@ fn modules_run_at_most_one_per_cpu_in_input_order() -> Result {
 
         let peaks = sandbox.log("peaks")?;
         assert_eq!(peaks.len(), segments.len(), "{operation}");
-        let peak = peaks
-            .iter()
-            .map(|n| n.parse::<usize>())
-            .collect::<core::result::Result<Vec<_>, _>>()?
-            .into_iter()
-            .max()
-            .unwrap_or_default();
+        let peak = sandbox.peak()?;
         assert!(
             peak <= jobs(),
-            "{operation}: {peak} modules ran at once, over {}",
+            "{operation}: {peak} URLs processed at once, over {}",
             jobs()
         );
     }
@@ -130,7 +134,10 @@ fn modules_stop_running_when_stdout_closes() -> Result {
         let (reader, writer) = std::io::pipe()?;
         drop(reader);
         let started = Instant::now();
-        let status = sandbox.run(operation, &segments).stdout(writer).status()?;
+        let status = sandbox
+            .run(operation, &[], &segments)
+            .stdout(writer)
+            .status()?;
         assert!(status.success(), "{operation}: {status}");
         assert!(started.elapsed() < Duration::from_secs(20), "{operation}");
 
@@ -144,6 +151,41 @@ fn modules_stop_running_when_stdout_closes() -> Result {
                 "module {pid} outlived `asimov resource {operation}`"
             );
         }
+    }
+    Ok(())
+}
+
+#[test]
+fn jobs_option_overrides_the_per_cpu_default() -> Result {
+    // Digits 5 to 9 keep delays short, as `-j 1` runs them one at a time.
+    let segments: Vec<String> = (5..10).map(|n| n.to_string()).collect();
+    for operation in OPERATIONS {
+        for (options, jobs) in [(&["-j", "1"][..], 1), (&["--jobs=2"][..], 2)] {
+            let sandbox = Sandbox::new()?;
+            let output = sandbox.run(operation, options, &segments).output()?;
+            assert!(
+                output.status.success(),
+                "{operation} {options:?}: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let lines = String::from_utf8(output.stdout)?.lines().count();
+            assert_eq!(lines, segments.len(), "{operation} {options:?}");
+            let peak = sandbox.peak()?;
+            assert!(
+                peak <= jobs,
+                "{operation} {options:?}: {peak} URLs processed at once"
+            );
+        }
+
+        let sandbox = Sandbox::new()?;
+        let output = sandbox.run(operation, &["-j", "0"], &segments).output()?;
+        // Like other invalid option values, this is a Clap usage error.
+        assert_eq!(output.status.code(), Some(2), "{operation}: -j 0");
+        assert!(String::from_utf8(output.stderr)?.contains("--jobs"));
+        assert!(
+            sandbox.log("pids").is_err(),
+            "{operation}: -j 0 ran modules"
+        );
     }
     Ok(())
 }

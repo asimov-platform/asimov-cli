@@ -31,6 +31,9 @@ pub struct ResourceListArgs {
     #[clap(flatten)]
     pub timing: TimingOptions,
 
+    #[clap(flatten)]
+    pub jobs: super::super::JobsOptions,
+
     /// The specific module to use.
     #[clap(long, short = 'M')]
     pub module: Option<ModuleName>,
@@ -92,6 +95,7 @@ pub(super) async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Res
         filtering,
         cache,
         timing,
+        jobs,
     } = args;
     OutputFilter::validate_json(&filtering, output.as_deref())?;
     let mut filter = None;
@@ -157,9 +161,9 @@ pub(super) async fn list(args: ResourceListArgs, flags: &StandardOptions) -> Res
 
     let verbose = flags.verbose;
 
-    // Start listers in input order, keeping at most one per CPU running,
+    // Start listers in input order, keeping at most `jobs` running,
     // including the one whose output is being written.
-    let jobs = execution::max_jobs();
+    let jobs = jobs.count();
     let mut pending = listers.into_iter();
     let mut tasks = AbortOnDrop(VecDeque::with_capacity(jobs));
     let mut start_next = |tasks: &mut AbortOnDrop<_, _>| {

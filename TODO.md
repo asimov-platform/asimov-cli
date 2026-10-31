@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 129 tests pass; 148 with
+- `cargo test --locked` (2026-10-30): 130 tests pass; 149 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -101,10 +101,6 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   Add automated updates for pinned Actions dependencies.
 
 ## P3: Portability, maintenance, and further coverage
-
-- [ ] Add `-j`/`--jobs=N` to override the per-CPU default of concurrent
-  module subprocesses in `resource fetch` and `resource list`.
-  Low priority.
 
 - [ ] Implement tracked-resource search in `src/commands/resource/search.rs`;
   it currently returns `EX_UNAVAILABLE` and is gated behind `unstable`.

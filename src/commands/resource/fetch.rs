@@ -37,6 +37,9 @@ pub struct ResourceFetchArgs {
     #[clap(flatten)]
     timing: TimingOptions,
 
+    #[clap(flatten)]
+    jobs: super::JobsOptions,
+
     #[arg(required = true)]
     urls: Vec<String>,
 }
@@ -108,9 +111,9 @@ pub async fn fetch(args: ResourceFetchArgs, flags: &StandardOptions) -> Result<(
 
     let verbose = flags.verbose;
 
-    // Start fetchers in input order, keeping at most one per CPU running,
+    // Start fetchers in input order, keeping at most `jobs` running,
     // including the one whose output is being written.
-    let jobs = execution::max_jobs();
+    let jobs = args.jobs.count();
     let mut pending = fetchers.into_iter();
     let mut tasks = AbortOnDrop(VecDeque::with_capacity(jobs));
     let mut start_next = |tasks: &mut AbortOnDrop<_, _>| {

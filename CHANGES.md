@@ -6,9 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Limit how many URLs `asimov fetch` and `asimov list` process at once with
+  `-j`/`--jobs=COUNT`
 ### Changed
-- Run at most one module per CPU at a time in `asimov fetch` and
-  `asimov list`, rather than one per URL all at once
+- Process at most one URL per CPU at a time in `asimov fetch` and
+  `asimov list`, rather than all URLs at once
 - Print the verbose progress of `asimov module` commands that install,
   upgrade, uninstall, enable, or disable modules, and of
   `asimov config telemetry`, to stderr rather than stdout

@@ -7,8 +7,29 @@ use asimov_directory::{
     fs::{ResourcesDirectory, StateDirectory},
 };
 use asimov_module::ModuleName;
-use clientele::{StandardOptions, SysexitsError::*, crates::clap::Subcommand};
+use clientele::{
+    StandardOptions,
+    SysexitsError::*,
+    crates::clap::{Args, Subcommand},
+};
 use std::io::{self, Write};
+
+/// Concurrency control for commands that process each URL as a separate job.
+#[derive(Args, Clone, Copy, Debug, Default)]
+pub struct JobsOptions {
+    /// The maximum number of URLs to process at once [default: number of CPUs].
+    #[arg(short = 'j', long, value_name = "COUNT")]
+    pub jobs: Option<core::num::NonZeroUsize>,
+}
+
+impl JobsOptions {
+    /// Returns the requested job count, or else the number of CPUs.
+    pub fn count(&self) -> usize {
+        self.jobs
+            .or_else(|| std::thread::available_parallelism().ok())
+            .map_or(1, core::num::NonZeroUsize::get)
+    }
+}
 
 /// Commands for managing tracked resources.
 #[derive(Debug, Subcommand)]
