@@ -2,7 +2,12 @@
 
 use clientele::SubcommandsProvider;
 use rayon::prelude::*;
-use std::process::Stdio;
+use std::{
+    io::Read,
+    process::{Child, Stdio},
+    sync::mpsc,
+    time::{Duration, Instant},
+};
 
 use crate::Result;
 
@@ -47,58 +52,73 @@ impl Help {
         result
     }
 
-    fn is_child_running(&self, child: &mut std::process::Child) -> Result<bool, std::io::Error> {
-        Ok(child.try_wait()?.is_none())
-    }
-
     fn collect_output(&self) -> Vec<(String, String)> {
-        const MAX_WAIT_TIME: std::time::Duration = std::time::Duration::from_secs(1);
-
         let provider = SubcommandsProvider::collect("asimov-", 1);
-        let commands = provider.get_commands();
-
-        let start_time = std::time::Instant::now();
-
-        commands
+        provider
+            .get_commands()
             .par_iter()
-            .filter_map(|cmd| {
-                let Ok(mut child) = std::process::Command::new(&cmd.path)
-                    .args(["--help"])
-                    .stdin(Stdio::inherit())
-                    .stdout(Stdio::piped())
-                    .stderr(Stdio::piped())
-                    .spawn()
-                else {
-                    return None;
-                };
-
-                loop {
-                    let Ok(is_running) = self.is_child_running(&mut child) else {
-                        return None;
-                    };
-
-                    if !is_running {
-                        break;
-                    }
-
-                    let now = std::time::Instant::now();
-                    if now.duration_since(start_time) > MAX_WAIT_TIME {
-                        child.kill().ok();
-                        drop(child);
-                        return None;
-                    }
-
-                    rayon::yield_local();
-                }
-
-                let output = child.wait_with_output().unwrap();
-                if !output.status.success() {
-                    return None;
-                }
-
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                Some((cmd.name.clone(), stdout.to_string()))
-            })
+            .filter_map(|cmd| Some((cmd.name.clone(), run_help(&cmd.path)?)))
             .collect()
+    }
+}
+
+/// How long each command may take to print its help and exit.
+const HELP_DEADLINE: Duration = Duration::from_secs(1);
+
+/// How much of each command's help output is kept; the rest is discarded.
+const HELP_OUTPUT_LIMIT: u64 = 256 * 1024;
+
+/// Runs `<path> --help` and returns its stdout, or `None` if the command
+/// can't be spawned, fails, or doesn't finish within [`HELP_DEADLINE`].
+///
+/// Stdout is drained while the child runs, so that verbose help can't block
+/// on a full pipe; a child that times out is killed and reaped.
+fn run_help(path: &std::path::Path) -> Option<String> {
+    let deadline = Instant::now() + HELP_DEADLINE;
+    let mut child = std::process::Command::new(path)
+        .arg("--help")
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .ok()?;
+
+    // The reader is detached rather than joined: if a grandchild inherits the
+    // pipe and keeps it open, the reader outlives us instead of blocking us.
+    let mut stdout = child.stdout.take()?;
+    let (sender, receiver) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut output = Vec::new();
+        let result = (&mut stdout)
+            .take(HELP_OUTPUT_LIMIT)
+            .read_to_end(&mut output)
+            .and_then(|_| std::io::copy(&mut stdout, &mut std::io::sink()));
+        sender.send(result.map(|_| output)).ok();
+    });
+
+    let output = receiver
+        .recv_timeout(deadline.saturating_duration_since(Instant::now()))
+        .ok()
+        .and_then(Result::ok);
+    let success = output.is_some() && wait_until(&mut child, deadline);
+    if !success {
+        child.kill().ok();
+        child.wait().ok();
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output?).into_owned())
+}
+
+/// Waits for the child to exit by the deadline, returning whether it exited
+/// successfully. Stdout has already closed, so this is normally immediate.
+fn wait_until(child: &mut Child, deadline: Instant) -> bool {
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return status.success(),
+            Ok(None) if Instant::now() < deadline => {
+                std::thread::sleep(Duration::from_millis(10));
+            },
+            _ => return false,
+        }
     }
 }

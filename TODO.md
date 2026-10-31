@@ -11,7 +11,7 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
 
 - Rust/Cargo 1.99.1 on aarch64 macOS; no test environment variables needed.
 - `cargo fmt --all -- --check` and `cargo check --locked`: pass.
-- `cargo test --locked` (2026-10-30): 124 tests pass; 143 with
+- `cargo test --locked` (2026-10-30): 125 tests pass; 144 with
   `--all-features`, 34 with `--no-default-features`.
 - `cargo check --locked --all-features`: pass.
 - `cargo check --locked --no-default-features`: passes without warnings.
@@ -41,12 +41,9 @@ Items marked "reproduced" were checked with isolated synthetic fixtures.
   (`--json=@id,name`) works. Coordinate an option-aware upstream API, preserving
   wildcard expansion, recursive-include detection, and external arguments.
 
-- [ ] Bound and correctly reap help subprocesses
-  (`src/commands/{help,help_cmd}.rs`). Collection waits for exit before draining
-  pipes, uses one deadline for the entire parallel batch, busy-polls, and kills
-  without waiting; explicit external help has no timeout. Drain stdout/stderr
-  concurrently, bound output, apply per-child deadlines, and always reap
-  children. Exercise large help output, hangs, failed spawns, and termination.
+- [ ] Bound explicit external help (`src/commands/help_cmd.rs`). `asimov help
+  <cmd>` waits indefinitely and buffers all output. Decide whether a timeout
+  fits there, or stream the child's help through instead.
 
 - [ ] Handle broken pipes in remaining command output paths. `println!` on a
   closed pipe panics with exit 101 (reproduced). Convert remaining stdout

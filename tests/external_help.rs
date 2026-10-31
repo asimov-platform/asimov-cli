@@ -107,3 +107,50 @@ fn nested_external_help_places_the_help_flag_after_subcommands()
     }
     Ok(())
 }
+
+#[test]
+fn root_long_help_survives_large_hanging_and_failing_external_help()
+-> Result<(), Box<dyn core::error::Error>> {
+    let root = temp_dir::TempDir::new()?;
+    for (name, script) in [
+        // Prints about 320 KiB, more than a pipe buffer holds:
+        (
+            "asimov-large",
+            "printf 'Large description\\n\\n'\ni=0\nwhile [ $i -lt 5000 ]; do\nprintf '%064d\\n' $i\ni=$((i + 1))\ndone\n",
+        ),
+        (
+            "asimov-hang",
+            "printf 'Hang description\\n'\nwhile :; do :; done\n",
+        ),
+        ("asimov-fail", "printf 'Fail description\\n'\nexit 1\n"),
+        ("asimov-fine", "printf 'Fine description\\n'\n"),
+    ] {
+        let program = root.child(name);
+        std::fs::write(&program, format!("#!/bin/sh\n{script}"))?;
+        std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o755))?;
+    }
+    let started = std::time::Instant::now();
+    let output = Command::new(env!("CARGO_BIN_EXE_asimov"))
+        .arg("--help")
+        .env("PATH", root.path())
+        .env("ASIMOV_ROOT", root.path())
+        .env("HOME", root.path())
+        .env("ASIMOV_KEYRING_BACKEND", "file")
+        .env("DO_NOT_TRACK", "1")
+        .current_dir(root.path())
+        .stdin(Stdio::null())
+        .output()?;
+    let elapsed = started.elapsed();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(elapsed < std::time::Duration::from_secs(10), "{elapsed:?}");
+    assert!(stdout.contains("Large description"), "{stdout}");
+    assert!(stdout.contains("Fine description"), "{stdout}");
+    assert!(!stdout.contains("Hang description"), "{stdout}");
+    assert!(!stdout.contains("Fail description"), "{stdout}");
+    Ok(())
+}

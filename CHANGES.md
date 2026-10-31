@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of panicking or failing, for `asimov --version`, `asimov --license`,
   and the `asimov module`, `asimov resource`, and `asimov remote list`
   commands
+- List external `asimov-*` commands with long help output in `asimov --help`,
+  and stop waiting on each such command after a one-second timeout
 
 ## 25.9.0 - 2026-10-23
 ### Added
