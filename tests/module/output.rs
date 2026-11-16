@@ -1,5 +1,7 @@
 // This is free and unencumbered software released into the public domain.
 
+#![cfg(unix)]
+
 use clientele::SysexitsError::*;
 use std::{
     os::unix::fs::PermissionsExt,
