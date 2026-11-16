@@ -284,16 +284,18 @@ dependencies = [
 
 [[package]]
 name = "asimov-config"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40cd50e6716e56d19943d84ed99ee82ed039dcf5b26d9755bb77f616f6d4c603"
 dependencies = [
  "asimov-core",
 ]
 
 [[package]]
 name = "asimov-core"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ad518e9084799443b85735ab267e1c665c9269b2dbaccf6dc9515f406ea76e3"
 dependencies = [
  "cap-directories",
  "cap-std",
@@ -304,8 +306,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-directory"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e64e3a88b4e2548300eb8abf15dbe947f26c5a404eed25b13c59a532b1061dcd"
 dependencies = [
  "asimov-config",
  "asimov-core",
@@ -324,8 +327,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-env"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "08a4ac50a138b98ea924601a75c1053f01feb3c928d544d8156aeeb6bf427506"
 dependencies = [
  "asimov-core",
  "cap-directories",
@@ -335,8 +339,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-flow"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c2a0b9ae8918c8f1a19bdd491dd2d862f51898c2743b7f74f4e91a1acaccd20"
 dependencies = [
  "asimov-core",
  "async-flow",
@@ -349,8 +354,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-http"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56be9e3c9bb4957e72f8d2159497119b22d07587470060822152339e490d8b58"
 dependencies = [
  "base64 0.23.1",
  "bs58",
@@ -374,14 +380,14 @@ dependencies = [
 
 [[package]]
 name = "asimov-huggingface"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "184244d7a84ea1f0557b3fb574782dabffdeb31335369cdd9bc1af5e127aa4a8"
 dependencies = [
  "asimov-core",
  "asimov-http",
  "hf-hub",
  "indicatif",
- "reqwest",
  "tempfile",
  "thiserror 2.0.21",
  "tokio",
@@ -389,8 +395,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-id"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "527e865d220c2d77662af13bef6eff21f931232e722bc521d820adfd8942fdba"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -405,8 +412,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-installer"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53e0f0fe3d6a1e33ce52b1c51f07a09ffc3a43e0fbf5de374f79831cd232f342"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -418,7 +426,6 @@ dependencies = [
  "clientele",
  "flate2",
  "getenv",
- "reqwest",
  "secrecy",
  "serde",
  "serde_json",
@@ -435,8 +442,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-kb"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42150c317041907cd78ab0e4a65eadd602a541c1178ab4cd91eb893f6f9e1f57"
 dependencies = [
  "asimov-core",
  "bs58",
@@ -447,8 +455,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-keyring"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c3f5e5886507ba1dfcc49f2f85239fc4d30d6bd82e2c80c7cbaa1582f2d3d4"
 dependencies = [
  "apple-native-keyring-store",
  "asimov-core",
@@ -470,8 +479,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f9ef28d8d6e26ec244e53e5131c323a155a2d8069bb96638659b02d003544f9"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -480,7 +490,6 @@ dependencies = [
  "getenv",
  "iri-string",
  "mime",
- "reqwest",
  "secrecy",
  "serde",
  "serde_json",
@@ -494,8 +503,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-module-kit"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d0973d2ff98fdcc369874b6819535baad65528640e9178112eff3bc73569a6d"
 dependencies = [
  "anyhow",
  "asimov-core",
@@ -515,8 +525,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-patterns"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0faae92686e76301f92a68617792760e6d389360e2e4c1015adc4122a9823a0"
 dependencies = [
  "asimov-core",
  "async-trait",
@@ -530,8 +541,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-prompt"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8751dea81f6e35e130a058323a319cea958f39164ec38a5aeafa8052948e126"
 dependencies = [
  "asimov-core",
  "bon",
@@ -541,8 +553,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-protocol"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00f0380fdd3b44c7ce8fa9f8b944bb9ddf1cd62833e40e30a747d92d007497c1"
 dependencies = [
  "asimov-core",
  "asimov-http",
@@ -564,7 +577,6 @@ dependencies = [
  "postcard",
  "rdf-hash",
  "rdf-model",
- "reqwest",
  "rustls",
  "serde",
  "thiserror 2.0.21",
@@ -574,8 +586,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-proxy"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85bf88bb22020692aafed4fd7ef2dcb1d5827c2932838c0ac2a2570773755c37"
 dependencies = [
  "asimov-http",
  "axum",
@@ -597,8 +610,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-registry"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f1584b1fff69ec6650b5ce89a2805c525dd87a2be8925a959b671b73d5dddcf9"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -620,8 +634,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-remote"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfd13da2d72b42623b0fae4b114ae1c74bce20b0b2c47b8195dfc46cef7f0451"
 dependencies = [
  "agent-detector",
  "asimov-directory",
@@ -635,7 +650,6 @@ dependencies = [
  "clientele",
  "http-body-util",
  "httpdate",
- "reqwest",
  "rustls",
  "rustls-platform-verifier",
  "secrecy",
@@ -648,8 +662,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-runner"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0f0aad0ebd782188df4d5ef7fca27f6df18285d92d687bd507aa6d090e20ba0"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -673,8 +688,9 @@ dependencies = [
 
 [[package]]
 name = "asimov-snapshot"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26472faf5e9b656aef5871a271d967fad2544fd3c5aa35fa859f7e7b833cec9a"
 dependencies = [
  "asimov-core",
  "asimov-env",
@@ -694,14 +710,14 @@ dependencies = [
 
 [[package]]
 name = "asimov-telemetry"
-version = "25.9.0"
-source = "git+https://github.com/asimov-platform/asimov-sdk.git?rev=0be8161e3962045f83684913f1633b6ce03fddab#0be8161e3962045f83684913f1633b6ce03fddab"
+version = "25.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1d06e6ef35ceeac5e4f336e63dedad98a4c5def17fc1d665e76038cec87c0e4"
 dependencies = [
  "agent-detector",
  "asimov-http",
  "bs58",
  "dogma-uuid",
- "reqwest",
  "serde",
  "serde_json",
  "tokio",
@@ -8448,7 +8464,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
